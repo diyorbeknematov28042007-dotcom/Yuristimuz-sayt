@@ -1,12 +1,12 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, Suspense } from 'react'
 import Link from 'next/link'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import type { UserRole } from '@/lib/types'
 
-export default function SignupPage() {
+function SignupForm() {
   const router = useRouter()
   const params = useSearchParams()
   const [role, setRole] = useState<UserRole>((params.get('role') as UserRole) || 'client')
@@ -98,5 +98,17 @@ export default function SignupPage() {
         </p>
       </div>
     </div>
+  )
+}
+
+export default function SignupPage() {
+  return (
+    <Suspense fallback={
+      <div className="w-full max-w-md">
+        <div className="card p-8 text-center text-gray-400">Yuklanmoqda...</div>
+      </div>
+    }>
+      <SignupForm />
+    </Suspense>
   )
 }
