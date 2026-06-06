@@ -1,0 +1,9 @@
+{
+  "name": "legaluz",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "cd apps/web && npm run dev",
+    "build": "cd apps/web && npm run build"
+  }
+}
