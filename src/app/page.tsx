@@ -231,7 +231,7 @@ export default function HomePage() {
       {/* SPECIALIZATIONS */}
       <section style={{ padding: '72px 20px', background: 'white' }} id="xizmatlar">
         <div style={{ maxWidth: 1152, margin: '0 auto' }}>
-          <Fade className="" style={{ textAlign: 'center', marginBottom: 40 }}>
+          <Fade>
             <div style={{ textAlign: 'center', marginBottom: 40 }}>
               <p style={{ fontSize: 11, fontWeight: 700, color: '#6366f1', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: 10 }}>Sohalar</p>
               <h2 style={{ fontSize: 32, fontWeight: 800, color: '#0f172a', letterSpacing: '-0.5px' }}>Barcha sohalarda yordam</h2>
