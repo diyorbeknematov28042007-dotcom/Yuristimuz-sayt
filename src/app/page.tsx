@@ -1,10 +1,103 @@
+'use client'
+
+import { useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
 
-export default function HomePage() {
+function useCountUp(target: number, duration = 1500, start = false) {
+  const [count, setCount] = useState(0)
+  useEffect(() => {
+    if (!start) return
+    let current = 0
+    const step = target / (duration / 16)
+    const timer = setInterval(() => {
+      current += step
+      if (current >= target) { setCount(target); clearInterval(timer) }
+      else setCount(Math.floor(current))
+    }, 16)
+    return () => clearInterval(timer)
+  }, [start, target, duration])
+  return count
+}
+
+function useInView(threshold = 0.1) {
+  const ref = useRef<HTMLDivElement>(null)
+  const [inView, setInView] = useState(false)
+  useEffect(() => {
+    const obs = new IntersectionObserver(
+      ([e]) => { if (e.isIntersecting) setInView(true) },
+      { threshold }
+    )
+    if (ref.current) obs.observe(ref.current)
+    return () => obs.disconnect()
+  }, [threshold])
+  return { ref, inView }
+}
+
+function AnimatedSection({ children, delay = 0, className = '' }: {
+  children: React.ReactNode
+  delay?: number
+  className?: string
+}) {
+  const { ref, inView } = useInView()
   return (
-    <main className="min-h-screen">
-      {/* Header */}
-      <header className="bg-white border-b border-gray-100">
+    <div ref={ref} className={className} style={{
+      opacity: inView ? 1 : 0,
+      transform: inView ? 'translateY(0)' : 'translateY(24px)',
+      transition: `opacity 0.6s ${delay}ms ease, transform 0.6s ${delay}ms ease`,
+    }}>
+      {children}
+    </div>
+  )
+}
+
+const features = [
+  { icon: '🔍', title: 'Tez qidiruv', desc: "Soha, joylashuv va narx bo'yicha filtrlang" },
+  { icon: '💬', title: 'Bepul chat', desc: "Yurist bilan to'g'ridan-to'g'ri gaplashing" },
+  { icon: '⚖️', title: 'Tajribali yuristlar', desc: "Barcha sohalar bo'yicha mutaxassislar" },
+  { icon: '🤖', title: 'AI maslahat', desc: 'Oddiy savollarga darhol javob oling' },
+  { icon: '📄', title: 'Hujjat generatsiya', desc: 'AI yordamida shartnoma va ariza tuzing' },
+  { icon: '🗺️', title: 'Xarita', desc: 'Yaqin advokatlarni toping' },
+]
+
+const steps = [
+  { num: '01', icon: '📝', title: "Elon qo'ying", desc: "Huquqiy muammongizni batafsil yozing — bepul" },
+  { num: '02', icon: '⚖️', title: 'Yurist toping', desc: "Filtr orqali o'zingizga mos mutaxassisni tanlang" },
+  { num: '03', icon: '💬', title: 'Gaplashing', desc: 'Chat orqali yurist bilan bog\'laning' },
+  { num: '04', icon: '✅', title: 'Muammoni yechin', desc: 'Professional yordam bilan natijaga ering' },
+]
+
+const specializations = [
+  { icon: '👨‍👩‍👧', label: 'Oilaviy huquq' },
+  { icon: '🏢', label: 'Biznes huquqi' },
+  { icon: '🏠', label: 'Mulk huquqi' },
+  { icon: '⚒️', label: 'Mehnat huquqi' },
+  { icon: '💰', label: 'Soliq huquqi' },
+  { icon: '🔒', label: 'Jinoyat huquqi' },
+  { icon: '📋', label: 'Shartnomalar' },
+  { icon: '🌐', label: 'Migratsiya' },
+]
+
+export default function HomePage() {
+  const [started, setStarted] = useState(false)
+  const { ref: statsRef, inView: statsInView } = useInView()
+  const lawyers = useCountUp(500, 1500, statsInView)
+  const ads = useCountUp(1200, 1500, statsInView)
+  const regions = useCountUp(14, 1200, statsInView)
+
+  useEffect(() => {
+    const t = setTimeout(() => setStarted(true), 100)
+    return () => clearTimeout(t)
+  }, [])
+
+  return (
+    <div className="min-h-screen bg-white">
+
+      {/* NAVBAR */}
+      <header style={{
+        opacity: started ? 1 : 0,
+        transform: started ? 'translateY(0)' : 'translateY(-16px)',
+        transition: 'opacity 0.5s ease, transform 0.5s ease',
+      }} className="bg-white border-b border-gray-100 sticky top-0 z-50">
         <div className="max-w-6xl mx-auto px-4 h-16 flex items-center justify-between">
           <div className="flex items-center gap-2">
             <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
@@ -12,97 +105,223 @@ export default function HomePage() {
             </div>
             <span className="font-bold text-gray-900 text-lg">LegalUZ</span>
           </div>
+          <nav className="hidden md:flex items-center gap-6">
+            {['Xizmatlar', 'Yuristlar', 'Narxlar'].map(item => (
+              <a key={item} href={`#${item.toLowerCase()}`}
+                className="text-sm text-gray-500 hover:text-gray-900 transition-colors">
+                {item}
+              </a>
+            ))}
+          </nav>
           <div className="flex items-center gap-3">
-            <Link href="/auth/login" className="btn-secondary text-sm">Kirish</Link>
-            <Link href="/auth/signup" className="btn-primary text-sm">Ro'yxatdan o'tish</Link>
+            <Link href="/auth/login" className="btn-secondary text-sm hidden md:flex">
+              Kirish
+            </Link>
+            <Link href="/auth/signup" className="btn-primary text-sm">
+              Boshlash
+            </Link>
           </div>
         </div>
       </header>
 
-      {/* Hero */}
-      <section className="bg-gradient-to-br from-blue-600 to-blue-800 text-white py-20 px-4">
+      {/* HERO */}
+      <section className="pt-20 pb-16 px-4 bg-gradient-to-b from-blue-50 to-white">
         <div className="max-w-4xl mx-auto text-center">
-          <h1 className="text-4xl md:text-5xl font-bold mb-6 leading-tight">
-            Kerakli yuristni<br />tez toping
+          <div style={{
+            opacity: started ? 1 : 0,
+            transform: started ? 'translateY(0)' : 'translateY(20px)',
+            transition: 'opacity 0.6s 0.1s ease, transform 0.6s 0.1s ease',
+          }}>
+            <div className="inline-flex items-center gap-2 bg-blue-100 text-blue-700 text-xs font-medium px-4 py-1.5 rounded-full mb-6">
+              <span className="w-1.5 h-1.5 bg-blue-600 rounded-full animate-pulse"></span>
+              O'zbekistondagi birinchi legal-tech platforma
+            </div>
+          </div>
+
+          <h1 style={{
+            opacity: started ? 1 : 0,
+            transform: started ? 'translateY(0)' : 'translateY(24px)',
+            transition: 'opacity 0.6s 0.2s ease, transform 0.6s 0.2s ease',
+          }} className="text-5xl md:text-6xl font-bold text-gray-900 leading-tight mb-6">
+            Kerakli yuristni<br />
+            <span className="text-blue-600">tez toping</span>
           </h1>
-          <p className="text-blue-100 text-xl mb-10 max-w-2xl mx-auto">
-            O'zbekistondagi birinchi huquqiy xizmatlar platformasi.
-            Bepul elon qo'ying yoki tajribali yuristlarni toping.
+
+          <p style={{
+            opacity: started ? 1 : 0,
+            transform: started ? 'translateY(0)' : 'translateY(24px)',
+            transition: 'opacity 0.6s 0.3s ease, transform 0.6s 0.3s ease',
+          }} className="text-gray-500 text-xl mb-10 max-w-2xl mx-auto leading-relaxed">
+            Bepul elon qo'ying, tajribali yuristlarni toping va huquqiy muammolaringizni yechin
           </p>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+
+          <div style={{
+            opacity: started ? 1 : 0,
+            transform: started ? 'translateY(0)' : 'translateY(24px)',
+            transition: 'opacity 0.6s 0.4s ease, transform 0.6s 0.4s ease',
+          }} className="flex flex-col sm:flex-row gap-4 justify-center mb-16">
             <Link href="/auth/signup?role=client"
-              className="bg-white text-blue-600 hover:bg-blue-50 font-semibold px-8 py-3 rounded-xl transition-colors">
-              Yurist topish
+              className="btn-primary btn-lg shadow-sm hover:shadow-md transition-shadow">
+              ⚖️ Yurist topish
             </Link>
             <Link href="/auth/signup?role=lawyer"
-              className="border-2 border-white text-white hover:bg-white hover:text-blue-600 font-semibold px-8 py-3 rounded-xl transition-colors">
-              Yurist sifatida kirish
+              className="btn-outline btn-lg">
+              📋 Yurist sifatida kirish
             </Link>
           </div>
-        </div>
-      </section>
 
-      {/* Features */}
-      <section className="py-16 px-4 bg-white">
-        <div className="max-w-6xl mx-auto">
-          <h2 className="text-3xl font-bold text-center mb-12">Nima uchun LegalUZ?</h2>
-          <div className="grid md:grid-cols-3 gap-8">
+          {/* Stats */}
+          <div ref={statsRef} style={{
+            opacity: started ? 1 : 0,
+            transition: 'opacity 0.6s 0.5s ease',
+          }} className="grid grid-cols-3 gap-8 max-w-md mx-auto">
             {[
-              { icon: '🆓', title: 'Mijozlar uchun bepul', desc: 'Elon joylash, yuristlarni ko\'rish va ulар bilan gaplashish — barchasi bepul.' },
-              { icon: '⚡', title: 'Tez va qulay', desc: 'Bir necha daqiqada kerakli yuristni toping va bog\'laning.' },
-              { icon: '🔒', title: 'Ishonchli', desc: 'Barcha yuristlar tekshirilgan. Reyting va sharhlar asosida tanlang.' },
-            ].map((f) => (
-              <div key={f.title} className="card p-6 text-center">
-                <div className="text-4xl mb-4">{f.icon}</div>
-                <h3 className="font-semibold text-lg mb-2">{f.title}</h3>
-                <p className="text-gray-500 text-sm">{f.desc}</p>
+              { value: lawyers, suffix: '+', label: 'Yuristlar' },
+              { value: ads, suffix: '+', label: 'Elonlar' },
+              { value: regions, suffix: '', label: 'Viloyat' },
+            ].map((s) => (
+              <div key={s.label} className="text-center">
+                <div className="text-3xl font-bold text-gray-900">{s.value}{s.suffix}</div>
+                <div className="text-sm text-gray-400 mt-1">{s.label}</div>
               </div>
             ))}
           </div>
         </div>
       </section>
 
-      {/* How it works */}
-      <section className="py-16 px-4 bg-gray-50">
-        <div className="max-w-4xl mx-auto">
-          <h2 className="text-3xl font-bold text-center mb-12">Qanday ishlaydi?</h2>
-          <div className="grid md:grid-cols-2 gap-8">
-            <div className="card p-6">
-              <h3 className="font-bold text-lg mb-4 text-blue-600">👤 Mijoz uchun</h3>
-              {['Ro\'yxatdan o\'ting (bepul)', 'Elon joylang yoki yuristlarni ko\'ring', 'Yurist bilan bog\'laning', 'Muammoingizni yechin'].map((s, i) => (
-                <div key={i} className="flex items-start gap-3 mb-3">
-                  <span className="w-6 h-6 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center text-sm font-bold flex-shrink-0">{i + 1}</span>
-                  <span className="text-gray-700 text-sm">{s}</span>
+      {/* SPECIALIZATIONS */}
+      <section className="py-16 px-4 bg-white" id="xizmatlar">
+        <div className="max-w-6xl mx-auto">
+          <AnimatedSection className="text-center mb-10">
+            <h2 className="text-3xl font-bold text-gray-900 mb-3">Barcha sohalarda yordam</h2>
+            <p className="text-gray-500">Qaysi soha bo'lmasin — bizda mutaxassis bor</p>
+          </AnimatedSection>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            {specializations.map((s, i) => (
+              <AnimatedSection key={s.label} delay={i * 60}>
+                <div className="card-hover p-5 text-center group">
+                  <div className="text-3xl mb-3 group-hover:scale-110 transition-transform duration-200">
+                    {s.icon}
+                  </div>
+                  <p className="text-sm font-medium text-gray-700">{s.label}</p>
                 </div>
-              ))}
-            </div>
-            <div className="card p-6">
-              <h3 className="font-bold text-lg mb-4 text-green-600">⚖️ Yurist uchun</h3>
-              {['14 kun bepul sinab ko\'ring', 'Profil va elon yarating', 'Mijozlarga yozing (kredit bilan)', 'Pro tarifga o\'ting — cheksiz'].map((s, i) => (
-                <div key={i} className="flex items-start gap-3 mb-3">
-                  <span className="w-6 h-6 bg-green-100 text-green-600 rounded-full flex items-center justify-center text-sm font-bold flex-shrink-0">{i + 1}</span>
-                  <span className="text-gray-700 text-sm">{s}</span>
-                </div>
-              ))}
-            </div>
+              </AnimatedSection>
+            ))}
           </div>
         </div>
       </section>
 
-      {/* CTA */}
-      <section className="py-16 px-4 bg-blue-600 text-white text-center">
-        <h2 className="text-3xl font-bold mb-4">Bugunoq boshlang</h2>
-        <p className="text-blue-100 mb-8">Ro'yxatdan o'tish bepul va bir daqiqa vaqt oladi</p>
-        <Link href="/auth/signup" className="bg-white text-blue-600 hover:bg-blue-50 font-semibold px-8 py-3 rounded-xl transition-colors inline-block">
-          Bepul boshlash
-        </Link>
+      {/* HOW IT WORKS */}
+      <section className="py-16 px-4 bg-gray-50">
+        <div className="max-w-6xl mx-auto">
+          <AnimatedSection className="text-center mb-12">
+            <h2 className="text-3xl font-bold text-gray-900 mb-3">Qanday ishlaydi?</h2>
+            <p className="text-gray-500">4 oddiy qadamda muammoni yechin</p>
+          </AnimatedSection>
+          <div className="grid md:grid-cols-4 gap-6">
+            {steps.map((step, i) => (
+              <AnimatedSection key={step.num} delay={i * 100}>
+                <div className="card p-6 text-center h-full">
+                  <div className="text-xs font-bold text-blue-400 mb-3">{step.num}</div>
+                  <div className="w-14 h-14 bg-blue-50 rounded-2xl flex items-center justify-center mx-auto mb-4 text-2xl">
+                    {step.icon}
+                  </div>
+                  <h3 className="font-semibold text-gray-900 mb-2">{step.title}</h3>
+                  <p className="text-sm text-gray-500 leading-relaxed">{step.desc}</p>
+                </div>
+              </AnimatedSection>
+            ))}
+          </div>
+        </div>
       </section>
 
-      {/* Footer */}
-      <footer className="bg-gray-900 text-gray-400 text-center py-8 text-sm">
-        <p>© 2026 LegalUZ. Barcha huquqlar himoyalangan.</p>
-        <p className="mt-1">Telegram: @lawyer_nematov</p>
+      {/* FEATURES */}
+      <section className="py-16 px-4 bg-white" id="yuristlar">
+        <div className="max-w-6xl mx-auto">
+          <AnimatedSection className="text-center mb-12">
+            <h2 className="text-3xl font-bold text-gray-900 mb-3">Nima uchun LegalUZ?</h2>
+            <p className="text-gray-500">Bir platformada barcha huquqiy xizmatlar</p>
+          </AnimatedSection>
+          <div className="grid md:grid-cols-3 gap-6">
+            {features.map((f, i) => (
+              <AnimatedSection key={f.title} delay={i * 80}>
+                <div className="card p-6 group hover:border-blue-200 transition-colors h-full">
+                  <div className="w-12 h-12 bg-blue-50 group-hover:bg-blue-100 rounded-xl flex items-center justify-center text-2xl mb-4 transition-colors">
+                    {f.icon}
+                  </div>
+                  <h3 className="font-semibold text-gray-900 mb-2">{f.title}</h3>
+                  <p className="text-sm text-gray-500 leading-relaxed">{f.desc}</p>
+                </div>
+              </AnimatedSection>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* FOR LAWYERS */}
+      <section className="py-16 px-4 bg-blue-600" id="narxlar">
+        <div className="max-w-4xl mx-auto">
+          <AnimatedSection className="text-center">
+            <div className="text-5xl mb-6">⚖️</div>
+            <h2 className="text-3xl font-bold text-white mb-4">Yuristmisiz?</h2>
+            <p className="text-blue-100 text-lg mb-8 max-w-xl mx-auto">
+              14 kun bepul sinab ko'ring. Yangi mijozlar toping, elon joylang va biznesingizni rivojlantiring
+            </p>
+            <div className="grid sm:grid-cols-3 gap-4 max-w-lg mx-auto mb-8">
+              {[
+                { icon: '🎯', text: 'Maqsadli mijozlar' },
+                { icon: '📊', text: 'Profil statistikasi' },
+                { icon: '💼', text: 'Workspace' },
+              ].map(item => (
+                <div key={item.text} className="bg-blue-500 rounded-xl p-4 text-center">
+                  <div className="text-2xl mb-2">{item.icon}</div>
+                  <p className="text-sm text-blue-100 font-medium">{item.text}</p>
+                </div>
+              ))}
+            </div>
+            <Link href="/auth/signup?role=lawyer"
+              className="inline-flex items-center gap-2 bg-white text-blue-600 hover:bg-blue-50 font-semibold px-8 py-3 rounded-xl transition-colors">
+              Bepul boshlash →
+            </Link>
+          </AnimatedSection>
+        </div>
+      </section>
+
+      {/* CTA */}
+      <section className="py-20 px-4 bg-gray-900">
+        <AnimatedSection className="text-center max-w-2xl mx-auto">
+          <h2 className="text-3xl font-bold text-white mb-4">Bugunoq boshlang</h2>
+          <p className="text-gray-400 mb-8">Ro'yxatdan o'tish bepul va bir daqiqa vaqt oladi</p>
+          <Link href="/auth/signup"
+            className="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold px-8 py-3 rounded-xl transition-colors">
+            Bepul ro'yxatdan o'tish →
+          </Link>
+        </AnimatedSection>
+      </section>
+
+      {/* FOOTER */}
+      <footer className="bg-gray-900 border-t border-gray-800 py-8 px-4">
+        <div className="max-w-6xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
+          <div className="flex items-center gap-2">
+            <div className="w-7 h-7 bg-blue-600 rounded-lg flex items-center justify-center">
+              <span className="text-white font-bold text-xs">L</span>
+            </div>
+            <span className="font-bold text-white">LegalUZ</span>
+          </div>
+          <p className="text-gray-500 text-sm">© 2026 LegalUZ. Barcha huquqlar himoyalangan.</p>
+          <div className="flex items-center gap-4">
+            <a href="https://t.me/lawyer_nematov"
+              className="text-gray-400 hover:text-white text-sm transition-colors">
+              Telegram
+            </a>
+            <a href="mailto:info@legaluz.uz"
+              className="text-gray-400 hover:text-white text-sm transition-colors">
+              Email
+            </a>
+          </div>
+        </div>
       </footer>
-    </main>
+
+    </div>
   )
 }
