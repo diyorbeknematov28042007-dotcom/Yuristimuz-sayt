@@ -1,81 +1,77 @@
-/** @type {import('tailwindcss').Config} */
-module.exports = {
-  content: [
-    './src/pages/**/*.{js,ts,jsx,tsx,mdx}',
-    './src/components/**/*.{js,ts,jsx,tsx,mdx}',
-    './src/app/**/*.{js,ts,jsx,tsx,mdx}',
-  ],
-  theme: {
-    extend: {
-      fontFamily: {
-        inter: ['var(--font-inter)', '-apple-system', 'BlinkMacSystemFont', 'sans-serif'],
-      },
-      colors: {
-        indigo: {
-          50:  '#eef2ff',
-          100: '#e0e7ff',
-          200: '#c7d2fe',
-          300: '#a5b4fc',
-          400: '#818cf8',
-          500: '#6366f1',
-          600: '#4f46e5',
-          700: '#4338ca',
-          800: '#3730a3',
-          900: '#312e81',
-        },
-        slate: {
-          50:  '#f8fafc',
-          100: '#f1f5f9',
-          200: '#e2e8f0',
-          300: '#cbd5e1',
-          400: '#94a3b8',
-          500: '#64748b',
-          600: '#475569',
-          700: '#334155',
-          800: '#1e293b',
-          900: '#0f172a',
-          950: '#020617',
-        },
-      },
-      borderRadius: {
-        'xl':  '12px',
-        '2xl': '16px',
-        '3xl': '20px',
-      },
-      fontSize: {
-        'xs':   ['11px', { lineHeight: '1.5' }],
-        'sm':   ['13px', { lineHeight: '1.5' }],
-        'base': ['14px', { lineHeight: '1.6' }],
-        'lg':   ['16px', { lineHeight: '1.5' }],
-        'xl':   ['18px', { lineHeight: '1.4' }],
-        '2xl':  ['22px', { lineHeight: '1.3' }],
-        '3xl':  ['28px', { lineHeight: '1.2' }],
-        '4xl':  ['36px', { lineHeight: '1.1' }],
-        '5xl':  ['48px', { lineHeight: '1.05' }],
-        '6xl':  ['60px', { lineHeight: '1.0' }],
-      },
-      boxShadow: {
-        'xs': '0 1px 2px rgba(0,0,0,0.05)',
-        'sm': '0 1px 4px rgba(0,0,0,0.06)',
-        'md': '0 4px 12px rgba(0,0,0,0.08)',
-        'lg': '0 8px 24px rgba(0,0,0,0.10)',
-        'xl': '0 16px 48px rgba(0,0,0,0.12)',
-        'indigo': '0 4px 16px rgba(99,102,241,0.3)',
-      },
-      backgroundImage: {
-        'gradient-indigo': 'linear-gradient(135deg, #6366f1, #4f46e5)',
-        'gradient-hero': 'linear-gradient(165deg, #eef2ff 0%, #f8fafc 50%, #ffffff 100%)',
-        'gradient-dark': 'linear-gradient(135deg, #0f172a, #1e293b)',
-      },
-      spacing: {
-        '18': '4.5rem',
-        '22': '5.5rem',
-      },
-      animation: {
-        'fade-up': 'fadeUp 0.5s ease both',
-        'fade-in': 'fadeIn 0.4s ease both',
-      },
-    },
-  },
-  plugins: [],
+import { createClient } from '@/lib/supabase/server'
+import { redirect } from 'next/navigation'
+import Link from 'next/link'
+import LogoutButton from '@/components/layout/LogoutButton'
+
+export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
+  const supabase = createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) redirect('/auth/login')
+
+  const { data: profile } = await supabase
+    .from('profiles').select('*').eq('id', user.id).single()
+
+  const isLawyer = profile?.role === 'lawyer'
+
+  const navLinks = [
+    { href: '/dashboard', label: 'Bosh sahifa', icon: '🏠' },
+    { href: '/dashboard/ads', label: 'Elonlar', icon: '📋' },
+    { href: '/dashboard/lawyers', label: 'Yuristlar', icon: '⚖️' },
+    { href: '/dashboard/chat', label: 'Chat', icon: '💬' },
+    ...(isLawyer ? [{ href: '/dashboard/profile', label: 'Profil', icon: '👤' }] : []),
+  ]
+
+  return (
+    <div className="min-h-screen bg-gray-50">
+      {/* Top navbar */}
+      <header className="bg-white border-b border-gray-100 sticky top-0 z-10">
+        <div className="max-w-6xl mx-auto px-4 h-14 flex items-center justify-between">
+          <Link href="/dashboard" className="flex items-center gap-2">
+            <div className="w-7 h-7 bg-blue-600 rounded-lg flex items-center justify-center">
+              <span className="text-white font-bold text-xs">L</span>
+            </div>
+            <span className="font-bold text-gray-900">Yuristim</span>
+          </Link>
+          <div className="flex items-center gap-4">
+            <span className="text-sm text-gray-500">{profile?.full_name}</span>
+            {isLawyer && (
+              <span className="text-xs bg-blue-100 text-blue-600 px-2 py-0.5 rounded-full font-medium">
+                Yurist
+              </span>
+            )}
+            <LogoutButton />
+          </div>
+        </div>
+      </header>
+
+      <div className="max-w-6xl mx-auto px-4 py-6 flex gap-6">
+        {/* Sidebar */}
+        <aside className="w-48 flex-shrink-0 hidden md:block">
+          <nav className="space-y-1">
+            {navLinks.map((link) => (
+              <Link key={link.href} href={link.href}
+                className="flex items-center gap-3 px-3 py-2 rounded-lg text-gray-600 hover:bg-gray-100 hover:text-gray-900 transition-colors text-sm">
+                <span>{link.icon}</span>
+                <span>{link.label}</span>
+              </Link>
+            ))}
+          </nav>
+        </aside>
+
+        {/* Main content */}
+        <main className="flex-1 min-w-0">{children}</main>
+      </div>
+
+      {/* Mobile bottom nav */}
+      <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-100 flex">
+        {navLinks.slice(0, 4).map((link) => (
+          <Link key={link.href} href={link.href}
+            className="flex-1 flex flex-col items-center py-2 text-gray-500 hover:text-blue-600 text-xs gap-1">
+            <span className="text-lg">{link.icon}</span>
+            <span>{link.label}</span>
+          </Link>
+        ))}
+      </nav>
+    </div>
+  )
 }
