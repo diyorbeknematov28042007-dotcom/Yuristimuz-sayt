@@ -13,7 +13,6 @@ function SignupForm() {
   const [fullName, setFullName] = useState('')
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
-  const [email, setEmail] = useState('')
   const [showPassword, setShowPassword] = useState(false)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
@@ -37,9 +36,8 @@ function SignupForm() {
 
     const supabase = createClient()
 
-    // YANGI: real email domen ishlatamiz (gmail.com)
-    // Username asosida noyob email yaratiladi
-    const internalEmail = email || `${username}+yuristim@gmail.com`
+    // Ichki email: real domen ishlatamiz (gmail.com - real domen sifatida qabul qilinadi)
+    const internalEmail = `${username}.yuristim@gmail.com`
 
     const { error: signUpError } = await supabase.auth.signUp({
       email: internalEmail,
@@ -55,10 +53,8 @@ function SignupForm() {
 
     if (signUpError) {
       console.error('Signup error:', signUpError)
-      if (signUpError.message.includes('already registered') || signUpError.message.includes('already exists')) {
-        setError("Bu username yoki email allaqachon band")
-      } else if (signUpError.message.includes('invalid')) {
-        setError("Email noto'g'ri formatda. Iltimos, haqiqiy email kiriting.")
+      if (signUpError.message.includes('already') || signUpError.message.includes('exists')) {
+        setError("Bu username allaqachon band. Boshqa nom tanlang.")
       } else if (signUpError.message.includes('Password')) {
         setError("Parol kamida 6 ta belgi bo'lishi kerak")
       } else {
@@ -81,7 +77,6 @@ function SignupForm() {
 
   return (
     <div style={{ width: '100%', maxWidth: 440 }}>
-      {/* Logo */}
       <div style={{ textAlign: 'center', marginBottom: 32 }}>
         <div style={{ width: 52, height: 52, background: '#0f172a', borderRadius: 14, display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px', boxShadow: '0 4px 14px rgba(15,23,42,0.2)' }}>
           <Scale size={24} color="#fff" strokeWidth={2.5} />
@@ -92,7 +87,6 @@ function SignupForm() {
 
       <div style={{ background: '#fff', borderRadius: 18, border: '0.5px solid #e2e8f0', boxShadow: '0 4px 24px rgba(0,0,0,0.04)', padding: 28 }}>
 
-        {/* Role tanlash */}
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 20 }}>
           <button type="button" onClick={() => setRole('client')}
             style={{
@@ -124,7 +118,6 @@ function SignupForm() {
         </div>
 
         <form onSubmit={handleSignup} style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-          {/* To'liq ism */}
           <div>
             <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: '#475569', marginBottom: 6 }}>To'liq ism</label>
             <input
@@ -136,9 +129,8 @@ function SignupForm() {
             />
           </div>
 
-          {/* Username */}
           <div>
-            <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: '#475569', marginBottom: 6 }}>Login (username)</label>
+            <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: '#475569', marginBottom: 6 }}>Login</label>
             <div style={{ position: 'relative' }}>
               <span style={{ position: 'absolute', left: 14, top: '50%', transform: 'translateY(-50%)', color: '#94a3b8', fontSize: 14, fontWeight: 600 }}>@</span>
               <input
@@ -153,23 +145,6 @@ function SignupForm() {
             <p style={{ fontSize: 11, color: '#94a3b8', marginTop: 4 }}>Lotin harflari, raqamlar va _ belgisi</p>
           </div>
 
-          {/* Email — IXTIYORIY EMAS, KERAK */}
-          <div>
-            <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: '#475569', marginBottom: 6 }}>
-              Email
-            </label>
-            <input
-              type="email"
-              value={email}
-              onChange={e => setEmail(e.target.value)}
-              style={{ width: '100%', padding: '10px 14px', fontSize: 14, background: '#fff', border: '1px solid #e2e8f0', borderRadius: 10, color: '#0f172a', outline: 'none', fontFamily: 'inherit' }}
-              placeholder="email@example.com"
-              required
-            />
-            <p style={{ fontSize: 11, color: '#94a3b8', marginTop: 4 }}>Parolni tiklash va xabarlar uchun</p>
-          </div>
-
-          {/* Parol */}
           <div>
             <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: '#475569', marginBottom: 6 }}>Parol</label>
             <div style={{ position: 'relative' }}>
@@ -213,24 +188,15 @@ function SignupForm() {
               padding: '12px 20px', background: '#0f172a', color: '#fff', border: 'none',
               borderRadius: 11, fontSize: 14, fontWeight: 700, cursor: loading ? 'not-allowed' : 'pointer',
               boxShadow: '0 4px 14px rgba(15,23,42,0.25)', marginTop: 8,
-              opacity: loading ? 0.7 : 1, transition: 'all 200ms',
+              opacity: loading ? 0.7 : 1,
             }}>
-            {loading ? (
-              <>
-                <span style={{ width: 14, height: 14, border: '2px solid rgba(255,255,255,0.3)', borderTopColor: '#fff', borderRadius: '50%', animation: 'spin 1s linear infinite' }} />
-                Yaratilmoqda...
-              </>
-            ) : (
-              <>
-                Hisob yaratish <ArrowRight size={15} />
-              </>
-            )}
+            {loading ? 'Yaratilmoqda...' : <>Hisob yaratish <ArrowRight size={15} /></>}
           </button>
         </form>
 
         {role === 'lawyer' && (
           <div style={{ marginTop: 16, padding: 14, background: '#f0fdf4', borderRadius: 11, border: '1px solid #bbf7d0' }}>
-            {['14 kun bepul trial', 'Hech qanday karta kerak emas', 'Beta — hammasi bepul'].map(item => (
+            {['14 kun bepul trial', 'Karta kerak emas', 'Beta — hammasi bepul'].map(item => (
               <div key={item} style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6, fontSize: 12, color: '#166534', fontWeight: 600 }}>
                 <CheckCircle2 size={13} color="#22c55e" />
                 {item}
@@ -246,18 +212,6 @@ function SignupForm() {
           </Link>
         </p>
       </div>
-
-      <p style={{ textAlign: 'center', fontSize: 11, color: '#94a3b8', marginTop: 20 }}>
-        Ro'yxatdan o'tish orqali{' '}
-        <span style={{ color: '#475569', fontWeight: 500 }}>Foydalanish shartlari</span>
-        {' '}ga rozilik bildirasiz
-      </p>
-
-      <style jsx>{`
-        @keyframes spin {
-          to { transform: rotate(360deg); }
-        }
-      `}</style>
     </div>
   )
 }
@@ -266,8 +220,8 @@ export default function SignupPage() {
   return (
     <Suspense fallback={
       <div style={{ width: '100%', maxWidth: 440 }}>
-        <div style={{ background: '#fff', borderRadius: 18, border: '0.5px solid #e2e8f0', padding: 40, textAlign: 'center' }}>
-          <div style={{ width: 24, height: 24, border: '3px solid #e2e8f0', borderTopColor: '#0f172a', borderRadius: '50%', animation: 'spin 1s linear infinite', margin: '0 auto' }} />
+        <div style={{ background: '#fff', borderRadius: 18, padding: 40, textAlign: 'center', border: '0.5px solid #e2e8f0' }}>
+          Yuklanmoqda...
         </div>
       </div>
     }>
