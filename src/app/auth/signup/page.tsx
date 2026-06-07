@@ -4,13 +4,12 @@ import { useState, Suspense } from 'react'
 import Link from 'next/link'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
-import { Scale, User, Briefcase, Eye, EyeOff, ArrowRight, CheckCircle } from 'lucide-react'
-import type { UserRole } from '@/lib/types'
+import { Scale, User, Briefcase, Eye, EyeOff, ArrowRight, CheckCircle2 } from 'lucide-react'
 
 function SignupForm() {
   const router = useRouter()
   const params = useSearchParams()
-  const [role, setRole] = useState<UserRole>((params.get('role') as UserRole) || 'client')
+  const [role, setRole] = useState((params.get('role') as 'client' | 'lawyer') || 'client')
   const [fullName, setFullName] = useState('')
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
@@ -30,10 +29,17 @@ function SignupForm() {
       return
     }
 
+    if (username.length < 3) {
+      setError("Login kamida 3 ta belgi bo'lishi kerak")
+      setLoading(false)
+      return
+    }
+
     const supabase = createClient()
 
-    // Username asosida email yaratamiz (ichki)
-    const internalEmail = email || `${username}@yuristim.internal`
+    // YANGI: real email domen ishlatamiz (gmail.com)
+    // Username asosida noyob email yaratiladi
+    const internalEmail = email || `${username}+yuristim@gmail.com`
 
     const { error: signUpError } = await supabase.auth.signUp({
       email: internalEmail,
@@ -44,16 +50,19 @@ function SignupForm() {
           full_name: fullName,
           username,
         },
-        // Email tasdiqni o'chiramiz
-        emailRedirectTo: undefined,
       }
     })
 
     if (signUpError) {
-      if (signUpError.message.includes('already registered')) {
-        setError("Bu username allaqachon band. Boshqa nom tanlang.")
+      console.error('Signup error:', signUpError)
+      if (signUpError.message.includes('already registered') || signUpError.message.includes('already exists')) {
+        setError("Bu username yoki email allaqachon band")
+      } else if (signUpError.message.includes('invalid')) {
+        setError("Email noto'g'ri formatda. Iltimos, haqiqiy email kiriting.")
+      } else if (signUpError.message.includes('Password')) {
+        setError("Parol kamida 6 ta belgi bo'lishi kerak")
       } else {
-        setError("Xatolik yuz berdi. Qayta urinib ko'ring.")
+        setError(signUpError.message || "Xatolik yuz berdi. Qayta urinib ko'ring.")
       }
       setLoading(false)
     } else {
@@ -62,74 +71,66 @@ function SignupForm() {
     }
   }
 
-  const passwordStrength = () => {
+  const strength = (() => {
     if (password.length === 0) return null
-    if (password.length < 6) return { label: 'Juda qisqa', color: 'bg-red-400', width: '25%' }
-    if (password.length < 8) return { label: 'Zaif', color: 'bg-orange-400', width: '50%' }
-    if (password.length < 12) return { label: 'Yaxshi', color: 'bg-yellow-400', width: '75%' }
-    return { label: 'Kuchli', color: 'bg-green-500', width: '100%' }
-  }
-
-  const strength = passwordStrength()
+    if (password.length < 6) return { label: 'Juda qisqa', color: '#f87171', width: '25%' }
+    if (password.length < 8) return { label: 'Zaif', color: '#fb923c', width: '50%' }
+    if (password.length < 12) return { label: 'Yaxshi', color: '#facc15', width: '75%' }
+    return { label: 'Kuchli', color: '#22c55e', width: '100%' }
+  })()
 
   return (
-    <div className="w-full max-w-md">
+    <div style={{ width: '100%', maxWidth: 440 }}>
       {/* Logo */}
-      <div className="text-center mb-8">
-        <div className="w-12 h-12 bg-gradient-to-br from-indigo-500 to-indigo-700 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg shadow-indigo-200">
-          <Scale size={22} className="text-white" />
+      <div style={{ textAlign: 'center', marginBottom: 32 }}>
+        <div style={{ width: 52, height: 52, background: '#0f172a', borderRadius: 14, display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px', boxShadow: '0 4px 14px rgba(15,23,42,0.2)' }}>
+          <Scale size={24} color="#fff" strokeWidth={2.5} />
         </div>
-        <h1 className="text-2xl font-extrabold text-slate-900 tracking-tight">Yuristim</h1>
-        <p className="text-sm text-slate-500 mt-1">Hisob yarating — bepul</p>
+        <h1 style={{ fontSize: 24, fontWeight: 800, color: '#0f172a', letterSpacing: '-0.5px', marginBottom: 6 }}>Yuristim</h1>
+        <p style={{ fontSize: 13, color: '#64748b' }}>Hisob yarating — bepul</p>
       </div>
 
-      <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-6">
+      <div style={{ background: '#fff', borderRadius: 18, border: '0.5px solid #e2e8f0', boxShadow: '0 4px 24px rgba(0,0,0,0.04)', padding: 28 }}>
 
         {/* Role tanlash */}
-        <div className="grid grid-cols-2 gap-3 mb-6">
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 20 }}>
           <button type="button" onClick={() => setRole('client')}
-            className={`p-4 rounded-xl border-2 text-left transition-all ${
-              role === 'client'
-                ? 'border-indigo-500 bg-indigo-50'
-                : 'border-slate-200 hover:border-slate-300 bg-white'
-            }`}>
-            <div className={`w-8 h-8 rounded-lg flex items-center justify-center mb-2 ${
-              role === 'client' ? 'bg-indigo-100' : 'bg-slate-100'
-            }`}>
-              <User size={16} className={role === 'client' ? 'text-indigo-600' : 'text-slate-400'} />
+            style={{
+              padding: 14, borderRadius: 12, textAlign: 'left', cursor: 'pointer',
+              border: role === 'client' ? '2px solid #0f172a' : '1px solid #e2e8f0',
+              background: role === 'client' ? '#f8fafc' : '#fff',
+              transition: 'all 150ms',
+            }}>
+            <div style={{ width: 32, height: 32, borderRadius: 9, display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 8, background: role === 'client' ? '#0f172a' : '#f1f5f9' }}>
+              <User size={16} color={role === 'client' ? '#fff' : '#94a3b8'} />
             </div>
-            <p className={`text-sm font-semibold ${role === 'client' ? 'text-indigo-700' : 'text-slate-700'}`}>
-              Mijoz
-            </p>
-            <p className="text-xs text-slate-400 mt-0.5">Yurist izlayman</p>
+            <p style={{ fontSize: 13, fontWeight: 700, color: '#0f172a', marginBottom: 2 }}>Mijoz</p>
+            <p style={{ fontSize: 11, color: '#94a3b8' }}>Yurist izlayman</p>
           </button>
 
           <button type="button" onClick={() => setRole('lawyer')}
-            className={`p-4 rounded-xl border-2 text-left transition-all ${
-              role === 'lawyer'
-                ? 'border-indigo-500 bg-indigo-50'
-                : 'border-slate-200 hover:border-slate-300 bg-white'
-            }`}>
-            <div className={`w-8 h-8 rounded-lg flex items-center justify-center mb-2 ${
-              role === 'lawyer' ? 'bg-indigo-100' : 'bg-slate-100'
-            }`}>
-              <Briefcase size={16} className={role === 'lawyer' ? 'text-indigo-600' : 'text-slate-400'} />
+            style={{
+              padding: 14, borderRadius: 12, textAlign: 'left', cursor: 'pointer',
+              border: role === 'lawyer' ? '2px solid #0f172a' : '1px solid #e2e8f0',
+              background: role === 'lawyer' ? '#f8fafc' : '#fff',
+              transition: 'all 150ms',
+            }}>
+            <div style={{ width: 32, height: 32, borderRadius: 9, display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 8, background: role === 'lawyer' ? '#0f172a' : '#f1f5f9' }}>
+              <Briefcase size={16} color={role === 'lawyer' ? '#fff' : '#94a3b8'} />
             </div>
-            <p className={`text-sm font-semibold ${role === 'lawyer' ? 'text-indigo-700' : 'text-slate-700'}`}>
-              Yurist
-            </p>
-            <p className="text-xs text-slate-400 mt-0.5">Mijoz topmoqchiman</p>
+            <p style={{ fontSize: 13, fontWeight: 700, color: '#0f172a', marginBottom: 2 }}>Yurist</p>
+            <p style={{ fontSize: 11, color: '#94a3b8' }}>Mijoz topmoqchiman</p>
           </button>
         </div>
 
-        <form onSubmit={handleSignup} className="space-y-4">
+        <form onSubmit={handleSignup} style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
           {/* To'liq ism */}
           <div>
-            <label className="label">To'liq ism</label>
+            <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: '#475569', marginBottom: 6 }}>To'liq ism</label>
             <input
               value={fullName}
               onChange={e => setFullName(e.target.value)}
-              className="input"
+              style={{ width: '100%', padding: '10px 14px', fontSize: 14, background: '#fff', border: '1px solid #e2e8f0', borderRadius: 10, color: '#0f172a', outline: 'none', fontFamily: 'inherit' }}
               placeholder="Ism Familiya"
               required
             />
@@ -137,30 +138,46 @@ function SignupForm() {
 
           {/* Username */}
           <div>
-            <label className="label">Login (username)</label>
-            <div className="relative">
-              <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-sm font-medium">@</span>
+            <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: '#475569', marginBottom: 6 }}>Login (username)</label>
+            <div style={{ position: 'relative' }}>
+              <span style={{ position: 'absolute', left: 14, top: '50%', transform: 'translateY(-50%)', color: '#94a3b8', fontSize: 14, fontWeight: 600 }}>@</span>
               <input
                 value={username}
                 onChange={e => setUsername(e.target.value.toLowerCase().replace(/[^a-z0-9_]/g, ''))}
-                className="input pl-8"
+                style={{ width: '100%', padding: '10px 14px 10px 28px', fontSize: 14, background: '#fff', border: '1px solid #e2e8f0', borderRadius: 10, color: '#0f172a', outline: 'none', fontFamily: 'inherit' }}
                 placeholder="username"
                 required
                 minLength={3}
               />
             </div>
-            <p className="helper-text">Faqat lotin harflari, raqamlar va _ belgisi</p>
+            <p style={{ fontSize: 11, color: '#94a3b8', marginTop: 4 }}>Lotin harflari, raqamlar va _ belgisi</p>
+          </div>
+
+          {/* Email — IXTIYORIY EMAS, KERAK */}
+          <div>
+            <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: '#475569', marginBottom: 6 }}>
+              Email
+            </label>
+            <input
+              type="email"
+              value={email}
+              onChange={e => setEmail(e.target.value)}
+              style={{ width: '100%', padding: '10px 14px', fontSize: 14, background: '#fff', border: '1px solid #e2e8f0', borderRadius: 10, color: '#0f172a', outline: 'none', fontFamily: 'inherit' }}
+              placeholder="email@example.com"
+              required
+            />
+            <p style={{ fontSize: 11, color: '#94a3b8', marginTop: 4 }}>Parolni tiklash va xabarlar uchun</p>
           </div>
 
           {/* Parol */}
           <div>
-            <label className="label">Parol</label>
-            <div className="relative">
+            <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: '#475569', marginBottom: 6 }}>Parol</label>
+            <div style={{ position: 'relative' }}>
               <input
                 type={showPassword ? 'text' : 'password'}
                 value={password}
                 onChange={e => setPassword(e.target.value)}
-                className="input pr-10"
+                style={{ width: '100%', padding: '10px 40px 10px 14px', fontSize: 14, background: '#fff', border: '1px solid #e2e8f0', borderRadius: 10, color: '#0f172a', outline: 'none', fontFamily: 'inherit' }}
                 placeholder="Kamida 6 ta belgi"
                 required
                 minLength={6}
@@ -168,87 +185,79 @@ function SignupForm() {
               <button
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600">
+                style={{ position: 'absolute', right: 12, top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', color: '#94a3b8', padding: 4 }}>
                 {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
               </button>
             </div>
             {strength && (
-              <div className="mt-2">
-                <div className="h-1 bg-slate-100 rounded-full overflow-hidden">
-                  <div className={`h-full ${strength.color} transition-all duration-300`}
-                    style={{ width: strength.width }} />
+              <div style={{ marginTop: 8 }}>
+                <div style={{ height: 3, background: '#f1f5f9', borderRadius: 100, overflow: 'hidden' }}>
+                  <div style={{ height: '100%', background: strength.color, width: strength.width, transition: 'all 300ms' }} />
                 </div>
-                <p className="text-xs text-slate-400 mt-1">{strength.label}</p>
+                <p style={{ fontSize: 11, color: '#94a3b8', marginTop: 4 }}>{strength.label}</p>
               </div>
             )}
           </div>
 
-          {/* Email — ixtiyoriy */}
-          <div>
-            <label className="label">
-              Email
-              <span className="text-slate-400 font-normal ml-1">(ixtiyoriy)</span>
-            </label>
-            <input
-              type="email"
-              value={email}
-              onChange={e => setEmail(e.target.value)}
-              className="input"
-              placeholder="email@example.com"
-            />
-            <p className="helper-text">Parolni tiklash uchun kerak bo'ladi</p>
-          </div>
-
           {error && (
-            <div className="alert-error">
-              <p>{error}</p>
+            <div style={{ padding: 12, borderRadius: 10, background: '#fef2f2', border: '1px solid #fecaca', fontSize: 13, color: '#991b1b' }}>
+              {error}
             </div>
           )}
 
           <button
             type="submit"
             disabled={loading}
-            className="btn-primary btn-md w-full mt-2">
+            style={{
+              display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+              padding: '12px 20px', background: '#0f172a', color: '#fff', border: 'none',
+              borderRadius: 11, fontSize: 14, fontWeight: 700, cursor: loading ? 'not-allowed' : 'pointer',
+              boxShadow: '0 4px 14px rgba(15,23,42,0.25)', marginTop: 8,
+              opacity: loading ? 0.7 : 1, transition: 'all 200ms',
+            }}>
             {loading ? (
-              <span className="flex items-center gap-2">
-                <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+              <>
+                <span style={{ width: 14, height: 14, border: '2px solid rgba(255,255,255,0.3)', borderTopColor: '#fff', borderRadius: '50%', animation: 'spin 1s linear infinite' }} />
                 Yaratilmoqda...
-              </span>
+              </>
             ) : (
-              <span className="flex items-center gap-2">
-                Hisob yaratish <ArrowRight size={16} />
-              </span>
+              <>
+                Hisob yaratish <ArrowRight size={15} />
+              </>
             )}
           </button>
         </form>
 
-        {/* Features */}
         {role === 'lawyer' && (
-          <div className="mt-4 p-3 bg-indigo-50 rounded-xl border border-indigo-100">
-            <div className="flex flex-col gap-1.5">
-              {['14 kun bepul trial', 'Hech qanday karta kerak emas', 'Beta davri — hammasi bepul'].map(item => (
-                <div key={item} className="flex items-center gap-2">
-                  <CheckCircle size={13} className="text-indigo-500 flex-shrink-0" />
-                  <span className="text-xs text-indigo-700 font-medium">{item}</span>
-                </div>
-              ))}
-            </div>
+          <div style={{ marginTop: 16, padding: 14, background: '#f0fdf4', borderRadius: 11, border: '1px solid #bbf7d0' }}>
+            {['14 kun bepul trial', 'Hech qanday karta kerak emas', 'Beta — hammasi bepul'].map(item => (
+              <div key={item} style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6, fontSize: 12, color: '#166534', fontWeight: 600 }}>
+                <CheckCircle2 size={13} color="#22c55e" />
+                {item}
+              </div>
+            ))}
           </div>
         )}
 
-        <p className="text-center text-sm text-slate-500 mt-5">
+        <p style={{ textAlign: 'center', fontSize: 13, color: '#64748b', marginTop: 20 }}>
           Hisob bormi?{' '}
-          <Link href="/auth/login" className="text-indigo-600 hover:text-indigo-700 font-semibold">
+          <Link href="/auth/login" style={{ color: '#0f172a', fontWeight: 700, textDecoration: 'none' }}>
             Kirish
           </Link>
         </p>
       </div>
 
-      <p className="text-center text-xs text-slate-400 mt-5">
+      <p style={{ textAlign: 'center', fontSize: 11, color: '#94a3b8', marginTop: 20 }}>
         Ro'yxatdan o'tish orqali{' '}
-        <span className="text-slate-500 font-medium">Foydalanish shartlari</span>
+        <span style={{ color: '#475569', fontWeight: 500 }}>Foydalanish shartlari</span>
         {' '}ga rozilik bildirasiz
       </p>
+
+      <style jsx>{`
+        @keyframes spin {
+          to { transform: rotate(360deg); }
+        }
+      `}</style>
     </div>
   )
 }
@@ -256,9 +265,9 @@ function SignupForm() {
 export default function SignupPage() {
   return (
     <Suspense fallback={
-      <div className="w-full max-w-md">
-        <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-8 text-center">
-          <div className="w-8 h-8 border-2 border-indigo-200 border-t-indigo-600 rounded-full animate-spin mx-auto" />
+      <div style={{ width: '100%', maxWidth: 440 }}>
+        <div style={{ background: '#fff', borderRadius: 18, border: '0.5px solid #e2e8f0', padding: 40, textAlign: 'center' }}>
+          <div style={{ width: 24, height: 24, border: '3px solid #e2e8f0', borderTopColor: '#0f172a', borderRadius: '50%', animation: 'spin 1s linear infinite', margin: '0 auto' }} />
         </div>
       </div>
     }>
