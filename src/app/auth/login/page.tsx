@@ -21,10 +21,8 @@ export default function LoginPage() {
 
     const supabase = createClient()
 
-    // Username dan email yasaymiz
-    const internalEmail = username.includes('@')
-      ? username
-      : `${username}@yuristim.internal`
+    // Username dan ichki email yasaymiz
+    const internalEmail = `${username.toLowerCase()}.yuristim@gmail.com`
 
     const { error } = await supabase.auth.signInWithPassword({
       email: internalEmail,
@@ -32,7 +30,7 @@ export default function LoginPage() {
     })
 
     if (error) {
-      setError("Login yoki parol noto'g'ri. Qayta urinib ko'ring.")
+      setError("Login yoki parol noto'g'ri")
       setLoading(false)
     } else {
       router.push('/dashboard')
@@ -41,50 +39,41 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="w-full max-w-md">
-      {/* Logo */}
-      <div className="text-center mb-8">
-        <div className="w-12 h-12 bg-gradient-to-br from-indigo-500 to-indigo-700 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg shadow-indigo-200">
-          <Scale size={22} className="text-white" />
+    <div style={{ width: '100%', maxWidth: 440 }}>
+      <div style={{ textAlign: 'center', marginBottom: 32 }}>
+        <div style={{ width: 52, height: 52, background: '#0f172a', borderRadius: 14, display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px', boxShadow: '0 4px 14px rgba(15,23,42,0.2)' }}>
+          <Scale size={24} color="#fff" strokeWidth={2.5} />
         </div>
-        <h1 className="text-2xl font-extrabold text-slate-900 tracking-tight">Yuristim</h1>
-        <p className="text-sm text-slate-500 mt-1">Hisobingizga kiring</p>
+        <h1 style={{ fontSize: 24, fontWeight: 800, color: '#0f172a', letterSpacing: '-0.5px', marginBottom: 6 }}>Yuristim</h1>
+        <p style={{ fontSize: 13, color: '#64748b' }}>Hisobingizga kiring</p>
       </div>
 
-      <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-6">
-        <form onSubmit={handleLogin} className="space-y-4">
+      <div style={{ background: '#fff', borderRadius: 18, border: '0.5px solid #e2e8f0', boxShadow: '0 4px 24px rgba(0,0,0,0.04)', padding: 28 }}>
+        <form onSubmit={handleLogin} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
 
-          {/* Username */}
           <div>
-            <label className="label">Login</label>
-            <div className="relative">
-              <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-sm font-medium">@</span>
+            <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: '#475569', marginBottom: 6 }}>Login</label>
+            <div style={{ position: 'relative' }}>
+              <span style={{ position: 'absolute', left: 14, top: '50%', transform: 'translateY(-50%)', color: '#94a3b8', fontSize: 14, fontWeight: 600 }}>@</span>
               <input
                 value={username}
-                onChange={e => setUsername(e.target.value)}
-                className="input pl-8"
-                placeholder="username yoki email"
+                onChange={e => setUsername(e.target.value.toLowerCase().replace(/[^a-z0-9_]/g, ''))}
+                style={{ width: '100%', padding: '10px 14px 10px 28px', fontSize: 14, background: '#fff', border: '1px solid #e2e8f0', borderRadius: 10, color: '#0f172a', outline: 'none', fontFamily: 'inherit' }}
+                placeholder="username"
                 required
                 autoComplete="username"
               />
             </div>
           </div>
 
-          {/* Parol */}
           <div>
-            <div className="flex items-center justify-between mb-1.5">
-              <label className="label mb-0">Parol</label>
-              <Link href="/auth/forgot-password"
-                className="text-xs text-indigo-600 hover:text-indigo-700 font-medium">
-                Parolni unutdingizmi?
-              </Link>
-            </div>
-            <div className="relative">
+            <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: '#475569', marginBottom: 6 }}>Parol</label>
+            <div style={{ position: 'relative' }}>
               <input
                 type={showPassword ? 'text' : 'password'}
                 value={password}
                 onChange={e => setPassword(e.target.value)}
-                className="input pr-10"
+                style={{ width: '100%', padding: '10px 40px 10px 14px', fontSize: 14, background: '#fff', border: '1px solid #e2e8f0', borderRadius: 10, color: '#0f172a', outline: 'none', fontFamily: 'inherit' }}
                 placeholder="Parolingiz"
                 required
                 autoComplete="current-password"
@@ -92,49 +81,45 @@ export default function LoginPage() {
               <button
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600">
+                style={{ position: 'absolute', right: 12, top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', color: '#94a3b8', padding: 4 }}>
                 {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
               </button>
             </div>
           </div>
 
           {error && (
-            <div className="alert-error">
-              <p>{error}</p>
+            <div style={{ padding: 12, borderRadius: 10, background: '#fef2f2', border: '1px solid #fecaca', fontSize: 13, color: '#991b1b' }}>
+              {error}
             </div>
           )}
 
           <button
             type="submit"
             disabled={loading}
-            className="btn-primary btn-md w-full mt-2">
-            {loading ? (
-              <span className="flex items-center gap-2">
-                <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                Kirilmoqda...
-              </span>
-            ) : (
-              <span className="flex items-center gap-2">
-                Kirish <ArrowRight size={16} />
-              </span>
-            )}
+            style={{
+              display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+              padding: '12px 20px', background: '#0f172a', color: '#fff', border: 'none',
+              borderRadius: 11, fontSize: 14, fontWeight: 700, cursor: loading ? 'not-allowed' : 'pointer',
+              boxShadow: '0 4px 14px rgba(15,23,42,0.25)', marginTop: 4,
+              opacity: loading ? 0.7 : 1,
+            }}>
+            {loading ? 'Kirilmoqda...' : <>Kirish <ArrowRight size={15} /></>}
           </button>
         </form>
 
-        <div className="divider my-5" />
-
-        <p className="text-center text-sm text-slate-500">
-          Hisob yo'qmi?{' '}
-          <Link href="/auth/signup" className="text-indigo-600 hover:text-indigo-700 font-semibold">
-            Bepul ro'yxatdan o'ting
-          </Link>
-        </p>
+        <div style={{ borderTop: '0.5px solid #f1f5f9', marginTop: 20, paddingTop: 20, textAlign: 'center' }}>
+          <p style={{ fontSize: 13, color: '#64748b' }}>
+            Hisob yo'qmi?{' '}
+            <Link href="/auth/signup" style={{ color: '#0f172a', fontWeight: 700, textDecoration: 'none' }}>
+              Bepul ro'yxatdan o'ting
+            </Link>
+          </p>
+        </div>
       </div>
 
-      {/* Beta note */}
-      <div className="mt-4 p-3 bg-slate-50 rounded-xl border border-slate-200 text-center">
-        <p className="text-xs text-slate-500">
-          🎉 Beta versiya — barcha xizmatlar <span className="font-semibold text-slate-700">bepul</span>
+      <div style={{ marginTop: 16, padding: 12, background: '#fafafa', borderRadius: 11, border: '0.5px solid #e2e8f0', textAlign: 'center' }}>
+        <p style={{ fontSize: 12, color: '#64748b' }}>
+          🎉 Beta versiya — barcha xizmatlar <span style={{ fontWeight: 700, color: '#0f172a' }}>bepul</span>
         </p>
       </div>
     </div>
