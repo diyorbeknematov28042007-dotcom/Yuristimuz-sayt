@@ -3,7 +3,6 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { createClient } from '@/lib/supabase/client'
 import { Scale, Eye, EyeOff, ArrowRight } from 'lucide-react'
 
 export default function LoginPage() {
@@ -19,22 +18,26 @@ export default function LoginPage() {
     setLoading(true)
     setError('')
 
-    const supabase = createClient()
+    try {
+      const res = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username, password }),
+      })
 
-    // Username dan ichki email yasaymiz
-    const internalEmail = `${username.toLowerCase()}.yuristim@gmail.com`
+      const data = await res.json()
 
-    const { error } = await supabase.auth.signInWithPassword({
-      email: internalEmail,
-      password,
-    })
+      if (!res.ok) {
+        setError(data.error || "Login yoki parol noto'g'ri")
+        setLoading(false)
+        return
+      }
 
-    if (error) {
-      setError("Login yoki parol noto'g'ri")
-      setLoading(false)
-    } else {
       router.push('/dashboard')
       router.refresh()
+    } catch {
+      setError("Tarmoq xatosi")
+      setLoading(false)
     }
   }
 
@@ -57,7 +60,7 @@ export default function LoginPage() {
               <span style={{ position: 'absolute', left: 14, top: '50%', transform: 'translateY(-50%)', color: '#94a3b8', fontSize: 14, fontWeight: 600 }}>@</span>
               <input
                 value={username}
-                onChange={e => setUsername(e.target.value.toLowerCase().replace(/[^a-z0-9_]/g, ''))}
+                onChange={e => setUsername(e.target.value.toLowerCase().replace(/[^a-z0-9_.]/g, ''))}
                 style={{ width: '100%', padding: '10px 14px 10px 28px', fontSize: 14, background: '#fff', border: '1px solid #e2e8f0', borderRadius: 10, color: '#0f172a', outline: 'none', fontFamily: 'inherit' }}
                 placeholder="username"
                 required
@@ -67,7 +70,12 @@ export default function LoginPage() {
           </div>
 
           <div>
-            <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: '#475569', marginBottom: 6 }}>Parol</label>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
+              <label style={{ fontSize: 12, fontWeight: 600, color: '#475569' }}>Parol</label>
+              <Link href="/auth/forgot-password" style={{ fontSize: 12, color: '#4338ca', textDecoration: 'none', fontWeight: 600 }}>
+                Parolni unutdingizmi?
+              </Link>
+            </div>
             <div style={{ position: 'relative' }}>
               <input
                 type={showPassword ? 'text' : 'password'}
@@ -78,9 +86,7 @@ export default function LoginPage() {
                 required
                 autoComplete="current-password"
               />
-              <button
-                type="button"
-                onClick={() => setShowPassword(!showPassword)}
+              <button type="button" onClick={() => setShowPassword(!showPassword)}
                 style={{ position: 'absolute', right: 12, top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', color: '#94a3b8', padding: 4 }}>
                 {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
               </button>
