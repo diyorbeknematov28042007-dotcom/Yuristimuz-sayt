@@ -1,29 +1,20 @@
 'use client'
-
+import { supabase } from '@/lib/supabase'
 import { useState, useEffect } from 'react'
 import { useSearchParams } from 'next/navigation'
-import { createClient } from '@supabase/supabase-js'
 import {
   User, Mail, Phone, MapPin, FileText,
   CheckCircle2, X, Sparkles, Save, AlertCircle
 } from 'lucide-react'
-
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-)
-
 export default function SettingsPage() {
   const params = useSearchParams()
   const isWelcome = params.get('welcome') === '1'
-
   const [user, setUser] = useState<any>(null)
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [saved, setSaved] = useState(false)
   const [error, setError] = useState('')
   const [showWelcome, setShowWelcome] = useState(isWelcome)
-
   const [form, setForm] = useState({
     full_name: '',
     email: '',
@@ -31,11 +22,9 @@ export default function SettingsPage() {
     city: '',
     bio: '',
   })
-
   useEffect(() => {
     fetchUser()
   }, [])
-
   const fetchUser = async () => {
     try {
       const res = await fetch('/api/auth/me')
@@ -48,7 +37,6 @@ export default function SettingsPage() {
           .select('*')
           .eq('id', data.user.id)
           .single()
-
         if (profile) {
           setForm({
             full_name: profile.full_name || '',
@@ -65,22 +53,18 @@ export default function SettingsPage() {
       setLoading(false)
     }
   }
-
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault()
     setSaving(true)
     setError('')
     setSaved(false)
-
     try {
       const res = await fetch('/api/user/update-profile', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(form),
       })
-
       const data = await res.json()
-
       if (!res.ok) {
         setError(data.error || "Saqlashda xatolik")
       } else {
@@ -94,7 +78,6 @@ export default function SettingsPage() {
       setSaving(false)
     }
   }
-
   if (loading) {
     return (
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: 200 }}>
@@ -103,10 +86,8 @@ export default function SettingsPage() {
       </div>
     )
   }
-
   return (
     <div style={{ maxWidth: 640, margin: '0 auto' }}>
-
       {/* Welcome banner */}
       {showWelcome && (
         <div style={{
@@ -133,7 +114,6 @@ export default function SettingsPage() {
           </button>
         </div>
       )}
-
       {/* Email eslatmasi */}
       {!form.email && !showWelcome && (
         <div style={{ background: '#fffbeb', border: '1px solid #fde68a', borderRadius: 12, padding: '14px 18px', marginBottom: 20, display: 'flex', alignItems: 'flex-start', gap: 12 }}>
@@ -144,7 +124,6 @@ export default function SettingsPage() {
           </div>
         </div>
       )}
-
       {/* Profil shakli */}
       <div style={{ background: '#fff', border: '0.5px solid #e2e8f0', borderRadius: 18, boxShadow: '0 4px 24px rgba(0,0,0,0.04)', overflow: 'hidden' }}>
         <div style={{ padding: '20px 24px', borderBottom: '0.5px solid #f1f5f9', display: 'flex', alignItems: 'center', gap: 14 }}>
@@ -158,9 +137,7 @@ export default function SettingsPage() {
             </p>
           </div>
         </div>
-
         <form onSubmit={handleSave} style={{ padding: 24, display: 'flex', flexDirection: 'column', gap: 18 }}>
-
           {/* To'liq ism */}
           <div>
             <label style={labelStyle}>
@@ -173,7 +150,6 @@ export default function SettingsPage() {
               placeholder="Ism Familiya"
             />
           </div>
-
           {/* Email */}
           <div>
             <label style={labelStyle}>
@@ -193,7 +169,6 @@ export default function SettingsPage() {
               Ixtiyoriy — faqat parol tiklash uchun ishlatiladi
             </p>
           </div>
-
           {/* Telefon */}
           <div>
             <label style={labelStyle}>
@@ -206,7 +181,6 @@ export default function SettingsPage() {
               placeholder="+998 90 123 45 67"
             />
           </div>
-
           {/* Shahar */}
           <div>
             <label style={labelStyle}>
@@ -219,7 +193,6 @@ export default function SettingsPage() {
               placeholder="Toshkent, Samarqand..."
             />
           </div>
-
           {/* Bio */}
           <div>
             <label style={labelStyle}>
@@ -233,19 +206,16 @@ export default function SettingsPage() {
               rows={3}
             />
           </div>
-
           {error && (
             <div style={{ padding: 12, borderRadius: 10, background: '#fef2f2', border: '1px solid #fecaca', fontSize: 13, color: '#991b1b' }}>
               {error}
             </div>
           )}
-
           {saved && (
             <div style={{ padding: 12, borderRadius: 10, background: '#f0fdf4', border: '1px solid #bbf7d0', fontSize: 13, color: '#166534', display: 'flex', alignItems: 'center', gap: 8 }}>
               <CheckCircle2 size={16} color="#16a34a" /> Saqlandi!
             </div>
           )}
-
           <button
             type="submit"
             disabled={saving}
@@ -261,7 +231,6 @@ export default function SettingsPage() {
           </button>
         </form>
       </div>
-
       <style>{`
         @keyframes fadeIn { from { opacity: 0; transform: translateY(-8px); } to { opacity: 1; transform: translateY(0); } }
         @keyframes spin { to { transform: rotate(360deg); } }
@@ -269,7 +238,6 @@ export default function SettingsPage() {
     </div>
   )
 }
-
 const labelStyle: React.CSSProperties = {
   display: 'flex', alignItems: 'center', gap: 6,
   fontSize: 12, fontWeight: 600, color: '#475569', marginBottom: 7
