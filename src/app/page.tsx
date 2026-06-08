@@ -432,36 +432,28 @@ export default function HomePage() {
           <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(3, 1fr)', gap: isMobile ? 10 : 14 }}>
             {founders.map((f, i) => (
               <Fade key={f.name} delay={i * 70}>
-                <div style={{ border: f.isFounder ? '1.5px solid #0f172a' : '1.5px dashed #cbd5e1', borderRadius: 18, padding: isMobile ? 18 : 22, background: f.isVacancy ? '#fafafa' : '#fff', boxShadow: f.isFounder ? '0 4px 16px rgba(15,23,42,0.07)' : 'none', position: 'relative' }}>
-                  {f.isFounder && <div style={{ position: 'absolute', top: -10, right: 16, background: '#0f172a', color: '#fff', fontSize: 9, fontWeight: 800, padding: '3px 9px', borderRadius: 4 }}>{f.badge}</div>}
-                  {f.isVacancy && <div style={{ position: 'absolute', top: -10, right: 16, background: '#fff7ed', color: '#c2410c', fontSize: 9, fontWeight: 800, padding: '3px 9px', borderRadius: 4, border: '0.5px solid #fed7aa' }}>OCHIQ</div>}
+                <div style={{ border: '1.5px solid #0f172a', borderRadius: 18, padding: isMobile ? 18 : 22, background: '#fff', boxShadow: '0 4px 16px rgba(15,23,42,0.07)', position: 'relative' }}>
+                  <div style={{ position: 'absolute', top: -10, right: 16, background: '#0f172a', color: '#fff', fontSize: 9, fontWeight: 800, padding: '3px 9px', borderRadius: 4 }}>{f.badge}</div>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 12 }}>
-                    <div style={{ width: isMobile ? 44 : 50, height: isMobile ? 44 : 50, background: f.isFounder ? 'linear-gradient(135deg,#0f172a,#4338ca)' : '#f1f5f9', color: f.isFounder ? '#fff' : '#94a3b8', borderRadius: 13, display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, fontSize: 16, flexShrink: 0 }}>
-                      {f.isVacancy ? <Users size={20} /> : f.ini}
+                    <div style={{ width: isMobile ? 44 : 50, height: isMobile ? 44 : 50, background: 'linear-gradient(135deg,#0f172a,#4338ca)', color: '#fff', borderRadius: 13, display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, fontSize: 16, flexShrink: 0 }}>
+                      {f.ini}
                     </div>
                     <div>
-                      <p style={{ fontWeight: 700, color: f.isVacancy ? '#475569' : '#0f172a', fontSize: 15 }}>{f.name}</p>
+                      <p style={{ fontWeight: 700, color: '#0f172a', fontSize: 15 }}>{f.name}</p>
                       <p style={{ fontSize: 11, color: '#94a3b8', fontWeight: 600 }}>{f.role}</p>
                     </div>
                   </div>
                   <p style={{ fontSize: isMobile ? 12 : 13, color: '#64748b', lineHeight: 1.6, marginBottom: 14 }}>{f.desc}</p>
-                  {f.isFounder && (
-                    <div style={{ paddingTop: 12, borderTop: '0.5px solid #f1f5f9', display: 'flex', flexDirection: 'column', gap: 8 }}>
-                      <a href={f.telegram} target="_blank" rel="noopener noreferrer" style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 12.5, color: '#4338ca', textDecoration: 'none', fontWeight: 600 }}>
-                        <span style={{ width: 27, height: 27, background: '#eef2ff', borderRadius: 7, display: 'flex', alignItems: 'center', justifyContent: 'center' }}><Send size={13} color="#4338ca" /></span>
-                        {f.handle}
-                      </a>
-                      <a href={`mailto:${f.email}`} style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 12, color: '#64748b', textDecoration: 'none' }}>
-                        <span style={{ width: 27, height: 27, background: '#f1f5f9', borderRadius: 7, display: 'flex', alignItems: 'center', justifyContent: 'center' }}><Mail size={13} color="#64748b" /></span>
-                        {f.email}
-                      </a>
-                    </div>
-                  )}
-                  {f.isVacancy && (
-                    <a href="https://t.me/lawyer_nematov" target="_blank" rel="noopener noreferrer" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 7, background: '#fff7ed', color: '#c2410c', fontWeight: 600, fontSize: 13, padding: '10px', borderRadius: 10, textDecoration: 'none', border: '0.5px solid #fed7aa' }}>
-                      <Send size={13} /> Murojaat qilish
+                  <div style={{ paddingTop: 12, borderTop: '0.5px solid #f1f5f9', display: 'flex', flexDirection: 'column', gap: 8 }}>
+                    <a href={f.telegram} target="_blank" rel="noopener noreferrer" style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 12.5, color: '#4338ca', textDecoration: 'none', fontWeight: 600 }}>
+                      <span style={{ width: 27, height: 27, background: '#eef2ff', borderRadius: 7, display: 'flex', alignItems: 'center', justifyContent: 'center' }}><Send size={13} color="#4338ca" /></span>
+                      {f.handle}
                     </a>
-                  )}
+                    <a href={`mailto:${f.email}`} style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 12, color: '#64748b', textDecoration: 'none' }}>
+                      <span style={{ width: 27, height: 27, background: '#f1f5f9', borderRadius: 7, display: 'flex', alignItems: 'center', justifyContent: 'center' }}><Mail size={13} color="#64748b" /></span>
+                      {f.email}
+                    </a>
+                  </div>
                 </div>
               </Fade>
             ))}
