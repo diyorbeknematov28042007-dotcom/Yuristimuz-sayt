@@ -65,34 +65,59 @@ const specs = [
 ]
 
 const steps = [
-  { num: '01', icon: <FileText size={20} />, title: "Elon qo'ying", desc: "Muammoni yozing", color: '#eff6ff', icolor: '#1d4ed8' },
-  { num: '02', icon: <Search size={20} />, title: 'Yurist toping', desc: "Soha va reyting bo'yicha", color: '#f0fdf4', icolor: '#166534' },
-  { num: '03', icon: <MessageCircle size={20} />, title: "Bog'laning", desc: "Real-time chat", color: '#faf5ff', icolor: '#7e22ce' },
-  { num: '04', icon: <CheckCircle2 size={20} />, title: 'Natija oling', desc: "Muammoni yechin", color: '#fff7ed', icolor: '#c2410c' },
+  { num: '01', icon: <FileText size={20} />, title: "Murojaat yuboring", desc: "Huquqiy vaziyatni qisqacha yozing", color: '#eff6ff', icolor: '#1d4ed8' },
+  { num: '02', icon: <Search size={20} />, title: 'Yurist tanlang', desc: "Soha, shahar va reytingga qarab", color: '#f0fdf4', icolor: '#166534' },
+  { num: '03', icon: <MessageCircle size={20} />, title: "To'g'ridan gaplashing", desc: "Platforma orqali bevosita chat", color: '#faf5ff', icolor: '#7e22ce' },
+  { num: '04', icon: <CheckCircle2 size={20} />, title: 'Yechim oling', desc: "Professional huquqiy yordam", color: '#fff7ed', icolor: '#c2410c' },
 ]
 
 const features = [
-  { icon: <Search size={20} />, title: 'Aqlli qidiruv', desc: "Soha, tajriba va joylashuv bo'yicha filtrlang", bg: '#eff6ff', c: '#1d4ed8' },
-  { icon: <MessageCircle size={20} />, title: 'Real-time chat', desc: "Yurist bilan platformada gaplashing", bg: '#f0fdf4', c: '#166534' },
-  { icon: <Bot size={20} />, title: 'AI maslahat', desc: "Darhol javob, keyin yuristga yo'naltirilasiz", bg: '#faf5ff', c: '#7e22ce' },
-  { icon: <FileText size={20} />, title: 'Hujjat generatsiya', desc: "AI bilan shartnoma tuzing", bg: '#fff7ed', c: '#c2410c' },
-  { icon: <MapPin size={20} />, title: 'Advokatura xaritasi', desc: "Yaqin atrofdagi advokatlarni toping", bg: '#f0fdfa', c: '#134e4a' },
-  { icon: <Shield size={20} />, title: 'Xavfsiz platforma', desc: "Tekshirilgan yuristlar, reyting tizimi", bg: '#fef2f2', c: '#991b1b' },
+  { icon: <Search size={20} />, title: 'Tezkor qidiruv', desc: "Soha, shahar va tajriba bo'yicha kerakli yuristni toping", bg: '#eff6ff', c: '#1d4ed8' },
+  { icon: <MessageCircle size={20} />, title: 'Bevosita chat', desc: "Yurist bilan platformada to'g'ridan muloqot qiling", bg: '#f0fdf4', c: '#166534' },
+  { icon: <Bot size={20} />, title: 'AI huquqiy maslahat', desc: "Sun'iy intellekt yordamida dastlabki maslahat oling", bg: '#faf5ff', c: '#7e22ce' },
+  { icon: <FileText size={20} />, title: 'Hujjat tuzish', desc: "AI yordamida shartnoma va arizalar tayyorlang", bg: '#fff7ed', c: '#c2410c' },
+  { icon: <MapPin size={20} />, title: 'Advokatlar xaritasi', desc: "Yaqin atrofdagi advokatlarni xaritadan toping", bg: '#f0fdfa', c: '#134e4a' },
+  { icon: <Shield size={20} />, title: 'Ishonchli tizim', desc: "Tasdiqlangan yuristlar, shaffof reyting va sharhlar", bg: '#fef2f2', c: '#991b1b' },
 ]
 
 const phases = [
-  { phase: 'Faza 1', title: 'Beta — Hozir', badge: 'BEPUL', badgeBg: '#dcfce7', badgeC: '#166534', accent: true, icon: <Sparkles size={14} />,
-    items: ["Platforma to'liq bepul", "Yuristlar bilan chat", "Elon joylash va ko'rish", "Yurist profillari", "Asosiy qidiruv"], note: 'Beta davri — hammasi bepul' },
-  { phase: 'Faza 2', title: 'Pro — 2026 Q3', badge: 'KELAYOTGAN', badgeBg: '#eff6ff', badgeC: '#1d4ed8', icon: <Zap size={14} />,
-    items: ["Yuristlar uchun Pro tarif", "Payme va Click to'lov", "Kredit tizimi", "Advokatura xaritasi", "Profil statistikasi"], note: "Mijozlar uchun asosiy xizmatlar bepul" },
-  { phase: 'Faza 3', title: 'Full — 2027', badge: 'KELAJAK', badgeBg: '#faf5ff', badgeC: '#7e22ce', icon: <Crown size={14} />,
-    items: ['AI huquqiy chatbot', 'Hujjat generatsiyasi', 'Zoom konsultatsiya', 'Yurist workspace', 'Mobil ilova'], note: "To'liq legal-tech ekotizimi" },
+  {
+    phase: 'Hozir', title: 'Asosiy xizmatlar', badge: 'BEPUL', badgeBg: '#dcfce7', badgeC: '#166534', accent: true, icon: <Sparkles size={14} />,
+    items: [
+      "Elon joylash va ko'rish",
+      "Yurist va mijoz o'rtasida chat",
+      "AI huquqiy maslahat (beta)",
+      "Advokatlar xaritasi",
+    ],
+    note: 'Barcha asosiy xizmatlar hozir bepul'
+  },
+  {
+    phase: 'Yil oxirigacha', title: 'Kengaytirilgan imkoniyatlar', badge: 'YAQINDA', badgeBg: '#eff6ff', badgeC: '#1d4ed8', icon: <Zap size={14} />,
+    items: [
+      "Yuristlar uchun maxsus tariflar",
+      "Profil statistikasi",
+      "Mobil ilova",
+      "Rivojlangan AI maslahatchi",
+    ],
+    note: "Mijozlar uchun asosiy xizmatlar bepul qoladi"
+  },
+  {
+    phase: 'Kutilmoqda', title: "To'liq huquqiy ekotizim", badge: 'REJALASHTIRILGAN', badgeBg: '#faf5ff', badgeC: '#7e22ce', icon: <Crown size={14} />,
+    items: [
+      "Hujjat tuzish imkoniyati",
+      "Yurist ish muhiti",
+      "Video konsultatsiya",
+      "Yuristlar o'qitish tizimi",
+      "Yuridik adabiyotlar kutubxonasi",
+    ],
+    note: "Yuristlar va mijozlar uchun keng imkoniyatlar"
+  },
 ]
 
 const founders = [
-  { ini: 'DN', name: 'Diyorbek Nematov', role: 'Founder & CEO', desc: "Huquq talabasi va legal-tech tadbirkor.", badge: 'CEO', isFounder: true, telegram: 'https://t.me/lawyer_nematov', email: 'diyorbeknematov07@gmail.com', handle: '@lawyer_nematov' },
-  { ini: '?', name: 'Texnik Co-founder', role: 'CTO', desc: "Full-stack developer izlanmoqda. Equity + maosh.", isVacancy: true },
-  { ini: '?', name: 'Marketing Co-founder', role: 'CMO', desc: "Digital marketing mutaxassisi izlanmoqda.", isVacancy: true },
+  {
+    ini: 'DN', name: 'Diyorbek Nematov', role: 'Asoschi va rahbar', desc: "Huquqshunos va raqamli xizmatlar tadbirkor. O'zbekistonda huquqiy yordamni hammaga ochiq qilish uchun ishlayapman.", badge: 'ASOSCHI', isFounder: true, telegram: 'https://t.me/lawyer_nematov', email: 'diyorbeknematov07@gmail.com', handle: '@lawyer_nematov'
+  },
 ]
 
 // ── Main Component ─────────────────────────────────────
@@ -101,9 +126,8 @@ export default function HomePage() {
   const [started, setStarted] = useState(false)
   const [mobileMenu, setMobileMenu] = useState(false)
   const { ref: statsRef, inView: statsInView } = useInView()
-  const lawyers = useCountUp(500, 1800, statsInView)
-  const ads = useCountUp(1200, 1800, statsInView)
   const regions = useCountUp(14, 1400, statsInView)
+  const sohalar = useCountUp(8, 1200, statsInView)
 
   useEffect(() => {
     const t = setTimeout(() => setStarted(true), 60)
@@ -131,7 +155,7 @@ export default function HomePage() {
           {/* Desktop nav */}
           {!isMobile && (
             <nav style={{ display: 'flex', gap: 24, alignItems: 'center' }}>
-              {[['Xizmatlar', '#xizmatlar'], ['Fazalar', '#fazalar'], ['Jamoa', '#jamoa'], ['Aloqa', '#aloqa']].map(([label, href]) => (
+              {[['Imkoniyatlar', '#xizmatlar'], ['Rejalar', '#fazalar'], ['Jamoa', '#jamoa'], ['Aloqa', '#aloqa']].map(([label, href]) => (
                 <a key={href} href={href} style={{ fontSize: 13.5, fontWeight: 500, color: '#475569', textDecoration: 'none', transition: 'color 150ms' }}
                   onMouseEnter={e => (e.currentTarget as HTMLElement).style.color = '#0f172a'}
                   onMouseLeave={e => (e.currentTarget as HTMLElement).style.color = '#475569'}>
@@ -162,7 +186,7 @@ export default function HomePage() {
         {/* Mobile dropdown */}
         {isMobile && mobileMenu && (
           <div style={{ borderTop: '0.5px solid #f1f5f9', background: '#fff', padding: '12px 16px 16px' }}>
-            {[['Xizmatlar', '#xizmatlar'], ['Fazalar', '#fazalar'], ['Jamoa', '#jamoa'], ['Aloqa', '#aloqa']].map(([label, href]) => (
+            {[['Imkoniyatlar', '#xizmatlar'], ['Rejalar', '#fazalar'], ['Jamoa', '#jamoa'], ['Aloqa', '#aloqa']].map(([label, href]) => (
               <a key={href} href={href} onClick={() => setMobileMenu(false)}
                 style={{ display: 'block', padding: '10px 0', fontSize: 15, fontWeight: 500, color: '#0f172a', textDecoration: 'none', borderBottom: '0.5px solid #f8fafc' }}>
                 {label}
@@ -203,7 +227,7 @@ export default function HomePage() {
 
           {/* Subtitle */}
           <p style={{ fontSize: isMobile ? 14 : 17, color: '#64748b', lineHeight: 1.65, maxWidth: 500, margin: `0 auto ${isMobile ? '28px' : '36px'}`, opacity: started ? 1 : 0, transform: started ? 'none' : 'translateY(18px)', transition: 'all .65s .3s ease' }}>
-            O'zbekistondagi birinchi raqamli huquqiy platforma. Tajribali yuristlar, tezkor yechim.
+            O'zbekistoning eng qulay huquqiy xizmatlar platformasi. Tajribali yuristlar, tezkor yechim.
           </p>
 
           {/* Buttons */}
@@ -212,13 +236,13 @@ export default function HomePage() {
               Yurist topish <ArrowRight size={14} />
             </Link>
             <Link href="/auth/signup?role=lawyer" style={{ display: 'inline-flex', alignItems: 'center', gap: 7, background: '#fff', color: '#0f172a', fontWeight: 700, fontSize: isMobile ? 14 : 15, padding: isMobile ? '12px 22px' : '13px 26px', borderRadius: 11, textDecoration: 'none', border: '1px solid #e2e8f0' }}>
-              <Briefcase size={14} /> Yurist sifatida
+              <Briefcase size={14} /> Yurist bo'ling
             </Link>
           </div>
 
           {/* Stats */}
           <div ref={statsRef} style={{ display: 'inline-grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 0, padding: isMobile ? '14px 20px' : '18px 32px', background: '#fff', border: '0.5px solid #e2e8f0', borderRadius: 16, boxShadow: '0 2px 12px rgba(0,0,0,0.04)', opacity: started ? 1 : 0, transition: 'opacity .7s .55s ease' }}>
-            {[{ value: lawyers, suffix: '+', label: 'Yuristlar' }, { value: ads, suffix: '+', label: 'Elonlar' }, { value: regions, suffix: '', label: 'Viloyat' }].map((s, i) => (
+            {[{ value: regions, suffix: '', label: 'Viloyat' }, { value: sohalar, suffix: '+', label: 'Huquqiy soha' }, { value: 24, suffix: '/7', label: 'AI maslahat' }].map((s, i) => (
               <div key={s.label} style={{ textAlign: 'left', padding: isMobile ? '0 14px' : '0 22px', borderLeft: i > 0 ? '0.5px solid #e2e8f0' : 'none' }}>
                 <div style={{ fontSize: isMobile ? 24 : 30, fontWeight: 900, color: '#0f172a', letterSpacing: '-1px', lineHeight: 1 }}>
                   {s.value}<span style={{ color: '#4338ca' }}>{s.suffix}</span>
@@ -236,8 +260,8 @@ export default function HomePage() {
           <Fade>
             <div style={{ textAlign: 'center', marginBottom: isMobile ? 24 : 40 }}>
               <p style={{ fontSize: 10, fontWeight: 700, color: '#4338ca', textTransform: 'uppercase', letterSpacing: '1.5px', marginBottom: 8 }}>Sohalar</p>
-              <h2 style={{ fontSize: isMobile ? 26 : 34, fontWeight: 800, color: '#0f172a', letterSpacing: '-0.5px', marginBottom: 8 }}>Har bir holatga mutaxassis</h2>
-              {!isMobile && <p style={{ color: '#64748b', fontSize: 15 }}>Qaysi huquqiy masala bo'lmasin — platformamizda tajribali yurist bor</p>}
+              <h2 style={{ fontSize: isMobile ? 26 : 34, fontWeight: 800, color: '#0f172a', letterSpacing: '-0.5px', marginBottom: 8 }}>Qaysi sohada yordam kerak?</h2>
+              {!isMobile && <p style={{ color: '#64748b', fontSize: 15 }}>Oilaviy nizolardan biznes huquqigacha — har bir masalaga mutaxassis topasiz</p>}
             </div>
           </Fade>
           <div style={{ display: 'grid', gridTemplateColumns: isMobile ? 'repeat(4, 1fr)' : 'repeat(4, 1fr)', gap: isMobile ? 8 : 12 }}>
@@ -290,7 +314,7 @@ export default function HomePage() {
           <Fade>
             <div style={{ textAlign: 'center', marginBottom: isMobile ? 24 : 44 }}>
               <p style={{ fontSize: 10, fontWeight: 700, color: '#4338ca', textTransform: 'uppercase', letterSpacing: '1.5px', marginBottom: 8 }}>Imkoniyatlar</p>
-              <h2 style={{ fontSize: isMobile ? 26 : 34, fontWeight: 800, color: '#0f172a', letterSpacing: '-0.5px' }}>Nima uchun Yuristim?</h2>
+              <h2 style={{ fontSize: isMobile ? 26 : 34, fontWeight: 800, color: '#0f172a', letterSpacing: '-0.5px' }}>Sizga nima beramiz?</h2>
             </div>
           </Fade>
           <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(3, 1fr)', gap: isMobile ? 8 : 14 }}>
@@ -318,8 +342,8 @@ export default function HomePage() {
         <div style={{ maxWidth: 1200, margin: '0 auto' }}>
           <Fade>
             <div style={{ textAlign: 'center', marginBottom: isMobile ? 20 : 36 }}>
-              <p style={{ fontSize: 10, fontWeight: 700, color: '#4338ca', textTransform: 'uppercase', letterSpacing: '1.5px', marginBottom: 8 }}>Yo'l xaritasi</p>
-              <h2 style={{ fontSize: isMobile ? 26 : 34, fontWeight: 800, color: '#0f172a', letterSpacing: '-0.5px' }}>Platforma fazalari</h2>
+              <p style={{ fontSize: 10, fontWeight: 700, color: '#4338ca', textTransform: 'uppercase', letterSpacing: '1.5px', marginBottom: 8 }}>Rivojlanish</p>
+              <h2 style={{ fontSize: isMobile ? 26 : 34, fontWeight: 800, color: '#0f172a', letterSpacing: '-0.5px' }}>Hozir va kelajakda</h2>
             </div>
           </Fade>
 
@@ -329,8 +353,8 @@ export default function HomePage() {
                 <Sparkles size={20} color="#4ade80" />
               </div>
               <div style={{ flex: 1, minWidth: 200 }}>
-                <p style={{ fontWeight: 700, color: '#fff', fontSize: isMobile ? 14 : 15, marginBottom: 3 }}>Hozir Beta — hammasi BEPUL</p>
-                <p style={{ fontSize: isMobile ? 12 : 13, color: '#94a3b8' }}>Sizning fikr va takliflaringiz bizga juda muhim.</p>
+                <p style={{ fontWeight: 700, color: '#fff', fontSize: isMobile ? 14 : 15, marginBottom: 3 }}>Hozirgi barcha xizmatlar — bepul</p>
+                <p style={{ fontSize: isMobile ? 12 : 13, color: '#94a3b8' }}>Platforma rivojlanish bosqichida. Fikr va takliflaringiz bizga muhim.</p>
               </div>
               <Link href="/auth/signup" style={{ display: 'inline-flex', alignItems: 'center', gap: 6, background: '#22c55e', color: '#fff', fontWeight: 600, fontSize: 13, padding: '10px 18px', borderRadius: 10, textDecoration: 'none', flexShrink: 0 }}>
                 Bepul kirish <ArrowRight size={13} />
@@ -378,10 +402,10 @@ export default function HomePage() {
             <div style={{ fontSize: isMobile ? 36 : 44, marginBottom: 16 }}>⚖️</div>
             <h2 style={{ fontSize: isMobile ? 28 : 38, fontWeight: 800, color: '#fff', marginBottom: 14, letterSpacing: '-0.5px' }}>Yuristmisiz?</h2>
             <p style={{ color: '#94a3b8', fontSize: isMobile ? 14 : 16, marginBottom: 28, lineHeight: 1.65, maxWidth: 480, margin: `0 auto ${isMobile ? '24px' : '32px'}` }}>
-              14 kun bepul sinab ko'ring. Yangi mijozlar toping.
+              Profilingizni yarating, e'lonlar joylashtiring va yangi mijozlar toping. Ro'yxatdan o'tish bepul.
             </p>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 10, maxWidth: 480, margin: `0 auto ${isMobile ? '24px' : '30px'}` }}>
-              {[{ icon: <Users size={18} />, text: 'Maqsadli mijozlar' }, { icon: <TrendingUp size={18} />, text: 'Statistika' }, { icon: <Briefcase size={18} />, text: 'Workspace' }].map(item => (
+              {[{ icon: <Users size={18} />, text: 'Yangi mijozlar' }, { icon: <TrendingUp size={18} />, text: 'Profil statistikasi' }, { icon: <Briefcase size={18} />, text: 'Ish muhiti' }].map(item => (
                 <div key={item.text} style={{ background: 'rgba(255,255,255,0.07)', border: '0.5px solid rgba(255,255,255,0.1)', borderRadius: 14, padding: isMobile ? '12px 8px' : '16px 10px', textAlign: 'center' }}>
                   <div style={{ color: '#a5b4fc', marginBottom: 7, display: 'flex', justifyContent: 'center' }}>{item.icon}</div>
                   <p style={{ fontSize: isMobile ? 10 : 12, color: '#e2e8f0', fontWeight: 500 }}>{item.text}</p>
@@ -401,8 +425,8 @@ export default function HomePage() {
           <Fade>
             <div style={{ textAlign: 'center', marginBottom: isMobile ? 24 : 40 }}>
               <p style={{ fontSize: 10, fontWeight: 700, color: '#4338ca', textTransform: 'uppercase', letterSpacing: '1.5px', marginBottom: 8 }}>Jamoa</p>
-              <h2 style={{ fontSize: isMobile ? 26 : 34, fontWeight: 800, color: '#0f172a', letterSpacing: '-0.5px' }}>Founders</h2>
-              <p style={{ color: '#64748b', marginTop: 8, fontSize: isMobile ? 13 : 15 }}>Co-founder vakansiyalari ochiq!</p>
+              <h2 style={{ fontSize: isMobile ? 26 : 34, fontWeight: 800, color: '#0f172a', letterSpacing: '-0.5px' }}>Biz haqimizda</h2>
+              <p style={{ color: '#64748b', marginTop: 8, fontSize: isMobile ? 13 : 15 }}>Yuristim — O'zbekiston huquqiy yordamini raqamlashtirish missiyasi</p>
             </div>
           </Fade>
           <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(3, 1fr)', gap: isMobile ? 10 : 14 }}>
@@ -472,9 +496,9 @@ export default function HomePage() {
             <div style={{ width: 52, height: 52, background: 'linear-gradient(135deg,#4338ca,#6366f1)', borderRadius: 16, display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 22px', boxShadow: '0 8px 24px rgba(67,56,202,.35)' }}>
               <Scale size={24} color="#fff" />
             </div>
-            <h2 style={{ fontSize: isMobile ? 30 : 38, fontWeight: 800, color: '#fff', marginBottom: 12, letterSpacing: '-0.5px' }}>Bugunoq boshlang</h2>
-            <p style={{ color: '#94a3b8', marginBottom: 6, fontSize: isMobile ? 14 : 16 }}>Beta versiya — barcha xizmatlar bepul</p>
-            <p style={{ color: '#475569', marginBottom: 28, fontSize: isMobile ? 12 : 13.5 }}>Ro'yxatdan o'tish 1 daqiqa. Hech qanday karta kerak emas.</p>
+            <h2 style={{ fontSize: isMobile ? 30 : 38, fontWeight: 800, color: '#fff', marginBottom: 12, letterSpacing: '-0.5px' }}>Ro'yxatdan o'ting</h2>
+            <p style={{ color: '#94a3b8', marginBottom: 6, fontSize: isMobile ? 14 : 16 }}>Barcha xizmatlar hozir bepul</p>
+            <p style={{ color: '#475569', marginBottom: 28, fontSize: isMobile ? 12 : 13.5 }}>Ro'yxatdan o'tish 1 daqiqa. Kredit karta talab etilmaydi.</p>
             <Link href="/auth/signup" style={{ display: 'inline-flex', alignItems: 'center', gap: 8, background: '#fff', color: '#0f172a', fontWeight: 700, fontSize: isMobile ? 14 : 15, padding: isMobile ? '13px 28px' : '15px 34px', borderRadius: 12, textDecoration: 'none' }}>
               Bepul ro'yxatdan o'tish <ArrowRight size={15} />
             </Link>
