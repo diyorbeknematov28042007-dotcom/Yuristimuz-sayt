@@ -116,7 +116,35 @@ const phases = [
 
 const founders = [
   {
-    ini: 'DN', name: 'Diyorbek Nematov', role: 'Asoschi va rahbar', desc: "Huquqshunos va raqamli xizmatlar tadbirkor. O'zbekistonda huquqiy yordamni hammaga ochiq qilish uchun ishlayapman.", badge: 'ASOSCHI', isFounder: true, telegram: 'https://t.me/lawyer_nematov', email: 'diyorbeknematov07@gmail.com', handle: '@lawyer_nematov'
+    type: 'founder' as const,
+    ini: 'DN',
+    name: 'Diyorbek Nematov',
+    role: 'Asoschi va rahbar',
+    desc: "Huquqshunos va raqamli xizmatlar tadbirkor. O'zbekistonda huquqiy yordamni hammaga ochiq qilish uchun ishlayapman.",
+    badge: 'ASOSCHI',
+    telegram: 'https://t.me/lawyer_nematov',
+    email: 'diyorbeknematov07@gmail.com',
+    handle: '@lawyer_nematov',
+  },
+  {
+    type: 'vacancy' as const,
+    ini: 'M',
+    name: 'Mentor va investor',
+    role: 'Strategik hamkor',
+    badge: 'VAKANSIYA',
+    tags: ['Startap tajribasi', 'Investitsiya', 'Nazorat va yo\'nalish'],
+    desc: "Yuridik yoki texnologiya sohasida tajribali mentor va investor izlanmoqda. Birgalikda O'zbekiston huquqiy xizmatlar bozorini rivojlantiramiz.",
+    telegram: 'https://t.me/lawyer_nematov',
+  },
+  {
+    type: 'vacancy' as const,
+    ini: 'MK',
+    name: 'Marketing mutaxassisi',
+    role: 'Kontent va o\'sish',
+    badge: 'VAKANSIYA',
+    tags: ["SMM va kontent", "O'zbek bozori", 'Raqamli marketing'],
+    desc: "O'zbekiston raqamli bozorini yaxshi biladigan, ijtimoiy tarmoqlarda tajribasi bor marketing mutaxassisi kerak.",
+    telegram: 'https://t.me/lawyer_nematov',
   },
 ]
 
@@ -432,29 +460,67 @@ export default function HomePage() {
           <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(3, 1fr)', gap: isMobile ? 10 : 14 }}>
             {founders.map((f, i) => (
               <Fade key={f.name} delay={i * 70}>
-                <div style={{ border: '1.5px solid #0f172a', borderRadius: 18, padding: isMobile ? 18 : 22, background: '#fff', boxShadow: '0 4px 16px rgba(15,23,42,0.07)', position: 'relative' }}>
-                  <div style={{ position: 'absolute', top: -10, right: 16, background: '#0f172a', color: '#fff', fontSize: 9, fontWeight: 800, padding: '3px 9px', borderRadius: 4 }}>{f.badge}</div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 12 }}>
-                    <div style={{ width: isMobile ? 44 : 50, height: isMobile ? 44 : 50, background: 'linear-gradient(135deg,#0f172a,#4338ca)', color: '#fff', borderRadius: 13, display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, fontSize: 16, flexShrink: 0 }}>
-                      {f.ini}
+
+                {f.type === 'founder' ? (
+                  /* ── Asoschi kartasi ── */
+                  <div style={{ border: '1.5px solid #0f172a', borderRadius: 18, padding: isMobile ? 18 : 22, background: '#fff', boxShadow: '0 4px 16px rgba(15,23,42,0.07)', position: 'relative', height: '100%' }}>
+                    <div style={{ position: 'absolute', top: -10, right: 16, background: '#0f172a', color: '#fff', fontSize: 9, fontWeight: 800, padding: '3px 10px', borderRadius: 4, letterSpacing: '0.5px' }}>{f.badge}</div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 12 }}>
+                      <div style={{ width: isMobile ? 46 : 52, height: isMobile ? 46 : 52, background: 'linear-gradient(135deg,#0f172a,#4338ca)', color: '#fff', borderRadius: 13, display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, fontSize: 17, flexShrink: 0 }}>
+                        {f.ini}
+                      </div>
+                      <div>
+                        <p style={{ fontWeight: 700, color: '#0f172a', fontSize: 15, marginBottom: 2 }}>{f.name}</p>
+                        <p style={{ fontSize: 11, color: '#64748b', fontWeight: 600 }}>{f.role}</p>
+                      </div>
                     </div>
-                    <div>
-                      <p style={{ fontWeight: 700, color: '#0f172a', fontSize: 15 }}>{f.name}</p>
-                      <p style={{ fontSize: 11, color: '#94a3b8', fontWeight: 600 }}>{f.role}</p>
+                    <p style={{ fontSize: isMobile ? 12 : 13, color: '#64748b', lineHeight: 1.65, marginBottom: 16 }}>{f.desc}</p>
+                    <div style={{ paddingTop: 14, borderTop: '0.5px solid #f1f5f9', display: 'flex', flexDirection: 'column', gap: 8 }}>
+                      <a href={f.telegram} target="_blank" rel="noopener noreferrer" style={{ display: 'flex', alignItems: 'center', gap: 9, fontSize: 12.5, color: '#4338ca', textDecoration: 'none', fontWeight: 600 }}>
+                        <span style={{ width: 28, height: 28, background: '#eef2ff', borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}><Send size={13} color="#4338ca" /></span>
+                        {'handle' in f ? f.handle : ''}
+                      </a>
+                      {'email' in f && (
+                        <a href={`mailto:${f.email}`} style={{ display: 'flex', alignItems: 'center', gap: 9, fontSize: 12, color: '#64748b', textDecoration: 'none' }}>
+                          <span style={{ width: 28, height: 28, background: '#f1f5f9', borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}><Mail size={13} color="#64748b" /></span>
+                          {f.email}
+                        </a>
+                      )}
                     </div>
                   </div>
-                  <p style={{ fontSize: isMobile ? 12 : 13, color: '#64748b', lineHeight: 1.6, marginBottom: 14 }}>{f.desc}</p>
-                  <div style={{ paddingTop: 12, borderTop: '0.5px solid #f1f5f9', display: 'flex', flexDirection: 'column', gap: 8 }}>
-                    <a href={f.telegram} target="_blank" rel="noopener noreferrer" style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 12.5, color: '#4338ca', textDecoration: 'none', fontWeight: 600 }}>
-                      <span style={{ width: 27, height: 27, background: '#eef2ff', borderRadius: 7, display: 'flex', alignItems: 'center', justifyContent: 'center' }}><Send size={13} color="#4338ca" /></span>
-                      {f.handle}
-                    </a>
-                    <a href={`mailto:${f.email}`} style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 12, color: '#64748b', textDecoration: 'none' }}>
-                      <span style={{ width: 27, height: 27, background: '#f1f5f9', borderRadius: 7, display: 'flex', alignItems: 'center', justifyContent: 'center' }}><Mail size={13} color="#64748b" /></span>
-                      {f.email}
+                ) : (
+                  /* ── Vakansiya kartasi ── */
+                  <div style={{ border: '1.5px dashed #cbd5e1', borderRadius: 18, padding: isMobile ? 18 : 22, background: '#fafafa', position: 'relative', height: '100%', display: 'flex', flexDirection: 'column' }}>
+                    <div style={{ position: 'absolute', top: -10, right: 16, background: '#fff7ed', color: '#c2410c', fontSize: 9, fontWeight: 800, padding: '3px 10px', borderRadius: 4, border: '0.5px solid #fed7aa', letterSpacing: '0.5px' }}>{f.badge}</div>
+
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 12 }}>
+                      <div style={{ width: isMobile ? 46 : 52, height: isMobile ? 46 : 52, background: '#f1f5f9', color: '#94a3b8', borderRadius: 13, display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, fontSize: 17, flexShrink: 0 }}>
+                        {f.ini}
+                      </div>
+                      <div>
+                        <p style={{ fontWeight: 700, color: '#0f172a', fontSize: 15, marginBottom: 2 }}>{f.name}</p>
+                        <p style={{ fontSize: 11, color: '#94a3b8', fontWeight: 600 }}>{f.role}</p>
+                      </div>
+                    </div>
+
+                    <p style={{ fontSize: isMobile ? 12 : 13, color: '#64748b', lineHeight: 1.65, marginBottom: 14, flex: 1 }}>{f.desc}</p>
+
+                    {'tags' in f && (
+                      <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginBottom: 14 }}>
+                        {f.tags.map((tag: string) => (
+                          <span key={tag} style={{ fontSize: 10, fontWeight: 600, background: '#fff', color: '#475569', padding: '3px 9px', borderRadius: 5, border: '0.5px solid #e2e8f0' }}>
+                            {tag}
+                          </span>
+                        ))}
+                      </div>
+                    )}
+
+                    <a href={f.telegram} target="_blank" rel="noopener noreferrer"
+                      style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 7, background: '#0f172a', color: '#fff', fontWeight: 600, fontSize: 13, padding: '11px', borderRadius: 11, textDecoration: 'none', marginTop: 'auto' }}>
+                      <Send size={14} /> Telegram orqali murojaat
                     </a>
                   </div>
-                </div>
+                )}
               </Fade>
             ))}
           </div>
