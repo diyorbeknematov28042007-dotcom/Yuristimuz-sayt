@@ -1,13 +1,14 @@
 'use client'
 import { supabase } from '@/lib/supabase'
 import { useState, useEffect } from 'react'
-import { useSearchParams } from 'next/navigation'
+import { useSearchParams, useRouter } from 'next/navigation'
 import {
   User, Mail, Phone, MapPin, FileText,
   CheckCircle2, X, Sparkles, Save, AlertCircle
 } from 'lucide-react'
 export default function SettingsPage() {
   const params = useSearchParams()
+  const router = useRouter()
   const isWelcome = params.get('welcome') === '1'
   const [user, setUser] = useState<any>(null)
   const [loading, setLoading] = useState(true)
@@ -70,6 +71,10 @@ export default function SettingsPage() {
       } else {
         setSaved(true)
         setShowWelcome(false)
+        // 🔄 Layout/sidebar ma'lumotlarini yangilash
+        router.refresh()
+        // Local user state'ni ham yangilash
+        setUser((u: any) => ({ ...u, full_name: form.full_name }))
         setTimeout(() => setSaved(false), 3000)
       }
     } catch (err) {
