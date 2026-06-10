@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '@/lib/supabase'
 import Link from 'next/link'
-import { Plus, Scale, User, MapPin, Star, BadgeCheck, MessageCircle, X, ChevronRight } from 'lucide-react'
+import { Plus, Scale, User, MapPin, Star, BadgeCheck, MessageCircle, X, ChevronRight, Briefcase } from 'lucide-react'
 
 const CATEGORIES = ['Oilaviy', 'Biznes', 'Mulk', 'Mehnat', 'Soliq', 'Jinoyat', 'Shartnoma', 'Migratsiya']
 const CITIES = ["Toshkent","Samarqand","Buxoro","Namangan","Andijon","Farg'ona","Nukus","Qarshi","Termiz","Jizzax"]
@@ -53,10 +53,16 @@ export default function AdsPage() {
       {/* Header */}
       <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom: 20 }}>
         <h1 style={{ fontSize: 22, fontWeight: 800, color: '#0f172a', letterSpacing: '-0.4px' }}>E'lonlar</h1>
-        <button onClick={() => setShowCreate(true)}
-          style={{ display:'flex', alignItems:'center', gap:7, background:'#0f172a', color:'#fff', border:'none', padding:'10px 18px', borderRadius:11, fontSize:13.5, fontWeight:700, cursor:'pointer', boxShadow:'0 2px 8px rgba(15,23,42,0.2)' }}>
-          <Plus size={15} /> E'lon qo'shish
-        </button>
+        <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+          <Link href="/dashboard/my-ads"
+            style={{ display: 'flex', alignItems: 'center', gap: 6, background: '#fff', color: '#475569', border: '0.5px solid #e2e8f0', padding: '9px 14px', borderRadius: 10, fontSize: 12.5, fontWeight: 600, textDecoration: 'none', transition: 'all 150ms' }}>
+            <Briefcase size={13} /> Mening e'lonlarim
+          </Link>
+          <button onClick={() => setShowCreate(true)}
+            style={{ display:'flex', alignItems:'center', gap:7, background:'#0f172a', color:'#fff', border:'none', padding:'10px 18px', borderRadius:11, fontSize:13.5, fontWeight:700, cursor:'pointer', boxShadow:'0 2px 8px rgba(15,23,42,0.2)' }}>
+            <Plus size={15} /> Yangi
+          </button>
+        </div>
       </div>
 
       {/* Tabs */}
