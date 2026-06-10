@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { Home, FileText, MessageCircle, Grid3x3, User, Settings } from 'lucide-react'
+import { Home, FileText, MessageCircle, Grid3x3, User, Settings, Briefcase } from 'lucide-react'
 
 const mainLinks = [
   { href: '/dashboard',          label: 'Asosiy',    icon: Home,          size: 20 },
@@ -10,6 +10,11 @@ const mainLinks = [
   { href: '/dashboard/chat',     label: 'Suhbatlar', icon: MessageCircle, size: 20 },
   { href: '/dashboard/services', label: 'Xizmatlar', icon: Grid3x3,       size: 20 },
   { href: '/dashboard/profile',  label: 'Profil',    icon: User,          size: 20 },
+]
+
+// Faqat desktop sidebar da ko'rinadi (mobile bottom nav da o'rin yo'q)
+const secondaryLinks = [
+  { href: '/dashboard/my-ads',   label: "Mening e'lonlarim",  icon: Briefcase, size: 18 },
 ]
 
 function isActive(href: string, pathname: string) {
@@ -45,6 +50,28 @@ export function SidebarNav() {
       })}
 
       <div style={{ height: 1, background: '#f1f5f9', margin: '10px 0' }} />
+
+      {/* Mening e'lonlarim (faqat sidebar) */}
+      {secondaryLinks.map(link => {
+        const active = isActive(link.href, pathname)
+        const Icon = link.icon
+        return (
+          <Link key={link.href} href={link.href}
+            style={{
+              display: 'flex', alignItems: 'center', gap: 10,
+              padding: '10px 12px', borderRadius: 10, marginBottom: 2,
+              fontSize: 13.5, fontWeight: active ? 700 : 500,
+              color: active ? '#0f172a' : '#64748b',
+              textDecoration: 'none',
+              background: active ? '#f1f5f9' : 'transparent',
+              borderLeft: active ? '3px solid #0f172a' : '3px solid transparent',
+              transition: 'all 150ms',
+            }}>
+            <Icon size={20} color={active ? '#0f172a' : '#94a3b8'} />
+            {link.label}
+          </Link>
+        )
+      })}
 
       {/* Sozlamalar */}
       {(() => {
