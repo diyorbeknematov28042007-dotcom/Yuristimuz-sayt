@@ -3,24 +3,35 @@
 import { useState, useEffect, useRef, Suspense } from 'react'
 import { useSearchParams } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
-import { Bot, Send, ArrowLeft, BadgeCheck, Star, Sparkles, CheckCheck, Loader2 } from 'lucide-react'
+import { Bot, Send, ArrowLeft, BadgeCheck, Star, Sparkles, CheckCheck, Loader2, Plus, AlertTriangle, ArrowRight } from 'lucide-react'
+import Link from 'next/link'
 
 // =============================================
 // MARKDOWN RENDERER — **bold**, *italic*, jadvallar, ro'yxatlar
 // =============================================
 function renderInline(text: string, key = 0): React.ReactNode[] {
   const parts: React.ReactNode[] = []
-  const regex = /(\*\*(.+?)\*\*|\*(.+?)\*|`([^`]+)`)/g
+  // [matn](url) — Markdown linklar VA **bold**, *italic*, `code`
+  const regex = /(\[([^\]]+)\]\(([^)]+)\)|\*\*(.+?)\*\*|\*(.+?)\*|`([^`]+)`)/g
   let last = 0, m: RegExpExecArray | null, k = key * 1000
 
   while ((m = regex.exec(text)) !== null) {
     if (m.index > last) parts.push(<span key={k++}>{text.slice(last, m.index)}</span>)
-    if (m[0].startsWith('**'))
-      parts.push(<strong key={k++} style={{ fontWeight: 700 }}>{m[2]}</strong>)
+    if (m[0].startsWith('[')) {
+      // Markdown link [matn](url)
+      parts.push(
+        <a key={k++} href={m[3]} target="_blank" rel="noopener noreferrer"
+          style={{ color: '#4338ca', textDecoration: 'underline', fontWeight: 600 }}>
+          {m[2]}
+        </a>
+      )
+    }
+    else if (m[0].startsWith('**'))
+      parts.push(<strong key={k++} style={{ fontWeight: 700 }}>{m[4]}</strong>)
     else if (m[0].startsWith('*'))
-      parts.push(<em key={k++} style={{ fontStyle: 'italic' }}>{m[3]}</em>)
+      parts.push(<em key={k++} style={{ fontStyle: 'italic' }}>{m[5]}</em>)
     else if (m[0].startsWith('`'))
-      parts.push(<code key={k++} style={{ background: 'rgba(0,0,0,0.08)', padding: '1px 6px', borderRadius: 4, fontSize: '0.88em', fontFamily: 'ui-monospace, monospace' }}>{m[4]}</code>)
+      parts.push(<code key={k++} style={{ background: 'rgba(0,0,0,0.08)', padding: '1px 6px', borderRadius: 4, fontSize: '0.88em', fontFamily: 'ui-monospace, monospace' }}>{m[6]}</code>)
     last = m.index + m[0].length
   }
   if (last < text.length) parts.push(<span key={k++}>{text.slice(last)}</span>)
@@ -192,15 +203,47 @@ function ChatContent() {
   const [input, setInput] = useState('')
   const [sending, setSending] = useState(false)
   const [showAI, setShowAI] = useState(false)
-  const [aiMsgs, setAiMsgs] = useState<{ role: 'user' | 'ai'; content: string }[]>([
-    { role: 'ai', content: 'Assalomu alaykum! 👋\n\nMen **Yuristim AI** konsultantiman — O\'zbekiston qonunchiligi bo\'yicha savollaringizga javob beraman.\n\nQanday masala bo\'yicha yordam kerak?' }
-  ])
+
+  // AI welcome xabari
+  const WELCOME_MSG = { role: 'ai' as const, content: "Assalomu alaykum! 👋\n\nMen **YuristimAI 0.1 beta** — O'zbekiston huquqshunos AI konsultantiman.\n\nSavolingizni yozing, men sizga aniq qonun moddalari va rasmiy manbalar bilan javob beraman. Bilmagan masalada to'g'ridan-to'g'ri ayitb beraman.\n\nQanday yordam kerak?" }
+
+  const [aiMsgs, setAiMsgs] = useState<{ role: 'user' | 'ai'; content: string }[]>([WELCOME_MSG])
   const [aiInput, setAiInput] = useState('')
   const [aiLoading, setAiLoading] = useState(false)
   const endRef = useRef<HTMLDivElement>(null)
   const aiEndRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLInputElement>(null)
   const aiInputRef = useRef<HTMLInputElement>(null)
+
+  // localStorage dan AI suhbat tarixini yuklash
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem('yuristim_ai_history')
+      if (saved) {
+        const parsed = JSON.parse(saved)
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          setAiMsgs(parsed)
+        }
+      }
+    } catch {}
+  }, [])
+
+  // AI suhbatni localStorage ga saqlash (har o'zgarishda)
+  useEffect(() => {
+    if (aiMsgs.length > 1) {  // welcome dan boshqa xabar bo'lsa
+      try {
+        localStorage.setItem('yuristim_ai_history', JSON.stringify(aiMsgs))
+      } catch {}
+    }
+  }, [aiMsgs])
+
+  // Yangi suhbat boshlash
+  const startNewAiChat = () => {
+    if (confirm("Yangi suhbat boshlamoqchimisiz? Joriy suhbat tarixingiz o'chiriladi.")) {
+      setAiMsgs([WELCOME_MSG])
+      try { localStorage.removeItem('yuristim_ai_history') } catch {}
+    }
+  }
 
   useEffect(() => {
     fetch('/api/auth/me').then(r => r.json()).then(async d => {
@@ -297,13 +340,18 @@ function ChatContent() {
   const sendAI = async () => {
     if (!aiInput.trim() || aiLoading) return
     const q = aiInput.trim(); setAiInput('')
-    setAiMsgs(prev => [...prev, { role: 'user', content: q }])
+    const newUserMsg = { role: 'user' as const, content: q }
+    const updatedMsgs = [...aiMsgs, newUserMsg]
+    setAiMsgs(updatedMsgs)
     setAiLoading(true)
     try {
       const res = await fetch('/api/ai/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ message: q })
+        // Welcome xabarini chiqarib, oxirgi 10 ta xabarni yuboramiz
+        body: JSON.stringify({
+          messages: updatedMsgs.slice(updatedMsgs.length === 1 ? 0 : 1)
+        })
       })
       const d = await res.json()
       setAiMsgs(prev => [...prev, { role: 'ai', content: d.reply || 'Javob topilmadi.' }])
@@ -330,14 +378,22 @@ function ChatContent() {
         </div>
         <div style={{ flex: 1 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
-            <span style={{ fontWeight: 700, color: '#0f172a', fontSize: 15 }}>AI Huquqiy Konsultant</span>
-            <span style={{ fontSize: 9, fontWeight: 700, background: 'linear-gradient(135deg,#7c3aed,#4338ca)', color: '#fff', padding: '2px 8px', borderRadius: 4 }}>AI</span>
+            <span style={{ fontWeight: 700, color: '#0f172a', fontSize: 15 }}>YuristimAI</span>
+            <span style={{ fontSize: 9, fontWeight: 700, background: 'linear-gradient(135deg,#7c3aed,#4338ca)', color: '#fff', padding: '2px 8px', borderRadius: 4, letterSpacing: '0.3px' }}>0.1 BETA</span>
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 5, marginTop: 2 }}>
             <div style={{ width: 6, height: 6, background: '#22c55e', borderRadius: '50%' }} />
-            <span style={{ fontSize: 11, color: '#22c55e', fontWeight: 500 }}>Onlayn · Darhol javob beradi</span>
+            <span style={{ fontSize: 11, color: '#22c55e', fontWeight: 500 }}>Onlayn · Rasmiy manbalar bilan</span>
           </div>
         </div>
+        {/* Yangi suhbat tugmasi */}
+        {aiMsgs.length > 1 && (
+          <button onClick={startNewAiChat}
+            title="Yangi suhbat"
+            style={{ width: 34, height: 34, background: '#f8fafc', border: '0.5px solid #e2e8f0', borderRadius: 9, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
+            <Plus size={16} color="#475569" />
+          </button>
+        )}
       </div>
 
       {/* Messages */}
@@ -378,13 +434,36 @@ function ChatContent() {
         <div ref={aiEndRef} />
       </div>
 
-      {/* Disclaimer */}
-      <div style={{ fontSize: 11, color: '#94a3b8', textAlign: 'center', padding: '8px 0', borderTop: '0.5px solid #f8fafc', flexShrink: 0 }}>
-        ⚠️ AI xato qilishi mumkin — muhim masalalarda yurist bilan maslahatlashing
+      {/* Kuchaytirilgan Disclaimer Banner */}
+      <div style={{
+        background: '#fff7ed',
+        border: '1px solid #fed7aa',
+        borderRadius: 12,
+        padding: '10px 14px',
+        margin: '10px 0 12px',
+        display: 'flex',
+        alignItems: 'flex-start',
+        gap: 10,
+        flexShrink: 0,
+      }}>
+        <div style={{ width: 26, height: 26, background: '#fed7aa', borderRadius: 7, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, marginTop: 1 }}>
+          <AlertTriangle size={14} color="#c2410c" />
+        </div>
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <p style={{ fontSize: 12, fontWeight: 700, color: '#9a3412', marginBottom: 2 }}>
+            YuristimAI 0.1 beta — sinov rejimida
+          </p>
+          <p style={{ fontSize: 11, color: '#c2410c', lineHeight: 1.5 }}>
+            AI xato qilishi mumkin. Aniq huquqiy maslahat uchun yurist bilan bog'laning.{' '}
+            <Link href="/#fazalar" style={{ color: '#9a3412', fontWeight: 600, textDecoration: 'underline' }}>
+              Keyingi fazada batafsil →
+            </Link>
+          </p>
+        </div>
       </div>
 
       {/* Input */}
-      <div style={{ display: 'flex', gap: 10, paddingTop: 10, flexShrink: 0 }}>
+      <div style={{ display: 'flex', gap: 10, paddingTop: 0, flexShrink: 0 }}>
         <input
           ref={aiInputRef}
           value={aiInput}
@@ -393,7 +472,7 @@ function ChatContent() {
           style={{ flex: 1, padding: '12px 16px', fontSize: 14, background: '#fff', border: '1px solid #e2e8f0', borderRadius: 14, outline: 'none', fontFamily: 'inherit', transition: 'border-color 150ms' }}
           onFocus={e => (e.target as HTMLElement).style.borderColor = '#7c3aed'}
           onBlur={e => (e.target as HTMLElement).style.borderColor = '#e2e8f0'}
-          placeholder="Huquqiy savol yozing..."
+          placeholder="Huquqiy savolingizni yozing..."
           disabled={aiLoading}
         />
         <button onClick={sendAI} disabled={aiLoading || !aiInput.trim()}
@@ -490,10 +569,10 @@ function ChatContent() {
         </div>
         <div style={{ flex: 1 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 3 }}>
-            <span style={{ fontWeight: 700, color: '#fff', fontSize: 15 }}>AI Huquqiy Konsultant</span>
-            <span style={{ fontSize: 9, fontWeight: 700, background: 'rgba(255,255,255,0.15)', color: '#fff', padding: '2px 8px', borderRadius: 4 }}>AI</span>
+            <span style={{ fontWeight: 700, color: '#fff', fontSize: 15 }}>YuristimAI</span>
+            <span style={{ fontSize: 9, fontWeight: 700, background: 'rgba(255,255,255,0.15)', color: '#fff', padding: '2px 8px', borderRadius: 4, letterSpacing: '0.3px' }}>0.1 BETA</span>
           </div>
-          <p style={{ fontSize: 12, color: 'rgba(255,255,255,0.65)' }}>Jadval, ro'yxat, qonun havolalari bilan javob beradi</p>
+          <p style={{ fontSize: 12, color: 'rgba(255,255,255,0.65)' }}>Rasmiy manbalar va aniq qonun moddalari bilan</p>
         </div>
         <div style={{ width: 7, height: 7, background: '#22c55e', borderRadius: '50%', boxShadow: '0 0 0 3px rgba(34,197,94,0.2)', flexShrink: 0 }} />
       </div>
