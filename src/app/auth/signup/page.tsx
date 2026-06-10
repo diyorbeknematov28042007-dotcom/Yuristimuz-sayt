@@ -4,6 +4,7 @@ import { useState, Suspense, useEffect } from 'react'
 import Link from 'next/link'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { Scale, User, Briefcase, Eye, EyeOff, ArrowRight, CheckCircle2, X, Loader2 } from 'lucide-react'
+import { BotCheck } from '@/components/auth/BotCheck'
 
 function SignupForm() {
   const router = useRouter()
@@ -17,6 +18,7 @@ function SignupForm() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [termsAccepted, setTermsAccepted] = useState(false)
+  const [humanVerified, setHumanVerified] = useState(false)
 
   // Username real-time check
   const [usernameCheck, setUsernameCheck] = useState<{
@@ -45,6 +47,7 @@ function SignupForm() {
 
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault()
+    if (!humanVerified) { setError("Avval inson ekanligingizni tasdiqlang"); return }
     if (!termsAccepted) { setError("Ommaviy offertani qabul qiling"); return }
     if (password !== passwordConfirm) { setError("Parollar mos kelmaydi"); return }
     if (usernameCheck.status === 'taken') { setError("Bu login band"); return }
@@ -71,7 +74,13 @@ function SignupForm() {
   })()
 
   const passwordsMatch = passwordConfirm.length > 0 && password === passwordConfirm
-  const canSubmit = termsAccepted && !loading && usernameCheck.status !== 'taken' && (passwordConfirm.length === 0 || passwordsMatch)
+  const canSubmit = humanVerified && termsAccepted && !loading && usernameCheck.status !== 'taken' && (passwordConfirm.length === 0 || passwordsMatch)
+
+  // Role o'zgarsa human verification reset bo'ladi
+  const handleRoleChange = (newRole: 'client' | 'lawyer') => {
+    setRole(newRole)
+    setHumanVerified(false)
+  }
 
   return (
     <div style={{ width: '100%', maxWidth: 460 }}>
@@ -93,7 +102,7 @@ function SignupForm() {
             { val: 'client', icon: <User size={16} />, title: 'Mijoz', desc: 'Yurist izlayman' },
             { val: 'lawyer', icon: <Briefcase size={16} />, title: 'Yurist', desc: 'Mijoz topmoqchiman' },
           ].map(opt => (
-            <button key={opt.val} type="button" onClick={() => setRole(opt.val as any)}
+            <button key={opt.val} type="button" onClick={() => handleRoleChange(opt.val as any)}
               style={{ padding: 14, borderRadius: 12, textAlign: 'left', cursor: 'pointer', border: role === opt.val ? '2px solid #0f172a' : '1px solid #e2e8f0', background: role === opt.val ? '#f8fafc' : '#fff', transition: 'all 150ms' }}>
               <div style={{ width: 32, height: 32, borderRadius: 9, display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 8, background: role === opt.val ? '#0f172a' : '#f1f5f9' }}>
                 <span style={{ color: role === opt.val ? '#fff' : '#94a3b8' }}>{opt.icon}</span>
@@ -190,6 +199,9 @@ function SignupForm() {
               {error}
             </div>
           )}
+
+          {/* Bot tekshirgich */}
+          <BotCheck role={role} onSuccess={() => setHumanVerified(true)} />
 
           {/* Submit */}
           <button type="submit" disabled={!canSubmit}
