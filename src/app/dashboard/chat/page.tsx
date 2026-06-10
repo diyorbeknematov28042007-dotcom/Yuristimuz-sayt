@@ -224,10 +224,71 @@ function ChatContent() {
     setTimeout(() => inputRef.current?.focus(), 100)
   }
 
+  // 🔴 REAL-TIME: yangi xabarlarni avtomatik kuzatish
+  useEffect(() => {
+    if (!active?.id) return
+
+    const channel = supabase
+      .channel(`messages:${active.id}`)
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'messages',
+          filter: `conversation_id=eq.${active.id}`,
+        },
+        (payload: any) => {
+          const newMsg = payload.new
+          // O'zim yuborgan xabar bo'lsa qo'shma (allaqachon optimistic update qildim)
+          setMsgs(prev => {
+            // Duplikatni oldini olish
+            if (prev.some(m => m.id === newMsg.id)) return prev
+            // O'zim yuborgan bo'lsa temporary message ni real bilan almashtirish
+            const tempIdx = prev.findIndex(m => m.sender_id === newMsg.sender_id && m.content === newMsg.content && typeof m.id === 'number')
+            if (tempIdx !== -1) {
+              const copy = [...prev]
+              copy[tempIdx] = newMsg
+              return copy
+            }
+            return [...prev, newMsg]
+          })
+        }
+      )
+      .subscribe()
+
+    return () => { supabase.removeChannel(channel) }
+  }, [active?.id])
+
+  // 🔴 REAL-TIME: conversations ro'yxati uchun (yangi xabar kelsa list yangilanadi)
+  useEffect(() => {
+    if (!user?.id) return
+
+    const channel = supabase
+      .channel(`user-convs:${user.id}`)
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'conversations',
+        },
+        async () => {
+          // Conversations ro'yxatini qayta yuklash
+          const { data } = await supabase.rpc('get_user_conversations', { p_user_id: user.id })
+          setConvs(data || [])
+        }
+      )
+      .subscribe()
+
+    return () => { supabase.removeChannel(channel) }
+  }, [user?.id])
+
   const sendMsg = async () => {
     if (!input.trim() || !active || !user) return
     setSending(true)
     const text = input.trim(); setInput('')
+    // Optimistic update — darhol ko'rsatamiz, keyin realtime real xabarni qo'yadi
     setMsgs(prev => [...prev, { id: Date.now(), sender_id: user.id, content: text, created_at: new Date().toISOString() }])
     await supabase.rpc('send_message', { p_conversation_id: active.id, p_sender_id: user.id, p_content: text })
     setSending(false)
