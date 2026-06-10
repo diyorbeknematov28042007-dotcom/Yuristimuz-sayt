@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
-import { getSession } from '@/lib/auth'
+import { getSession, createSession, setSessionCookie } from '@/lib/auth'
 
 export async function POST(request: NextRequest) {
   try {
@@ -29,8 +29,21 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Saqlashda xatolik" }, { status: 400 })
     }
 
+    // 🔄 full_name o'zgargan bo'lsa — JWT cookie ni yangilash
+    // (sidebar va boshqa joylarda darhol yangi ism ko'rinsin)
+    if (full_name && full_name !== user.full_name) {
+      const newToken = await createSession({
+        id: user.id,
+        username: user.username,
+        full_name,
+        role: user.role,
+      })
+      await setSessionCookie(newToken)
+    }
+
     return NextResponse.json({ success: true })
   } catch (err) {
+    console.error('Profile update error:', err)
     return NextResponse.json({ error: "Server xatosi" }, { status: 500 })
   }
 }
