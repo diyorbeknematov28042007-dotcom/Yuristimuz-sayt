@@ -4,8 +4,13 @@ import { useState, useEffect } from 'react'
 import { useSearchParams, useRouter } from 'next/navigation'
 import {
   User, Mail, Phone, MapPin, FileText,
-  CheckCircle2, X, Sparkles, Save, AlertCircle
+  CheckCircle2, X, Sparkles, Save, AlertCircle,
+  Briefcase, Award, Clock, Languages, DollarSign
 } from 'lucide-react'
+
+const CATEGORIES = ['Oilaviy', 'Biznes', 'Mulk', 'Mehnat', 'Soliq', 'Jinoyat', 'Shartnoma', 'Migratsiya']
+const LANGUAGES = ["O'zbekcha", "Ruscha", "Inglizcha", "Qoraqalpoqcha", "Tojikcha"]
+const RESPONSE_TIMES = ['1 soat ichida', '4 soat ichida', '24 soat ichida', '3 kun ichida']
 export default function SettingsPage() {
   const params = useSearchParams()
   const router = useRouter()
@@ -23,6 +28,18 @@ export default function SettingsPage() {
     city: '',
     bio: '',
   })
+
+  // Yurist uchun qo'shimcha state
+  const [lawyerForm, setLawyerForm] = useState({
+    specialization: [] as string[],
+    experience_years: '',
+    hourly_rate: '',
+    description: '',
+    languages: ['O\'zbekcha'] as string[],
+    response_time: '24 soat ichida',
+  })
+  const [lawyerSaved, setLawyerSaved] = useState(false)
+  const [lawyerSaving, setLawyerSaving] = useState(false)
   useEffect(() => {
     fetchUser()
   }, [])
@@ -47,12 +64,79 @@ export default function SettingsPage() {
             bio: profile.bio || '',
           })
         }
+
+        // Yurist bo'lsa — qo'shimcha profil
+        if (data.user.role === 'lawyer') {
+          const { data: lp } = await supabase.rpc('get_lawyer_profile', {
+            p_user_id: data.user.id,
+          })
+          if (lp && lp[0]) {
+            setLawyerForm({
+              specialization: lp[0].specialization || [],
+              experience_years: lp[0].experience_years?.toString() || '',
+              hourly_rate: lp[0].hourly_rate?.toString() || '',
+              description: lp[0].description || '',
+              languages: lp[0].languages || ['O\'zbekcha'],
+              response_time: lp[0].response_time || '24 soat ichida',
+            })
+          }
+        }
       }
     } catch (err) {
       console.error(err)
     } finally {
       setLoading(false)
     }
+  }
+
+  // Yurist profilini saqlash
+  const handleSaveLawyer = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setLawyerSaving(true); setLawyerSaved(false); setError('')
+    try {
+      const res = await fetch('/api/user/lawyer-profile', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          specialization: lawyerForm.specialization,
+          experience_years: lawyerForm.experience_years ? parseInt(lawyerForm.experience_years) : null,
+          hourly_rate: lawyerForm.hourly_rate ? parseFloat(lawyerForm.hourly_rate) : null,
+          description: lawyerForm.description || null,
+          languages: lawyerForm.languages,
+          response_time: lawyerForm.response_time,
+        }),
+      })
+      const data = await res.json()
+      if (!res.ok) {
+        setError(data.error || "Saqlashda xatolik")
+      } else {
+        setLawyerSaved(true)
+        setTimeout(() => setLawyerSaved(false), 3000)
+      }
+    } catch {
+      setError("Tarmoq xatosi")
+    } finally {
+      setLawyerSaving(false)
+    }
+  }
+
+  // Ixtisoslikni toggle qilish
+  const toggleSpec = (spec: string) => {
+    setLawyerForm(f => ({
+      ...f,
+      specialization: f.specialization.includes(spec)
+        ? f.specialization.filter(s => s !== spec)
+        : [...f.specialization, spec]
+    }))
+  }
+
+  const toggleLang = (lang: string) => {
+    setLawyerForm(f => ({
+      ...f,
+      languages: f.languages.includes(lang)
+        ? f.languages.filter(l => l !== lang)
+        : [...f.languages, lang]
+    }))
   }
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -236,6 +320,194 @@ export default function SettingsPage() {
           </button>
         </form>
       </div>
+
+      {/* ════════════════════════════════════ */}
+      {/* YURIST UCHUN MAXSUS BO'LIM            */}
+      {/* ════════════════════════════════════ */}
+      {user?.role === 'lawyer' && (
+        <div style={{ background: '#fff', border: '0.5px solid #e2e8f0', borderRadius: 18, boxShadow: '0 4px 24px rgba(0,0,0,0.04)', overflow: 'hidden', marginTop: 20 }}>
+
+          {/* Header */}
+          <div style={{ padding: '20px 24px', borderBottom: '0.5px solid #f1f5f9', background: 'linear-gradient(135deg, #faf5ff, #ede9fe)', display: 'flex', alignItems: 'center', gap: 14 }}>
+            <div style={{ width: 44, height: 44, background: 'linear-gradient(135deg,#7c3aed,#4338ca)', borderRadius: 12, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+              <Briefcase size={20} color="#fff" />
+            </div>
+            <div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                <p style={{ fontWeight: 700, color: '#0f172a', fontSize: 15 }}>Yurist ma'lumotlari</p>
+                <span style={{ fontSize: 9, fontWeight: 700, background: '#4338ca', color: '#fff', padding: '2px 7px', borderRadius: 4 }}>FAQAT SIZ</span>
+              </div>
+              <p style={{ fontSize: 12, color: '#6d28d9' }}>Mijozlar sizni topishi uchun to'ldiring</p>
+            </div>
+          </div>
+
+          <form onSubmit={handleSaveLawyer} style={{ padding: 24, display: 'flex', flexDirection: 'column', gap: 20 }}>
+
+            {/* Ixtisoslik */}
+            <div>
+              <label style={labelStyle}>
+                <Award size={13} /> Ixtisoslik
+                <span style={{ marginLeft: 4, fontSize: 11, color: '#94a3b8', fontWeight: 500 }}>
+                  ({lawyerForm.specialization.length} tanlandi)
+                </span>
+              </label>
+              <div style={{ display: 'flex', gap: 7, flexWrap: 'wrap' }}>
+                {CATEGORIES.map(cat => {
+                  const active = lawyerForm.specialization.includes(cat)
+                  return (
+                    <button type="button" key={cat} onClick={() => toggleSpec(cat)}
+                      style={{
+                        padding: '7px 14px', borderRadius: 100,
+                        border: active ? '1.5px solid #0f172a' : '1px solid #e2e8f0',
+                        background: active ? '#0f172a' : '#fff',
+                        color: active ? '#fff' : '#475569',
+                        fontSize: 12.5, fontWeight: 600, cursor: 'pointer',
+                        transition: 'all 150ms', fontFamily: 'inherit',
+                      }}>
+                      {active ? '✓ ' : ''}{cat}
+                    </button>
+                  )
+                })}
+              </div>
+              <p style={{ fontSize: 11, color: '#94a3b8', marginTop: 8 }}>
+                Bir nechta soha tanlashingiz mumkin
+              </p>
+            </div>
+
+            {/* Tajriba + Narx (yonma-yon) */}
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+              <div>
+                <label style={labelStyle}>
+                  <Clock size={13} /> Tajriba
+                </label>
+                <div style={{ position: 'relative' }}>
+                  <input
+                    type="number"
+                    min="0"
+                    max="60"
+                    value={lawyerForm.experience_years}
+                    onChange={e => setLawyerForm(f => ({ ...f, experience_years: e.target.value }))}
+                    style={{ ...inputStyle, paddingRight: 48 }}
+                    placeholder="0"
+                  />
+                  <span style={{ position: 'absolute', right: 14, top: '50%', transform: 'translateY(-50%)', fontSize: 12, color: '#94a3b8', fontWeight: 500 }}>
+                    yil
+                  </span>
+                </div>
+              </div>
+              <div>
+                <label style={labelStyle}>
+                  <DollarSign size={13} /> Soatlik narx
+                </label>
+                <div style={{ position: 'relative' }}>
+                  <input
+                    type="number"
+                    min="0"
+                    value={lawyerForm.hourly_rate}
+                    onChange={e => setLawyerForm(f => ({ ...f, hourly_rate: e.target.value }))}
+                    style={{ ...inputStyle, paddingRight: 60 }}
+                    placeholder="100000"
+                  />
+                  <span style={{ position: 'absolute', right: 14, top: '50%', transform: 'translateY(-50%)', fontSize: 12, color: '#94a3b8', fontWeight: 500 }}>
+                    so'm
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            {/* Tillar */}
+            <div>
+              <label style={labelStyle}>
+                <Languages size={13} /> Bilish tillari
+              </label>
+              <div style={{ display: 'flex', gap: 7, flexWrap: 'wrap' }}>
+                {LANGUAGES.map(lang => {
+                  const active = lawyerForm.languages.includes(lang)
+                  return (
+                    <button type="button" key={lang} onClick={() => toggleLang(lang)}
+                      style={{
+                        padding: '7px 14px', borderRadius: 100,
+                        border: active ? '1.5px solid #0f172a' : '1px solid #e2e8f0',
+                        background: active ? '#f1f5f9' : '#fff',
+                        color: active ? '#0f172a' : '#475569',
+                        fontSize: 12.5, fontWeight: 600, cursor: 'pointer',
+                        transition: 'all 150ms', fontFamily: 'inherit',
+                      }}>
+                      {active ? '✓ ' : ''}{lang}
+                    </button>
+                  )
+                })}
+              </div>
+            </div>
+
+            {/* Javob berish vaqti */}
+            <div>
+              <label style={labelStyle}>
+                <Clock size={13} /> Javob berish vaqti
+              </label>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 7 }}>
+                {RESPONSE_TIMES.map(t => {
+                  const active = lawyerForm.response_time === t
+                  return (
+                    <button type="button" key={t} onClick={() => setLawyerForm(f => ({ ...f, response_time: t }))}
+                      style={{
+                        padding: '9px 12px', borderRadius: 10,
+                        border: active ? '1.5px solid #0f172a' : '1px solid #e2e8f0',
+                        background: active ? '#f8fafc' : '#fff',
+                        color: active ? '#0f172a' : '#475569',
+                        fontSize: 12.5, fontWeight: 600, cursor: 'pointer',
+                        transition: 'all 150ms', textAlign: 'left',
+                        fontFamily: 'inherit',
+                      }}>
+                      {active ? '◉ ' : '○ '}{t}
+                    </button>
+                  )
+                })}
+              </div>
+            </div>
+
+            {/* Professional tavsif */}
+            <div>
+              <label style={labelStyle}>
+                <FileText size={13} /> Professional tavsif
+                <span style={{ marginLeft: 4, fontSize: 11, color: '#94a3b8', fontWeight: 500 }}>
+                  ({lawyerForm.description.length}/500)
+                </span>
+              </label>
+              <textarea
+                value={lawyerForm.description}
+                onChange={e => setLawyerForm(f => ({ ...f, description: e.target.value.slice(0, 500) }))}
+                style={{ ...inputStyle, minHeight: 100, resize: 'vertical' as const }}
+                placeholder="Tajribangiz, ko'rsatgan xizmatlaringiz, muvaffaqiyatli ishlaringiz haqida yozing..."
+                rows={4}
+              />
+              <p style={{ fontSize: 11, color: '#94a3b8', marginTop: 5 }}>
+                Mijozlar profil sahifangizda buni ko'radi
+              </p>
+            </div>
+
+            {/* Saved xabar */}
+            {lawyerSaved && (
+              <div style={{ padding: 12, borderRadius: 10, background: '#f0fdf4', border: '1px solid #bbf7d0', fontSize: 13, color: '#166534', display: 'flex', alignItems: 'center', gap: 8 }}>
+                <CheckCircle2 size={16} color="#16a34a" /> Yurist ma'lumotlari saqlandi!
+              </div>
+            )}
+
+            {/* Submit */}
+            <button type="submit" disabled={lawyerSaving}
+              style={{
+                display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+                padding: '12px 20px', background: 'linear-gradient(135deg,#7c3aed,#4338ca)', color: '#fff', border: 'none',
+                borderRadius: 11, fontSize: 14, fontWeight: 700,
+                cursor: lawyerSaving ? 'not-allowed' : 'pointer',
+                boxShadow: '0 4px 14px rgba(124,58,237,0.25)',
+                opacity: lawyerSaving ? 0.7 : 1,
+              }}>
+              {lawyerSaving ? 'Saqlanmoqda...' : <><Save size={15} /> Yurist ma'lumotlarini saqlash</>}
+            </button>
+          </form>
+        </div>
+      )}
       <style>{`
         @keyframes fadeIn { from { opacity: 0; transform: translateY(-8px); } to { opacity: 1; transform: translateY(0); } }
         @keyframes spin { to { transform: rotate(360deg); } }
