@@ -5,7 +5,8 @@ import { createClient } from '@supabase/supabase-js'
 import {
   Scale, MapPin, Star, BadgeCheck, Clock, Briefcase,
   Languages, MessageCircle, Award, FileText, AlertCircle,
-  Share2, Calendar, Eye
+  Share2, Calendar, Eye, Building2, GraduationCap,
+  Shield, Globe, Phone, Linkedin, Send, MessageSquare, Sparkles
 } from 'lucide-react'
 import ShareButton from '@/components/lawyer/ShareButton'
 import PublicReviewsBox from '@/components/reviews/PublicReviewsBox'
@@ -255,11 +256,12 @@ export default async function PublicLawyerPage(
             <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
               {lawyer.languages.map((l: string) => (
                 <span key={l} style={{
+                  display: 'inline-flex', alignItems: 'center', gap: 5,
                   fontSize: 12, fontWeight: 600,
                   background: '#eef2ff', color: '#4338ca',
                   padding: '6px 13px', borderRadius: 100,
                 }}>
-                  🌐 {l}
+                  <Globe size={11} /> {l}
                 </span>
               ))}
             </div>
@@ -292,7 +294,7 @@ export default async function PublicLawyerPage(
         {/* ISH JOYI                                */}
         {/* ═══════════════════════════════════ */}
         {(lawyer.workplace || lawyer.job_title) && (
-          <Section title="Ish joyi" icon={<span style={{ fontSize: 14 }}>🏢</span>}>
+          <Section title="Ish joyi" icon={<Building2 size={15} color="#475569" />}>
             {lawyer.job_title && (
               <p style={{ fontSize: 13.5, fontWeight: 600, color: '#0f172a', marginBottom: 4 }}>
                 {lawyer.job_title}
@@ -308,7 +310,7 @@ export default async function PublicLawyerPage(
         {/* TA'LIM VA SERTIFIKATLAR                 */}
         {/* ═══════════════════════════════════ */}
         {(lawyer.education_university || lawyer.certificates?.length > 0) && (
-          <Section title="Ta'lim va sertifikatlar" icon={<span style={{ fontSize: 14 }}>🎓</span>}>
+          <Section title="Ta'lim va sertifikatlar" icon={<GraduationCap size={15} color="#475569" />}>
             {lawyer.education_university && (
               <div style={{ marginBottom: lawyer.certificates?.length > 0 ? 14 : 0, paddingBottom: lawyer.certificates?.length > 0 ? 14 : 0, borderBottom: lawyer.certificates?.length > 0 ? '0.5px solid #f1f5f9' : 'none' }}>
                 <p style={{ fontSize: 13.5, fontWeight: 600, color: '#0f172a', marginBottom: 3 }}>
@@ -329,11 +331,12 @@ export default async function PublicLawyerPage(
                 <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
                   {lawyer.certificates.map((c: string) => (
                     <span key={c} style={{
+                      display: 'inline-flex', alignItems: 'center', gap: 5,
                       fontSize: 11.5, fontWeight: 600,
                       background: '#eef2ff', color: '#4338ca',
                       padding: '5px 11px', borderRadius: 100,
                     }}>
-                      🏆 {c}
+                      <Award size={11} /> {c}
                     </span>
                   ))}
                 </div>
@@ -346,13 +349,13 @@ export default async function PublicLawyerPage(
         {/* LITSENZIYA                              */}
         {/* ═══════════════════════════════════ */}
         {lawyer.license_number && (
-          <Section title="Advokatlik litsenziyasi" icon={<span style={{ fontSize: 14 }}>⚖️</span>}>
+          <Section title="Advokatlik litsenziyasi" icon={<Shield size={15} color="#475569" />}>
             <div style={{
               background: '#dbeafe', border: '1px solid #93c5fd',
               borderRadius: 10, padding: '12px 14px',
             }}>
               <div style={{ display: 'inline-flex', alignItems: 'center', gap: 5, background: '#1d4ed8', color: '#fff', padding: '3px 9px', borderRadius: 5, fontSize: 10, fontWeight: 700, letterSpacing: '0.4px', marginBottom: 8 }}>
-                ⚖️ LITSENZIYALANGAN ADVOKAT
+                <Shield size={10} /> LITSENZIYALANGAN ADVOKAT
               </div>
               <p style={{ fontSize: 13, color: '#1e3a8a', marginBottom: 4 }}>
                 <strong>Litsenziya raqami:</strong> {lawyer.license_number}
@@ -370,12 +373,12 @@ export default async function PublicLawyerPage(
         {/* ALOQA VA IJTIMOIY TARMOQLAR             */}
         {/* ═══════════════════════════════════ */}
         {(lawyer.public_phone || lawyer.social_telegram || lawyer.social_linkedin || lawyer.website) && (
-          <Section title="Aloqa" icon={<span style={{ fontSize: 14 }}>🌐</span>}>
+          <Section title="Aloqa" icon={<Globe size={15} color="#475569" />}>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
               {lawyer.public_phone && (
                 <a href={`tel:${lawyer.public_phone}`}
                   style={contactLinkStyle('#0f172a', '#f1f5f9')}>
-                  <span style={{ fontSize: 18 }}>📱</span>
+                  <span style={iconCircleStyle('#0f172a')}><Phone size={14} color="#fff" /></span>
                   <span style={{ flex: 1 }}>{lawyer.public_phone}</span>
                   <span style={{ fontSize: 11, color: '#94a3b8', fontWeight: 600 }}>Qo'ng'iroq</span>
                 </a>
@@ -383,7 +386,7 @@ export default async function PublicLawyerPage(
               {lawyer.social_telegram && (
                 <a href={`https://t.me/${lawyer.social_telegram}`} target="_blank" rel="noopener noreferrer"
                   style={contactLinkStyle('#0c4a6e', '#f0f9ff')}>
-                  <span style={{ fontSize: 18 }}>✈️</span>
+                  <span style={iconCircleStyle('#0088cc')}><Send size={14} color="#fff" /></span>
                   <span style={{ flex: 1 }}>@{lawyer.social_telegram}</span>
                   <span style={{ fontSize: 11, color: '#0284c7', fontWeight: 600 }}>Telegram</span>
                 </a>
@@ -391,7 +394,7 @@ export default async function PublicLawyerPage(
               {lawyer.social_linkedin && (
                 <a href={lawyer.social_linkedin} target="_blank" rel="noopener noreferrer"
                   style={contactLinkStyle('#1e3a8a', '#eff6ff')}>
-                  <span style={{ fontSize: 18 }}>💼</span>
+                  <span style={iconCircleStyle('#0a66c2')}><Linkedin size={14} color="#fff" /></span>
                   <span style={{ flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{lawyer.social_linkedin.replace(/^https?:\/\//, '')}</span>
                   <span style={{ fontSize: 11, color: '#1d4ed8', fontWeight: 600 }}>LinkedIn</span>
                 </a>
@@ -399,7 +402,7 @@ export default async function PublicLawyerPage(
               {lawyer.website && (
                 <a href={lawyer.website} target="_blank" rel="noopener noreferrer"
                   style={contactLinkStyle('#475569', '#fafafa')}>
-                  <span style={{ fontSize: 18 }}>🌐</span>
+                  <span style={iconCircleStyle('#475569')}><Globe size={14} color="#fff" /></span>
                   <span style={{ flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{lawyer.website.replace(/^https?:\/\//, '')}</span>
                   <span style={{ fontSize: 11, color: '#64748b', fontWeight: 600 }}>Veb-sayt</span>
                 </a>
@@ -412,7 +415,7 @@ export default async function PublicLawyerPage(
         {/* SHARHLAR (faqat reyting > 0 bo'lsa) */}
         {/* ═══════════════════════════════════ */}
         {lawyer.total_reviews > 0 && (
-          <Section title="Sharhlar va reyting" icon={<span style={{ fontSize: 14 }}>⭐</span>}>
+          <Section title="Sharhlar va reyting" icon={<Sparkles size={15} color="#475569" />}>
             <PublicReviewsBox
               lawyerId={lawyer.id}
               averageRating={parseFloat(lawyer.rating) || 0}
@@ -514,5 +517,15 @@ function contactLinkStyle(textColor: string, bgColor: string): React.CSSProperti
     fontSize: 13, fontWeight: 600, color: textColor,
     textDecoration: 'none',
     transition: 'all 150ms',
+  }
+}
+
+function iconCircleStyle(bgColor: string): React.CSSProperties {
+  return {
+    width: 30, height: 30,
+    background: bgColor,
+    borderRadius: 9,
+    display: 'flex', alignItems: 'center', justifyContent: 'center',
+    flexShrink: 0,
   }
 }
