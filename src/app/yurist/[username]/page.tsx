@@ -8,6 +8,7 @@ import {
   Share2, Calendar, Eye
 } from 'lucide-react'
 import ShareButton from '@/components/lawyer/ShareButton'
+import PublicReviewsBox from '@/components/reviews/PublicReviewsBox'
 
 // ─────────────────────────────────────────────
 // Data fetching
@@ -404,6 +405,19 @@ export default async function PublicLawyerPage(
                 </a>
               )}
             </div>
+          </Section>
+        )}
+
+        {/* ═══════════════════════════════════ */}
+        {/* SHARHLAR (faqat reyting > 0 bo'lsa) */}
+        {/* ═══════════════════════════════════ */}
+        {lawyer.total_reviews > 0 && (
+          <Section title="Sharhlar va reyting" icon={<span style={{ fontSize: 14 }}>⭐</span>}>
+            <PublicReviewsBox
+              lawyerId={lawyer.id}
+              averageRating={parseFloat(lawyer.rating) || 0}
+              totalReviews={lawyer.total_reviews || 0}
+            />
           </Section>
         )}
 
