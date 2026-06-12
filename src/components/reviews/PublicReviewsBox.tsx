@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { Star, Loader2 } from 'lucide-react'
+import { Star, Loader2, Info, Reply, TrendingUp } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 
 type Props = {
@@ -28,16 +28,20 @@ export default function PublicReviewsBox({
 }: Props) {
   const [reviews, setReviews] = useState<Review[]>([])
   const [breakdown, setBreakdown] = useState<{ rating: number; count: number }[]>([])
+  const [ratingDetails, setRatingDetails] = useState<any>(null)
   const [loading, setLoading] = useState(true)
+  const [showInfo, setShowInfo] = useState(false)
 
   useEffect(() => {
     (async () => {
-      const [{ data: list }, { data: bd }] = await Promise.all([
+      const [{ data: list }, { data: bd }, { data: details }] = await Promise.all([
         supabase.rpc('get_lawyer_reviews', { p_lawyer_id: lawyerId, p_limit: 5, p_offset: 0 }),
-        supabase.rpc('get_rating_breakdown', { p_lawyer_id: lawyerId })
+        supabase.rpc('get_rating_breakdown', { p_lawyer_id: lawyerId }),
+        supabase.rpc('get_rating_details', { p_lawyer_id: lawyerId }),
       ])
       setReviews(list || [])
       setBreakdown(bd || [])
+      setRatingDetails(details?.[0] || null)
       setLoading(false)
     })()
   }, [lawyerId])
@@ -55,7 +59,7 @@ export default function PublicReviewsBox({
 
   return (
     <div>
-      {/* Summary */}
+      {/* SUMMARY */}
       <div style={{
         display: 'grid', gridTemplateColumns: '1fr 1.4fr', gap: 16,
         padding: 16, background: '#fafafa', border: '0.5px solid #e2e8f0',
@@ -73,6 +77,19 @@ export default function PublicReviewsBox({
             ))}
           </div>
           <p style={{ fontSize: 11, color: '#94a3b8', fontWeight: 600 }}>{totalReviews} sharh</p>
+
+          {/* Info tooltip */}
+          {ratingDetails && (
+            <button onClick={() => setShowInfo(!showInfo)}
+              style={{
+                marginTop: 8, background: 'none', border: 'none', cursor: 'pointer',
+                display: 'inline-flex', alignItems: 'center', gap: 3,
+                fontSize: 10, color: '#64748b', fontWeight: 600,
+                fontFamily: 'inherit',
+              }}>
+              <Info size={10} /> Reyting qanday hisoblanadi?
+            </button>
+          )}
         </div>
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
@@ -83,7 +100,7 @@ export default function PublicReviewsBox({
               <div style={{ flex: 1, height: 5, background: '#e2e8f0', borderRadius: 100, overflow: 'hidden' }}>
                 <div style={{
                   width: `${(b.count / maxCount) * 100}%`, height: '100%',
-                  background: '#f59e0b', borderRadius: 100,
+                  background: '#f59e0b', borderRadius: 100, transition: 'width 300ms',
                 }} />
               </div>
               <span style={{ fontSize: 11, color: '#94a3b8', fontWeight: 600, width: 16, textAlign: 'right' }}>{b.count}</span>
@@ -92,7 +109,36 @@ export default function PublicReviewsBox({
         </div>
       </div>
 
-      {/* Top 5 reviews */}
+      {/* BAYESIAN INFO BOX */}
+      {showInfo && ratingDetails && (
+        <div style={{
+          padding: '12px 14px',
+          background: '#eff6ff', border: '1px solid #bfdbfe',
+          borderRadius: 11, marginBottom: 14,
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 7, marginBottom: 8 }}>
+            <TrendingUp size={13} color="#1d4ed8" />
+            <p style={{ fontSize: 12, fontWeight: 700, color: '#1e3a8a' }}>
+              Adolatli reyting tizimi
+            </p>
+          </div>
+          <p style={{ fontSize: 11.5, color: '#1e40af', lineHeight: 1.6, marginBottom: 8 }}>
+            Yangi yurist bir nechta sharhdan keyin haqiqiy reytingga yaqinlashadi. Bu adolat va aniqlikni ta'minlash uchun ishlatiladi.
+          </p>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, fontSize: 11 }}>
+            <div style={{ padding: '7px 9px', background: '#fff', borderRadius: 7, border: '0.5px solid #bfdbfe' }}>
+              <p style={{ color: '#64748b', marginBottom: 2 }}>Sof o'rtacha</p>
+              <p style={{ fontWeight: 700, color: '#1e3a8a' }}>{parseFloat(ratingDetails.raw_average).toFixed(2)}</p>
+            </div>
+            <div style={{ padding: '7px 9px', background: '#fff', borderRadius: 7, border: '0.5px solid #bfdbfe' }}>
+              <p style={{ color: '#64748b', marginBottom: 2 }}>Platforma o'rtachasi</p>
+              <p style={{ fontWeight: 700, color: '#1e3a8a' }}>{parseFloat(ratingDetails.global_average).toFixed(2)}</p>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* TOP 5 REVIEWS */}
       {reviews.length > 0 && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
           {reviews.map(r => (
@@ -137,9 +183,12 @@ export default function PublicReviewsBox({
                   marginTop: 9, padding: '9px 11px',
                   background: '#f8fafc', borderLeft: '3px solid #4338ca', borderRadius: 9,
                 }}>
-                  <p style={{ fontSize: 10, fontWeight: 700, color: '#4338ca', letterSpacing: '0.3px', marginBottom: 4 }}>
-                    YURIST JAVOBI
-                  </p>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 5, marginBottom: 4 }}>
+                    <Reply size={10} color="#4338ca" />
+                    <p style={{ fontSize: 10, fontWeight: 700, color: '#4338ca', letterSpacing: '0.3px' }}>
+                      YURIST JAVOBI
+                    </p>
+                  </div>
                   <p style={{ fontSize: 12, color: '#475569', lineHeight: 1.55, whiteSpace: 'pre-wrap' }}>
                     {r.lawyer_reply}
                   </p>
