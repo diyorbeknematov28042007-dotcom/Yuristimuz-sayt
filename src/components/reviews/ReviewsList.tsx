@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { Star, MessageSquare, MoreHorizontal, ChevronDown, Loader2, Reply } from 'lucide-react'
+import { Star, MessageSquare, MoreHorizontal, ChevronDown, Loader2, Reply, Info, TrendingUp } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 import StarRating from './StarRating'
 
@@ -40,6 +40,8 @@ export default function ReviewsList({
 }: Props) {
   const [reviews, setReviews] = useState<Review[]>([])
   const [breakdown, setBreakdown] = useState<Breakdown[]>([])
+  const [ratingDetails, setRatingDetails] = useState<any>(null)
+  const [showInfo, setShowInfo] = useState(false)
   const [loading, setLoading] = useState(true)
   const [showAll, setShowAll] = useState(false)
   const [hasMore, setHasMore] = useState(true)
@@ -55,16 +57,18 @@ export default function ReviewsList({
 
   const fetchInitial = async () => {
     setLoading(true)
-    const [{ data: list }, { data: bd }] = await Promise.all([
+    const [{ data: list }, { data: bd }, { data: details }] = await Promise.all([
       supabase.rpc('get_lawyer_reviews', {
         p_lawyer_id: lawyerId,
         p_limit: PAGE_SIZE,
         p_offset: 0,
       }),
-      supabase.rpc('get_rating_breakdown', { p_lawyer_id: lawyerId })
+      supabase.rpc('get_rating_breakdown', { p_lawyer_id: lawyerId }),
+      supabase.rpc('get_rating_details', { p_lawyer_id: lawyerId }),
     ])
     setReviews(list || [])
     setBreakdown(bd || [])
+    setRatingDetails(details?.[0] || null)
     setHasMore((list || []).length === PAGE_SIZE)
     setPage(0)
     setLoading(false)
@@ -154,7 +158,7 @@ export default function ReviewsList({
       <div style={{
         display: 'grid', gridTemplateColumns: '1fr 1.4fr', gap: 16,
         padding: 18, background: '#fafafa', border: '0.5px solid #e2e8f0',
-        borderRadius: 14, marginBottom: 18, alignItems: 'center',
+        borderRadius: 14, marginBottom: 14, alignItems: 'center',
       }}>
         {/* Left: average */}
         <div style={{ textAlign: 'center', borderRight: '0.5px solid #e2e8f0', paddingRight: 16 }}>
@@ -167,6 +171,19 @@ export default function ReviewsList({
           <p style={{ fontSize: 11, color: '#94a3b8', fontWeight: 600 }}>
             {totalReviews} sharh
           </p>
+
+          {/* Info tugmasi */}
+          {ratingDetails && (
+            <button onClick={() => setShowInfo(!showInfo)}
+              style={{
+                marginTop: 10, background: 'none', border: 'none', cursor: 'pointer',
+                display: 'inline-flex', alignItems: 'center', gap: 4,
+                fontSize: 11, color: showInfo ? '#1d4ed8' : '#64748b', fontWeight: 600,
+                fontFamily: 'inherit',
+              }}>
+              <Info size={11} /> {showInfo ? "Yashirish" : "Qanday hisoblanadi?"}
+            </button>
+          )}
         </div>
 
         {/* Right: breakdown bars */}
@@ -196,6 +213,52 @@ export default function ReviewsList({
           ))}
         </div>
       </div>
+
+      {/* BAYESIAN INFO PANEL */}
+      {showInfo && ratingDetails && (
+        <div style={{
+          padding: '14px 16px',
+          background: '#eff6ff', border: '1px solid #bfdbfe',
+          borderRadius: 12, marginBottom: 16,
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }}>
+            <div style={{ width: 28, height: 28, background: '#1d4ed8', borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <TrendingUp size={14} color="#fff" />
+            </div>
+            <div>
+              <p style={{ fontSize: 12.5, fontWeight: 700, color: '#1e3a8a' }}>
+                Adolatli reyting tizimi
+              </p>
+              <p style={{ fontSize: 10.5, color: '#1e40af', marginTop: 1 }}>
+                Bayesian o'rtacha — IMDb va Amazon ishlatadi
+              </p>
+            </div>
+          </div>
+          <p style={{ fontSize: 12, color: '#1e40af', lineHeight: 1.65, marginBottom: 10 }}>
+            Yangi yurist 1 ta 5-yulduzdan keyin 5.0 ko'rinmaydi. Reyting sharhlar soni oshgan sayin haqiqiy qiymatga yaqinlashadi. Bu mijozlarni adolatsiz ko'rsatkichlardan himoya qiladi.
+          </p>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 7 }}>
+            <div style={{ padding: '8px 10px', background: '#fff', borderRadius: 8, border: '0.5px solid #bfdbfe' }}>
+              <p style={{ fontSize: 10, color: '#64748b', marginBottom: 3, textTransform: 'uppercase', letterSpacing: '0.4px', fontWeight: 600 }}>Sof o'rtacha</p>
+              <p style={{ fontSize: 14, fontWeight: 800, color: '#1e3a8a' }}>
+                {parseFloat(ratingDetails.raw_average).toFixed(2)}
+              </p>
+            </div>
+            <div style={{ padding: '8px 10px', background: '#fff', borderRadius: 8, border: '0.5px solid #bfdbfe' }}>
+              <p style={{ fontSize: 10, color: '#64748b', marginBottom: 3, textTransform: 'uppercase', letterSpacing: '0.4px', fontWeight: 600 }}>Adolatli</p>
+              <p style={{ fontSize: 14, fontWeight: 800, color: '#1e3a8a' }}>
+                {averageRating.toFixed(2)}
+              </p>
+            </div>
+            <div style={{ padding: '8px 10px', background: '#fff', borderRadius: 8, border: '0.5px solid #bfdbfe' }}>
+              <p style={{ fontSize: 10, color: '#64748b', marginBottom: 3, textTransform: 'uppercase', letterSpacing: '0.4px', fontWeight: 600 }}>Platforma</p>
+              <p style={{ fontSize: 14, fontWeight: 800, color: '#1e3a8a' }}>
+                {parseFloat(ratingDetails.global_average).toFixed(2)}
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* ════════════════════════════ */}
       {/* REVIEWS LIST                  */}
