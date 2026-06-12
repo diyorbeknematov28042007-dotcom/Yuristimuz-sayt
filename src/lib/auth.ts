@@ -12,6 +12,7 @@ export interface SessionUser {
   username: string
   full_name: string
   role: 'client' | 'lawyer' | 'admin'
+  avatar_url?: string | null
 }
 
 export async function createSession(user: SessionUser): Promise<string> {
@@ -20,6 +21,7 @@ export async function createSession(user: SessionUser): Promise<string> {
     username: user.username,
     full_name: user.full_name,
     role: user.role,
+    avatar_url: user.avatar_url || null,
   })
     .setProtectedHeader({ alg: 'HS256' })
     .setIssuedAt()
@@ -36,6 +38,7 @@ export async function verifySession(token: string): Promise<SessionUser | null> 
       username: payload.username as string,
       full_name: payload.full_name as string,
       role: payload.role as 'client' | 'lawyer' | 'admin',
+      avatar_url: (payload.avatar_url as string) || null,
     }
   } catch {
     return null
