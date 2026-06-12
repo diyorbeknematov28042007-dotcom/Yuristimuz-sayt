@@ -7,6 +7,7 @@ import {
   CheckCircle2, X, Sparkles, Save, AlertCircle,
   Briefcase, Award, Clock, Languages, DollarSign
 } from 'lucide-react'
+import AvatarUpload from '@/components/profile/AvatarUpload'
 
 const CATEGORIES = ['Oilaviy', 'Biznes', 'Mulk', 'Mehnat', 'Soliq', 'Jinoyat', 'Shartnoma', 'Migratsiya']
 const LANGUAGES = ["O'zbekcha", "Ruscha", "Inglizcha", "Qoraqalpoqcha", "Tojikcha"]
@@ -27,6 +28,7 @@ export default function SettingsPage() {
     phone: '',
     city: '',
     bio: '',
+    avatar_url: null as string | null,
   })
 
   // Yurist uchun qo'shimcha state
@@ -37,6 +39,20 @@ export default function SettingsPage() {
     description: '',
     languages: ['O\'zbekcha'] as string[],
     response_time: '24 soat ichida',
+    // Yangi maydonlar — Faza 1.3
+    workplace: '',
+    job_title: '',
+    education_university: '',
+    education_year: '',
+    diploma_url: '',
+    certificates: [] as string[],
+    license_number: '',
+    license_authority: '',
+    license_valid_until: '',
+    social_telegram: '',
+    social_linkedin: '',
+    website: '',
+    public_phone: '',
   })
   const [lawyerSaved, setLawyerSaved] = useState(false)
   const [lawyerSaving, setLawyerSaving] = useState(false)
@@ -62,6 +78,7 @@ export default function SettingsPage() {
             phone: profile.phone || '',
             city: profile.city || '',
             bio: profile.bio || '',
+            avatar_url: profile.avatar_url || null,
           })
         }
 
@@ -78,6 +95,19 @@ export default function SettingsPage() {
               description: lp[0].description || '',
               languages: lp[0].languages || ['O\'zbekcha'],
               response_time: lp[0].response_time || '24 soat ichida',
+              workplace: lp[0].workplace || '',
+              job_title: lp[0].job_title || '',
+              education_university: lp[0].education_university || '',
+              education_year: lp[0].education_year?.toString() || '',
+              diploma_url: lp[0].diploma_url || '',
+              certificates: lp[0].certificates || [],
+              license_number: lp[0].license_number || '',
+              license_authority: lp[0].license_authority || '',
+              license_valid_until: lp[0].license_valid_until || '',
+              social_telegram: lp[0].social_telegram || '',
+              social_linkedin: lp[0].social_linkedin || '',
+              website: lp[0].website || '',
+              public_phone: lp[0].public_phone || '',
             })
           }
         }
@@ -104,6 +134,20 @@ export default function SettingsPage() {
           description: lawyerForm.description || null,
           languages: lawyerForm.languages,
           response_time: lawyerForm.response_time,
+          // Yangi maydonlar
+          workplace: lawyerForm.workplace || null,
+          job_title: lawyerForm.job_title || null,
+          education_university: lawyerForm.education_university || null,
+          education_year: lawyerForm.education_year ? parseInt(lawyerForm.education_year) : null,
+          diploma_url: lawyerForm.diploma_url || null,
+          certificates: lawyerForm.certificates.length > 0 ? lawyerForm.certificates : null,
+          license_number: lawyerForm.license_number || null,
+          license_authority: lawyerForm.license_authority || null,
+          license_valid_until: lawyerForm.license_valid_until || null,
+          social_telegram: lawyerForm.social_telegram || null,
+          social_linkedin: lawyerForm.social_linkedin || null,
+          website: lawyerForm.website || null,
+          public_phone: lawyerForm.public_phone || null,
         }),
       })
       const data = await res.json()
@@ -227,6 +271,20 @@ export default function SettingsPage() {
           </div>
         </div>
         <form onSubmit={handleSave} style={{ padding: 24, display: 'flex', flexDirection: 'column', gap: 18 }}>
+
+          {/* Avatar upload */}
+          {user?.id && (
+            <AvatarUpload
+              currentAvatarUrl={form.avatar_url}
+              userName={form.full_name || user.username || 'U'}
+              userId={user.id}
+              onUploadSuccess={(newUrl) => {
+                setForm(f => ({ ...f, avatar_url: newUrl }))
+                router.refresh()
+              }}
+            />
+          )}
+
           {/* To'liq ism */}
           <div>
             <label style={labelStyle}>
@@ -328,17 +386,32 @@ export default function SettingsPage() {
         <div style={{ background: '#fff', border: '0.5px solid #e2e8f0', borderRadius: 18, boxShadow: '0 4px 24px rgba(0,0,0,0.04)', overflow: 'hidden', marginTop: 20 }}>
 
           {/* Header */}
-          <div style={{ padding: '20px 24px', borderBottom: '0.5px solid #f1f5f9', background: 'linear-gradient(135deg, #faf5ff, #ede9fe)', display: 'flex', alignItems: 'center', gap: 14 }}>
-            <div style={{ width: 44, height: 44, background: 'linear-gradient(135deg,#7c3aed,#4338ca)', borderRadius: 12, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-              <Briefcase size={20} color="#fff" />
-            </div>
-            <div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                <p style={{ fontWeight: 700, color: '#0f172a', fontSize: 15 }}>Yurist ma'lumotlari</p>
-                <span style={{ fontSize: 9, fontWeight: 700, background: '#4338ca', color: '#fff', padding: '2px 7px', borderRadius: 4 }}>FAQAT SIZ</span>
+          <div style={{ padding: '20px 24px', borderBottom: '0.5px solid #f1f5f9', background: 'linear-gradient(135deg, #faf5ff, #ede9fe)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 14, flexWrap: 'wrap' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 14, flex: 1, minWidth: 200 }}>
+              <div style={{ width: 44, height: 44, background: 'linear-gradient(135deg,#7c3aed,#4338ca)', borderRadius: 12, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                <Briefcase size={20} color="#fff" />
               </div>
-              <p style={{ fontSize: 12, color: '#6d28d9' }}>Mijozlar sizni topishi uchun to'ldiring</p>
+              <div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                  <p style={{ fontWeight: 700, color: '#0f172a', fontSize: 15 }}>Yurist ma'lumotlari</p>
+                  <span style={{ fontSize: 9, fontWeight: 700, background: '#4338ca', color: '#fff', padding: '2px 7px', borderRadius: 4 }}>FAQAT SIZ</span>
+                </div>
+                <p style={{ fontSize: 12, color: '#6d28d9' }}>Mijozlar sizni topishi uchun to'ldiring</p>
+              </div>
             </div>
+            {/* Public profil tugmasi */}
+            {user?.username && (
+              <a href={`/yurist/${user.username}`} target="_blank" rel="noopener noreferrer"
+                style={{
+                  display: 'flex', alignItems: 'center', gap: 6,
+                  padding: '8px 14px', background: '#fff',
+                  color: '#7c3aed', border: '1px solid #ddd6fe',
+                  borderRadius: 10, fontSize: 12, fontWeight: 600, textDecoration: 'none',
+                  whiteSpace: 'nowrap',
+                }}>
+                🔗 Mening profilim
+              </a>
+            )}
           </div>
 
           <form onSubmit={handleSaveLawyer} style={{ padding: 24, display: 'flex', flexDirection: 'column', gap: 20 }}>
@@ -486,6 +559,223 @@ export default function SettingsPage() {
               </p>
             </div>
 
+            {/* ════════════════════════════ */}
+            {/* 🏢 ISH JOYI                  */}
+            {/* ════════════════════════════ */}
+            <details style={detailsStyle}>
+              <summary style={summaryStyle}>
+                <span style={summaryLeftStyle}>
+                  <span style={summaryIconStyle}>🏢</span>
+                  <span>
+                    <p style={summaryTitleStyle}>Ish joyi</p>
+                    <p style={summarySubStyle}>Qayerda ishlaysiz</p>
+                  </span>
+                </span>
+                <span style={summaryChevron}>▼</span>
+              </summary>
+              <div style={detailsBodyStyle}>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+                  <div>
+                    <label style={miniLabelStyle}>Tashkilot nomi</label>
+                    <input value={lawyerForm.workplace}
+                      onChange={e => setLawyerForm(f => ({ ...f, workplace: e.target.value }))}
+                      placeholder='"Karimov va sheriklari"'
+                      style={inputStyle} />
+                  </div>
+                  <div>
+                    <label style={miniLabelStyle}>Lavozim</label>
+                    <input value={lawyerForm.job_title}
+                      onChange={e => setLawyerForm(f => ({ ...f, job_title: e.target.value }))}
+                      placeholder="Advokat, yurist, maslahatchi"
+                      style={inputStyle} />
+                  </div>
+                </div>
+              </div>
+            </details>
+
+            {/* ════════════════════════════ */}
+            {/* 🎓 TA'LIM                    */}
+            {/* ════════════════════════════ */}
+            <details style={detailsStyle}>
+              <summary style={summaryStyle}>
+                <span style={summaryLeftStyle}>
+                  <span style={summaryIconStyle}>🎓</span>
+                  <span>
+                    <p style={summaryTitleStyle}>Ta'lim va sertifikatlar</p>
+                    <p style={summarySubStyle}>Diplom, universitet, qo'shimcha kurslar</p>
+                  </span>
+                </span>
+                <span style={summaryChevron}>▼</span>
+              </summary>
+              <div style={detailsBodyStyle}>
+                <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: 10, marginBottom: 12 }}>
+                  <div>
+                    <label style={miniLabelStyle}>Universitet</label>
+                    <input value={lawyerForm.education_university}
+                      onChange={e => setLawyerForm(f => ({ ...f, education_university: e.target.value }))}
+                      placeholder="Toshkent Davlat Yuridik Universiteti"
+                      style={inputStyle} />
+                  </div>
+                  <div>
+                    <label style={miniLabelStyle}>Tugatgan yil</label>
+                    <input type="number" min="1960" max={new Date().getFullYear()}
+                      value={lawyerForm.education_year}
+                      onChange={e => setLawyerForm(f => ({ ...f, education_year: e.target.value }))}
+                      placeholder="2018"
+                      style={inputStyle} />
+                  </div>
+                </div>
+
+                {/* Sertifikatlar — pill format */}
+                <div>
+                  <label style={miniLabelStyle}>
+                    Qo'shimcha sertifikatlar
+                    <span style={{ marginLeft: 4, fontSize: 10, color: '#94a3b8', fontWeight: 500 }}>
+                      ({lawyerForm.certificates.length}/3)
+                    </span>
+                  </label>
+                  <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginBottom: 8 }}>
+                    {lawyerForm.certificates.map((c, i) => (
+                      <span key={i} style={{
+                        display: 'inline-flex', alignItems: 'center', gap: 5,
+                        background: '#eef2ff', color: '#4338ca',
+                        padding: '5px 10px', borderRadius: 100,
+                        fontSize: 12, fontWeight: 600,
+                      }}>
+                        {c}
+                        <button type="button"
+                          onClick={() => setLawyerForm(f => ({ ...f, certificates: f.certificates.filter((_, idx) => idx !== i) }))}
+                          style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#4338ca', padding: 0, display: 'flex' }}>
+                          <X size={12} />
+                        </button>
+                      </span>
+                    ))}
+                  </div>
+                  {lawyerForm.certificates.length < 3 && (
+                    <input
+                      placeholder='Sertifikat nomini yozib Enter bosing'
+                      style={inputStyle}
+                      onKeyDown={e => {
+                        if (e.key === 'Enter') {
+                          e.preventDefault()
+                          const val = (e.target as HTMLInputElement).value.trim()
+                          if (val && !lawyerForm.certificates.includes(val)) {
+                            setLawyerForm(f => ({ ...f, certificates: [...f.certificates, val] }))
+                            ;(e.target as HTMLInputElement).value = ''
+                          }
+                        }
+                      }} />
+                  )}
+                  <p style={{ fontSize: 11, color: '#94a3b8', marginTop: 5 }}>
+                    Masalan: "Korporativ huquq sertifikat", "Mehnat huquqi kursi"
+                  </p>
+                </div>
+              </div>
+            </details>
+
+            {/* ════════════════════════════ */}
+            {/* ⚖️ LITSENZIYA (ixtiyoriy)     */}
+            {/* ════════════════════════════ */}
+            <details style={detailsStyle}>
+              <summary style={summaryStyle}>
+                <span style={summaryLeftStyle}>
+                  <span style={summaryIconStyle}>⚖️</span>
+                  <span>
+                    <p style={summaryTitleStyle}>Advokatlik litsenziyasi</p>
+                    <p style={summarySubStyle}>Ixtiyoriy — litsenziyasi bor advokatlar uchun</p>
+                  </span>
+                </span>
+                <span style={summaryChevron}>▼</span>
+              </summary>
+              <div style={detailsBodyStyle}>
+                <div style={{
+                  padding: '10px 13px', background: '#fef3c7', border: '1px solid #fde68a',
+                  borderRadius: 9, marginBottom: 12, fontSize: 11.5, color: '#78350f', lineHeight: 1.55,
+                }}>
+                  💡 Litsenziyani kiritsangiz, profilda "Litsenziyalangan advokat" badge ko'rinadi
+                </div>
+
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 10 }}>
+                  <div>
+                    <label style={miniLabelStyle}>Litsenziya raqami</label>
+                    <input value={lawyerForm.license_number}
+                      onChange={e => setLawyerForm(f => ({ ...f, license_number: e.target.value }))}
+                      placeholder="№ 12345"
+                      style={inputStyle} />
+                  </div>
+                  <div>
+                    <label style={miniLabelStyle}>Amal qilish muddati</label>
+                    <input type="date"
+                      value={lawyerForm.license_valid_until}
+                      onChange={e => setLawyerForm(f => ({ ...f, license_valid_until: e.target.value }))}
+                      style={inputStyle} />
+                  </div>
+                </div>
+
+                <div>
+                  <label style={miniLabelStyle}>Beruvchi organ</label>
+                  <input value={lawyerForm.license_authority}
+                    onChange={e => setLawyerForm(f => ({ ...f, license_authority: e.target.value }))}
+                    placeholder="O'zbekiston Respublikasi Adliya vazirligi"
+                    style={inputStyle} />
+                </div>
+              </div>
+            </details>
+
+            {/* ════════════════════════════ */}
+            {/* 🌐 IJTIMOIY TARMOQLAR        */}
+            {/* ════════════════════════════ */}
+            <details style={detailsStyle}>
+              <summary style={summaryStyle}>
+                <span style={summaryLeftStyle}>
+                  <span style={summaryIconStyle}>🌐</span>
+                  <span>
+                    <p style={summaryTitleStyle}>Aloqa va ijtimoiy tarmoqlar</p>
+                    <p style={summarySubStyle}>Telegram, LinkedIn, veb-sayt</p>
+                  </span>
+                </span>
+                <span style={summaryChevron}>▼</span>
+              </summary>
+              <div style={detailsBodyStyle}>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                  <div>
+                    <label style={miniLabelStyle}>📱 Umumiy telefon (public)</label>
+                    <input type="tel" value={lawyerForm.public_phone}
+                      onChange={e => setLawyerForm(f => ({ ...f, public_phone: e.target.value }))}
+                      placeholder="+998 90 123 45 67"
+                      style={inputStyle} />
+                    <p style={{ fontSize: 10.5, color: '#94a3b8', marginTop: 3 }}>
+                      Bu raqam profilda ko'rinadi — mijozlar to'g'ridan qo'ng'iroq qila oladi
+                    </p>
+                  </div>
+
+                  <div>
+                    <label style={miniLabelStyle}>✈️ Telegram</label>
+                    <input value={lawyerForm.social_telegram}
+                      onChange={e => setLawyerForm(f => ({ ...f, social_telegram: e.target.value.replace('@', '') }))}
+                      placeholder="username (@ belgisisiz)"
+                      style={inputStyle} />
+                  </div>
+
+                  <div>
+                    <label style={miniLabelStyle}>💼 LinkedIn URL</label>
+                    <input type="url" value={lawyerForm.social_linkedin}
+                      onChange={e => setLawyerForm(f => ({ ...f, social_linkedin: e.target.value }))}
+                      placeholder="https://linkedin.com/in/..."
+                      style={inputStyle} />
+                  </div>
+
+                  <div>
+                    <label style={miniLabelStyle}>🌐 Veb-sayt</label>
+                    <input type="url" value={lawyerForm.website}
+                      onChange={e => setLawyerForm(f => ({ ...f, website: e.target.value }))}
+                      placeholder="https://..."
+                      style={inputStyle} />
+                  </div>
+                </div>
+              </div>
+            </details>
+
             {/* Saved xabar */}
             {lawyerSaved && (
               <div style={{ padding: 12, borderRadius: 10, background: '#f0fdf4', border: '1px solid #bbf7d0', fontSize: 13, color: '#166534', display: 'flex', alignItems: 'center', gap: 8 }}>
@@ -523,4 +813,41 @@ const inputStyle: React.CSSProperties = {
   width: '100%', padding: '10px 14px', fontSize: 14,
   background: '#fff', border: '1px solid #e2e8f0', borderRadius: 10,
   color: '#0f172a', outline: 'none', fontFamily: 'inherit'
+}
+const miniLabelStyle: React.CSSProperties = {
+  display: 'block', fontSize: 11, fontWeight: 600, color: '#64748b',
+  marginBottom: 5, textTransform: 'uppercase' as const, letterSpacing: '0.4px',
+}
+const detailsStyle: React.CSSProperties = {
+  background: '#fafafa',
+  border: '1px solid #e2e8f0',
+  borderRadius: 12,
+  overflow: 'hidden',
+}
+const summaryStyle: React.CSSProperties = {
+  display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+  padding: '14px 16px',
+  cursor: 'pointer',
+  listStyle: 'none',
+  userSelect: 'none' as const,
+}
+const summaryLeftStyle: React.CSSProperties = {
+  display: 'flex', alignItems: 'center', gap: 12,
+}
+const summaryIconStyle: React.CSSProperties = {
+  fontSize: 20,
+}
+const summaryTitleStyle: React.CSSProperties = {
+  fontSize: 13, fontWeight: 700, color: '#0f172a', marginBottom: 1,
+}
+const summarySubStyle: React.CSSProperties = {
+  fontSize: 11, color: '#94a3b8',
+}
+const summaryChevron: React.CSSProperties = {
+  fontSize: 10, color: '#94a3b8',
+}
+const detailsBodyStyle: React.CSSProperties = {
+  padding: '14px 16px 18px',
+  borderTop: '1px solid #e2e8f0',
+  background: '#fff',
 }
