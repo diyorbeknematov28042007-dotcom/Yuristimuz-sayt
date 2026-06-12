@@ -7,8 +7,10 @@ import { supabase } from '@/lib/supabase'
 import {
   ArrowLeft, MapPin, Star, BadgeCheck, Clock, Briefcase,
   Languages, MessageCircle, Phone, Mail, Award, FileText,
-  Loader2, AlertCircle, DollarSign
+  Loader2, AlertCircle, DollarSign, MessageSquare
 } from 'lucide-react'
+import ReviewsList from '@/components/reviews/ReviewsList'
+import LeaveReviewButton from '@/components/reviews/LeaveReviewButton'
 
 export default function LawyerDetailPage() {
   const params = useParams()
@@ -167,29 +169,40 @@ export default function LawyerDetailPage() {
 
         {/* CTA tugmalar */}
         {!isOwnProfile && currentUser && (
-          <div style={{ display: 'flex', gap: 8 }}>
-            <button onClick={handleStartChat} disabled={startingChat}
-              style={{
-                flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
-                padding: '12px', background: '#0f172a', color: '#fff', border: 'none', borderRadius: 12,
-                fontSize: 14, fontWeight: 700, cursor: startingChat ? 'not-allowed' : 'pointer',
-                fontFamily: 'inherit',
-                boxShadow: '0 4px 12px rgba(15,23,42,0.2)',
-              }}>
-              {startingChat ? <Loader2 size={15} style={{ animation: 'spin 1s linear infinite' }} /> : <><MessageCircle size={15} /> Yozish</>}
-            </button>
-            {lawyer.phone && (
-              <a href={`tel:${lawyer.phone}`}
+          <>
+            <div style={{ display: 'flex', gap: 8, marginBottom: 8 }}>
+              <button onClick={handleStartChat} disabled={startingChat}
                 style={{
-                  display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  padding: '12px 16px', background: '#fff', color: '#0f172a',
-                  border: '1px solid #e2e8f0', borderRadius: 12,
-                  fontSize: 14, fontWeight: 600, textDecoration: 'none',
+                  flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+                  padding: '12px', background: '#0f172a', color: '#fff', border: 'none', borderRadius: 12,
+                  fontSize: 14, fontWeight: 700, cursor: startingChat ? 'not-allowed' : 'pointer',
+                  fontFamily: 'inherit',
+                  boxShadow: '0 4px 12px rgba(15,23,42,0.2)',
                 }}>
-                <Phone size={15} />
-              </a>
+                {startingChat ? <Loader2 size={15} style={{ animation: 'spin 1s linear infinite' }} /> : <><MessageCircle size={15} /> Yozish</>}
+              </button>
+              {lawyer.phone && (
+                <a href={`tel:${lawyer.phone}`}
+                  style={{
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    padding: '12px 16px', background: '#fff', color: '#0f172a',
+                    border: '1px solid #e2e8f0', borderRadius: 12,
+                    fontSize: 14, fontWeight: 600, textDecoration: 'none',
+                  }}>
+                  <Phone size={15} />
+                </a>
+              )}
+            </div>
+            {/* Sharh qoldirish tugmasi - faqat client */}
+            {currentUser.role === 'client' && (
+              <LeaveReviewButton
+                lawyerId={lawyer.id}
+                lawyerName={lawyer.full_name}
+                clientId={currentUser.id}
+                onReviewSaved={() => fetchData()}
+              />
             )}
-          </div>
+          </>
         )}
 
         {isOwnProfile && (
@@ -250,6 +263,19 @@ export default function LawyerDetailPage() {
           </p>
         </Section>
       )}
+
+      {/* ════════════════════════════ */}
+      {/* SHARHLAR BO'LIMI              */}
+      {/* ════════════════════════════ */}
+      <Section title="Sharhlar va reyting" icon={<MessageSquare size={16} color="#475569" />}>
+        <ReviewsList
+          lawyerId={lawyer.id}
+          lawyerName={lawyer.full_name}
+          averageRating={parseFloat(lawyer.rating) || 0}
+          totalReviews={lawyer.total_reviews || 0}
+          isOwnProfile={isOwnProfile}
+        />
+      </Section>
 
       <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
     </div>
