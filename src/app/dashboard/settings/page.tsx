@@ -5,9 +5,12 @@ import { useSearchParams, useRouter } from 'next/navigation'
 import {
   User, Mail, Phone, MapPin, FileText,
   CheckCircle2, X, Sparkles, Save, AlertCircle,
-  Briefcase, Award, Clock, Languages, DollarSign
+  Briefcase, Award, Clock, Languages, DollarSign,
+  Bell, Volume2, VolumeX, MessageCircle, Smartphone, Loader2
 } from 'lucide-react'
 import AvatarUpload from '@/components/profile/AvatarUpload'
+import { useNotifications } from '@/contexts/NotificationContext'
+import { subscribeToPush, unsubscribeFromPush, getSubscriptionStatus } from '@/lib/push-subscription'
 
 const CATEGORIES = ['Oilaviy', 'Biznes', 'Mulk', 'Mehnat', 'Soliq', 'Jinoyat', 'Shartnoma', 'Migratsiya']
 const LANGUAGES = ["O'zbekcha", "Ruscha", "Inglizcha", "Qoraqalpoqcha", "Tojikcha"]
@@ -798,6 +801,12 @@ export default function SettingsPage() {
           </form>
         </div>
       )}
+
+      {/* ════════════════════════════════════════ */}
+      {/* BILDIRISHNOMA SOZLAMALARI                */}
+      {/* ════════════════════════════════════════ */}
+      <NotificationSettings userId={user?.id} />
+
       <style>{`
         @keyframes fadeIn { from { opacity: 0; transform: translateY(-8px); } to { opacity: 1; transform: translateY(0); } }
         @keyframes spin { to { transform: rotate(360deg); } }
@@ -805,6 +814,248 @@ export default function SettingsPage() {
     </div>
   )
 }
+// ────────────────────────────────────────
+// BILDIRISHNOMA SOZLAMALARI - sub komponent
+// ────────────────────────────────────────
+function NotificationSettings({ userId }: { userId?: string }) {
+  const { soundEnabled, setSoundEnabled, totalUnread } = useNotifications()
+  const [pushStatus, setPushStatus] = useState<{
+    isSubscribed: boolean
+    permission: NotificationPermission | 'unsupported'
+  }>({ isSubscribed: false, permission: 'default' })
+  const [pushLoading, setPushLoading] = useState(false)
+  const [pushError, setPushError] = useState('')
+
+  // Joriy holatni yuklash
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+    getSubscriptionStatus().then(setPushStatus)
+  }, [])
+
+  const handlePushToggle = async () => {
+    if (!userId) return
+    setPushLoading(true)
+    setPushError('')
+
+    if (pushStatus.isSubscribed) {
+      // Unsubscribe
+      const res = await unsubscribeFromPush(userId)
+      if (!res.success) {
+        setPushError(res.error || 'Xato')
+      }
+    } else {
+      // Subscribe
+      const res = await subscribeToPush(userId)
+      if (!res.success) {
+        setPushError(res.error || 'Xato')
+      }
+    }
+
+    const newStatus = await getSubscriptionStatus()
+    setPushStatus(newStatus)
+    setPushLoading(false)
+  }
+
+  const supported = pushStatus.permission !== 'unsupported'
+  const denied = pushStatus.permission === 'denied'
+
+  return (
+    <div style={{ background: '#fff', border: '0.5px solid #e2e8f0', borderRadius: 16, marginBottom: 16, overflow: 'hidden' }}>
+      {/* Header */}
+      <div style={{
+        padding: '18px 22px',
+        background: 'linear-gradient(135deg, #fafafa, #fff)',
+        borderBottom: '0.5px solid #e2e8f0',
+      }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+          <div style={{
+            width: 34, height: 34,
+            background: '#0f172a', borderRadius: 10,
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+          }}>
+            <Bell size={16} color="#fff" />
+          </div>
+          <div>
+            <h2 style={{ fontSize: 15, fontWeight: 700, color: '#0f172a', letterSpacing: '-0.2px' }}>
+              Bildirishnomalar
+            </h2>
+            <p style={{ fontSize: 11.5, color: '#94a3b8', marginTop: 1 }}>
+              Yangi xabarlar haqida xabardor bo'lish
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <div style={{ padding: '6px 0' }}>
+
+        {/* ─── Push notification (yangi) ─── */}
+        <div style={{ padding: '14px 22px', borderBottom: '0.5px solid #f1f5f9' }}>
+          <div style={{
+            display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12,
+          }}>
+            <div style={{ flex: 1 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 3 }}>
+                <Smartphone size={14} color={pushStatus.isSubscribed ? '#0f172a' : '#94a3b8'} />
+                <span style={{ fontSize: 13, fontWeight: 700, color: '#0f172a' }}>
+                  Telefon bildirishnomasi
+                </span>
+                {pushStatus.isSubscribed && (
+                  <span style={{
+                    fontSize: 9, fontWeight: 700,
+                    background: '#dcfce7', color: '#166534',
+                    padding: '2px 6px', borderRadius: 4,
+                    letterSpacing: '0.3px',
+                  }}>
+                    YOQILGAN
+                  </span>
+                )}
+              </div>
+              <p style={{ fontSize: 11.5, color: '#64748b', lineHeight: 1.5 }}>
+                Sayt yopiq bo'lsa ham yangi xabarlar telefonga keladi
+              </p>
+            </div>
+
+            {/* Toggle */}
+            <button
+              type="button"
+              onClick={handlePushToggle}
+              disabled={!supported || denied || pushLoading || !userId}
+              style={{
+                width: 44, height: 26,
+                background: pushStatus.isSubscribed ? '#0f172a' : '#cbd5e1',
+                border: 'none', borderRadius: 100,
+                cursor: (!supported || denied || pushLoading) ? 'not-allowed' : 'pointer',
+                position: 'relative',
+                transition: 'background 200ms',
+                flexShrink: 0,
+                opacity: (!supported || denied) ? 0.4 : 1,
+              }}>
+              <div style={{
+                position: 'absolute',
+                top: 3, left: pushStatus.isSubscribed ? 21 : 3,
+                width: 20, height: 20,
+                background: '#fff', borderRadius: '50%',
+                transition: 'left 200ms',
+                boxShadow: '0 1px 3px rgba(0,0,0,0.15)',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+              }}>
+                {pushLoading && <Loader2 size={11} color="#0f172a" style={{ animation: 'spin 1s linear infinite' }} />}
+              </div>
+            </button>
+          </div>
+
+          {/* Status xabarlar */}
+          {!supported && (
+            <div style={{
+              marginTop: 10, padding: '8px 11px',
+              background: '#fafafa', borderRadius: 8,
+              fontSize: 11, color: '#64748b', lineHeight: 1.5,
+            }}>
+              Brauzeringiz push notification'larni qo'llab-quvvatlamaydi. Chrome yoki Safari (iOS 16.4+) ishlatib ko'ring.
+            </div>
+          )}
+          {denied && (
+            <div style={{
+              marginTop: 10, padding: '8px 11px',
+              background: '#fef2f2', border: '1px solid #fecaca', borderRadius: 8,
+              fontSize: 11, color: '#991b1b', lineHeight: 1.5,
+            }}>
+              Bildirishnoma rad etilgan. Brauzer sozlamalaridan ruxsat bering: <strong>🔒 → Bildirishnomalar → Ruxsat</strong>
+            </div>
+          )}
+          {pushError && (
+            <div style={{
+              marginTop: 10, padding: '8px 11px',
+              background: '#fef2f2', border: '1px solid #fecaca', borderRadius: 8,
+              fontSize: 11, color: '#991b1b',
+            }}>
+              {pushError}
+            </div>
+          )}
+          {pushStatus.isSubscribed && (
+            <div style={{
+              marginTop: 10, padding: '8px 11px',
+              background: '#f0fdf4', border: '1px solid #bbf7d0', borderRadius: 8,
+              display: 'flex', alignItems: 'center', gap: 7,
+              fontSize: 11, color: '#166534',
+            }}>
+              <CheckCircle2 size={12} />
+              <span>Bu qurilmada bildirishnomalar yoqilgan</span>
+            </div>
+          )}
+        </div>
+
+        {/* ─── Ovoz signali ─── */}
+        <div style={{ padding: '14px 22px' }}>
+          <div style={{
+            display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12,
+          }}>
+            <div style={{ flex: 1 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 3 }}>
+                {soundEnabled ? <Volume2 size={14} color="#0f172a" /> : <VolumeX size={14} color="#94a3b8" />}
+                <span style={{ fontSize: 13, fontWeight: 700, color: '#0f172a' }}>
+                  Ovoz signali
+                </span>
+              </div>
+              <p style={{ fontSize: 11.5, color: '#64748b', lineHeight: 1.5 }}>
+                Sayt ochiq bo'lganda yangi xabar kelishi bilan ovoz
+              </p>
+            </div>
+
+            <button
+              type="button"
+              onClick={() => setSoundEnabled(!soundEnabled)}
+              style={{
+                width: 44, height: 26,
+                background: soundEnabled ? '#0f172a' : '#cbd5e1',
+                border: 'none', borderRadius: 100,
+                cursor: 'pointer',
+                position: 'relative',
+                transition: 'background 200ms',
+                flexShrink: 0,
+              }}>
+              <div style={{
+                position: 'absolute',
+                top: 3, left: soundEnabled ? 21 : 3,
+                width: 20, height: 20,
+                background: '#fff', borderRadius: '50%',
+                transition: 'left 200ms',
+                boxShadow: '0 1px 3px rgba(0,0,0,0.15)',
+              }} />
+            </button>
+          </div>
+
+          {/* Stats */}
+          {totalUnread > 0 && (
+            <div style={{
+              marginTop: 14, padding: '10px 13px',
+              background: '#fef2f2', border: '1px solid #fecaca',
+              borderRadius: 10,
+              display: 'flex', alignItems: 'center', gap: 9,
+            }}>
+              <div style={{
+                width: 26, height: 26,
+                background: '#ef4444', borderRadius: 8,
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+              }}>
+                <MessageCircle size={13} color="#fff" />
+              </div>
+              <div style={{ flex: 1 }}>
+                <p style={{ fontSize: 12.5, fontWeight: 700, color: '#991b1b' }}>
+                  {totalUnread} ta o'qilmagan xabar
+                </p>
+                <p style={{ fontSize: 11, color: '#b91c1c', marginTop: 1 }}>
+                  Suhbatlar bo'limiga kiring va javob bering
+                </p>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  )
+}
+
 const labelStyle: React.CSSProperties = {
   display: 'flex', alignItems: 'center', gap: 6,
   fontSize: 12, fontWeight: 600, color: '#475569', marginBottom: 7
