@@ -1,0 +1,50 @@
+{
+  "name": "Yuristim — Huquqiy yordam platformasi",
+  "short_name": "Yuristim",
+  "description": "O'zbekistondagi yuristlar va mijozlarni bog'lovchi raqamli platforma. AI yordamida tez huquqiy maslahat oling.",
+  "start_url": "/dashboard",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#fafafa",
+  "theme_color": "#0f172a",
+  "lang": "uz",
+  "dir": "ltr",
+  "scope": "/",
+  "categories": ["business", "productivity", "legal"],
+  "icons": [
+    {
+      "src": "/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Suhbatlar",
+      "short_name": "Chat",
+      "description": "Mijozlar bilan suhbat",
+      "url": "/dashboard/chat",
+      "icons": [{ "src": "/icon-192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "E'lonlar",
+      "short_name": "E'lonlar",
+      "description": "Huquqiy yordam e'lonlari",
+      "url": "/dashboard/ads",
+      "icons": [{ "src": "/icon-192.png", "sizes": "192x192" }]
+    }
+  ]
+}
