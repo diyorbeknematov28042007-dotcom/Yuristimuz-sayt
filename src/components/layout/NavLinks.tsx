@@ -3,6 +3,7 @@
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { Home, FileText, MessageCircle, Grid3x3, User, Settings, Briefcase } from 'lucide-react'
+import { useNotifications } from '@/contexts/NotificationContext'
 
 const mainLinks = [
   { href: '/dashboard',          label: 'Asosiy',    icon: Home,          size: 20 },
@@ -25,12 +26,14 @@ function isActive(href: string, pathname: string) {
 // ── Desktop sidebar nav ────────────────────────────
 export function SidebarNav() {
   const pathname = usePathname()
+  const { totalUnread } = useNotifications()
 
   return (
     <nav style={{ flex: 1, padding: '12px', overflowY: 'auto' }}>
       {mainLinks.map(link => {
         const active = isActive(link.href, pathname)
         const Icon = link.icon
+        const isChatLink = link.href === '/dashboard/chat'
         return (
           <Link key={link.href} href={link.href}
             style={{
@@ -42,9 +45,22 @@ export function SidebarNav() {
               background: active ? '#f1f5f9' : 'transparent',
               borderLeft: active ? '3px solid #0f172a' : '3px solid transparent',
               transition: 'all 150ms',
+              position: 'relative',
             }}>
             <Icon size={20} color={active ? '#0f172a' : '#94a3b8'} />
-            {link.label}
+            <span style={{ flex: 1 }}>{link.label}</span>
+            {/* Chat unread badge */}
+            {isChatLink && totalUnread > 0 && (
+              <span style={{
+                background: '#ef4444', color: '#fff',
+                fontSize: 10.5, fontWeight: 700,
+                padding: '2px 7px', borderRadius: 100,
+                minWidth: 20, textAlign: 'center',
+                lineHeight: 1.4,
+              }}>
+                {totalUnread > 99 ? '99+' : totalUnread}
+              </span>
+            )}
           </Link>
         )
       })}
@@ -100,6 +116,7 @@ export function SidebarNav() {
 // ── Mobile bottom nav ──────────────────────────────
 export function BottomNav() {
   const pathname = usePathname()
+  const { totalUnread } = useNotifications()
 
   return (
     <nav style={{
@@ -114,6 +131,7 @@ export function BottomNav() {
       {mainLinks.map(link => {
         const active = isActive(link.href, pathname)
         const Icon = link.icon
+        const isChatLink = link.href === '/dashboard/chat'
         return (
           <Link key={link.href} href={link.href}
             style={{
@@ -121,7 +139,25 @@ export function BottomNav() {
               gap: 3, padding: '4px 10px', textDecoration: 'none',
               minWidth: 44, position: 'relative',
             }}>
-            <Icon size={22} color={active ? '#0f172a' : '#94a3b8'} strokeWidth={active ? 2.5 : 1.8} />
+            <div style={{ position: 'relative' }}>
+              <Icon size={22} color={active ? '#0f172a' : '#94a3b8'} strokeWidth={active ? 2.5 : 1.8} />
+              {/* Chat unread badge - mobile da kichik */}
+              {isChatLink && totalUnread > 0 && (
+                <span style={{
+                  position: 'absolute',
+                  top: -5, right: -8,
+                  background: '#ef4444', color: '#fff',
+                  fontSize: 9, fontWeight: 700,
+                  padding: '1px 5px', borderRadius: 100,
+                  minWidth: 16, textAlign: 'center',
+                  lineHeight: 1.3,
+                  border: '1.5px solid #fff',
+                  boxShadow: '0 1px 3px rgba(0,0,0,0.15)',
+                }}>
+                  {totalUnread > 9 ? '9+' : totalUnread}
+                </span>
+              )}
+            </div>
             <span style={{
               fontSize: 9, fontWeight: active ? 700 : 500,
               letterSpacing: '0.1px',
