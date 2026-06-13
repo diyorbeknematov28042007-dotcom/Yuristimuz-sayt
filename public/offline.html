@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Internet yo'q — Yuristim</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: #fafafa;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+    .container {
+      max-width: 400px;
+      text-align: center;
+    }
+    .icon {
+      width: 80px;
+      height: 80px;
+      background: linear-gradient(135deg, #0f172a, #4338ca);
+      border-radius: 22px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 24px;
+      color: #fff;
+      font-size: 36px;
+      font-weight: 800;
+    }
+    h1 {
+      font-size: 22px;
+      font-weight: 800;
+      color: #0f172a;
+      letter-spacing: -0.4px;
+      margin-bottom: 10px;
+    }
+    p {
+      font-size: 14px;
+      color: #64748b;
+      line-height: 1.6;
+      margin-bottom: 24px;
+    }
+    .btn {
+      display: inline-block;
+      padding: 12px 24px;
+      background: #0f172a;
+      color: #fff;
+      border: none;
+      border-radius: 12px;
+      font-size: 14px;
+      font-weight: 700;
+      cursor: pointer;
+      text-decoration: none;
+      font-family: inherit;
+      transition: transform 150ms;
+    }
+    .btn:hover { transform: translateY(-1px); }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="icon">Y</div>
+    <h1>Internet aloqasi yo'q</h1>
+    <p>Yuristim'ga kirish uchun internetga ulanishingiz kerak. Wi-Fi yoki mobil aloqani tekshiring va qayta urinib ko'ring.</p>
+    <button class="btn" onclick="window.location.reload()">
+      Qayta urinish
+    </button>
+  </div>
+</body>
+</html>
