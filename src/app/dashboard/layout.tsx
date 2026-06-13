@@ -1,337 +1,120 @@
-'use client'
+import { redirect } from 'next/navigation'
+import Link from 'next/link'
+import { getSession } from '@/lib/auth'
+import LogoutButton from '@/components/layout/LogoutButton'
+import { SidebarNav, BottomNav } from '@/components/layout/NavLinks'
+import { Scale, Bell } from 'lucide-react'
+import { NotificationProvider } from '@/contexts/NotificationContext'
 
-import { createContext, useContext, useEffect, useState, useCallback, useRef } from 'react'
-import { supabase } from '@/lib/supabase'
+export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
+  const user = await getSession()
+  if (!user) redirect('/auth/login')
 
-type NotificationContextType = {
-  totalUnread: number
-  conversationsWithUnread: number
-  unreadByConversation: Map<string, number>
-  refresh: () => Promise<void>
-  markAsRead: (conversationId: string) => Promise<void>
-  // Toast bildirishnoma
-  showToast: (message: ToastData) => void
-  // Settings
-  soundEnabled: boolean
-  setSoundEnabled: (enabled: boolean) => void
-}
-
-type ToastData = {
-  id: string
-  senderName: string
-  senderAvatar: string | null
-  content: string
-  conversationId: string
-}
-
-const NotificationContext = createContext<NotificationContextType | null>(null)
-
-export function NotificationProvider({
-  userId,
-  children
-}: {
-  userId: string | null
-  children: React.ReactNode
-}) {
-  const [totalUnread, setTotalUnread] = useState(0)
-  const [conversationsWithUnread, setConversationsWithUnread] = useState(0)
-  const [unreadByConversation, setUnreadByConversation] = useState<Map<string, number>>(new Map())
-  const [toasts, setToasts] = useState<ToastData[]>([])
-  const [soundEnabled, setSoundEnabledState] = useState(true)
-  const audioRef = useRef<HTMLAudioElement | null>(null)
-
-  // localStorage dan sound setting yuklash
-  useEffect(() => {
-    const saved = localStorage.getItem('yuristim_sound_enabled')
-    if (saved !== null) {
-      setSoundEnabledState(saved === 'true')
-    }
-  }, [])
-
-  const setSoundEnabled = useCallback((enabled: boolean) => {
-    setSoundEnabledState(enabled)
-    localStorage.setItem('yuristim_sound_enabled', String(enabled))
-  }, [])
-
-  // Unread count'ni yuklash
-  const refresh = useCallback(async () => {
-    if (!userId) return
-
-    const [{ data: total }, { data: perConv }] = await Promise.all([
-      supabase.rpc('get_unread_count', { p_user_id: userId }),
-      supabase.rpc('get_unread_by_conversation', { p_user_id: userId }),
-    ])
-
-    if (total?.[0]) {
-      setTotalUnread(Number(total[0].total_unread))
-      setConversationsWithUnread(Number(total[0].conversations_with_unread))
-    }
-
-    if (perConv) {
-      const map = new Map<string, number>()
-      perConv.forEach((row: any) => {
-        map.set(row.conversation_id, Number(row.unread_count))
-      })
-      setUnreadByConversation(map)
-    }
-  }, [userId])
-
-  // Xabarlarni o'qildi deb belgilash
-  const markAsRead = useCallback(async (conversationId: string) => {
-    if (!userId) return
-    await supabase.rpc('mark_messages_as_read', {
-      p_user_id: userId,
-      p_conversation_id: conversationId,
-    })
-    await refresh()
-  }, [userId, refresh])
-
-  // Toast ko'rsatish
-  const showToast = useCallback((toast: ToastData) => {
-    setToasts(prev => [...prev, toast])
-    // 5 sekunddan keyin avtomatik o'chirish
-    setTimeout(() => {
-      setToasts(prev => prev.filter(t => t.id !== toast.id))
-    }, 5000)
-  }, [])
-
-  // Audio object yaratish
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      // Notification sound (kichik pop)
-      audioRef.current = new Audio('data:audio/wav;base64,UklGRl9vT19XQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQA=')
-      audioRef.current.volume = 0.3
-    }
-  }, [])
-
-  // Realtime subscription — yangi xabarlar
-  useEffect(() => {
-    if (!userId) return
-
-    refresh()
-
-    const channel = supabase
-      .channel(`notifications:${userId}`)
-      .on(
-        'postgres_changes',
-        {
-          event: 'INSERT',
-          schema: 'public',
-          table: 'messages',
-        },
-        async (payload: any) => {
-          const newMsg = payload.new
-
-          // O'zim yuborgan bo'lsa - skip
-          if (newMsg.sender_id === userId) return
-
-          // Bu xabar menga taalluqlimi tekshirish
-          const { data: conv } = await supabase
-            .from('conversations')
-            .select('client_id, lawyer_id')
-            .eq('id', newMsg.conversation_id)
-            .single()
-
-          if (!conv) return
-          if (conv.client_id !== userId && conv.lawyer_id !== userId) return
-
-          // Sender ma'lumotini olish
-          const { data: msgData } = await supabase.rpc('get_message_with_sender', {
-            p_message_id: newMsg.id,
-          })
-
-          if (msgData?.[0]) {
-            const sender = msgData[0]
-
-            // Toast ko'rsatish (faqat chat sahifasida emas)
-            if (!window.location.pathname.includes('/chat')) {
-              showToast({
-                id: newMsg.id,
-                senderName: sender.sender_full_name || sender.sender_username,
-                senderAvatar: sender.sender_avatar_url,
-                content: sender.content,
-                conversationId: newMsg.conversation_id,
-              })
-
-              // Ovoz signali
-              if (soundEnabled && audioRef.current) {
-                audioRef.current.play().catch(() => {})
-              }
-            }
-          }
-
-          // Counter yangilash
-          await refresh()
-        }
-      )
-      .subscribe()
-
-    return () => { supabase.removeChannel(channel) }
-  }, [userId, refresh, showToast, soundEnabled])
-
-  // Tab title yangilash
-  useEffect(() => {
-    if (typeof document === 'undefined') return
-    const baseTitle = document.title.replace(/^\(\d+\)\s/, '')
-    if (totalUnread > 0) {
-      document.title = `(${totalUnread}) ${baseTitle}`
-    } else {
-      document.title = baseTitle
-    }
-  }, [totalUnread])
-
-  // Favicon dot
-  useEffect(() => {
-    if (typeof document === 'undefined') return
-
-    const updateFavicon = () => {
-      const link = document.querySelector("link[rel*='icon']") as HTMLLinkElement
-      if (!link) return
-
-      if (totalUnread === 0) {
-        link.href = '/favicon.ico'
-        return
-      }
-
-      // Canvas bilan qizil nuqta qo'shish
-      const canvas = document.createElement('canvas')
-      canvas.width = 32
-      canvas.height = 32
-      const ctx = canvas.getContext('2d')
-      if (!ctx) return
-
-      const img = new Image()
-      img.onload = () => {
-        ctx.drawImage(img, 0, 0, 32, 32)
-        // Qizil dot
-        ctx.beginPath()
-        ctx.arc(24, 8, 7, 0, 2 * Math.PI)
-        ctx.fillStyle = '#ef4444'
-        ctx.fill()
-        ctx.strokeStyle = '#fff'
-        ctx.lineWidth = 1.5
-        ctx.stroke()
-        link.href = canvas.toDataURL()
-      }
-      img.src = '/favicon.ico'
-    }
-
-    updateFavicon()
-  }, [totalUnread])
+  const initials = user.full_name
+    ?.split(' ')
+    .map((n: string) => n[0])
+    .join('')
+    .slice(0, 2)
+    .toUpperCase() || 'U'
 
   return (
-    <NotificationContext.Provider value={{
-      totalUnread, conversationsWithUnread, unreadByConversation,
-      refresh, markAsRead, showToast,
-      soundEnabled, setSoundEnabled,
-    }}>
-      {children}
-      <ToastContainer toasts={toasts} onClose={(id) => setToasts(prev => prev.filter(t => t.id !== id))} />
-    </NotificationContext.Provider>
-  )
-}
-
-export function useNotifications() {
-  const ctx = useContext(NotificationContext)
-  if (!ctx) {
-    // Default values agar provider yo'q bo'lsa
-    return {
-      totalUnread: 0,
-      conversationsWithUnread: 0,
-      unreadByConversation: new Map(),
-      refresh: async () => {},
-      markAsRead: async () => {},
-      showToast: () => {},
-      soundEnabled: true,
-      setSoundEnabled: () => {},
-    }
-  }
-  return ctx
-}
-
-// ─────────────────────────────────────────
-// Toast UI komponenti
-// ─────────────────────────────────────────
-function ToastContainer({
-  toasts,
-  onClose
-}: {
-  toasts: ToastData[]
-  onClose: (id: string) => void
-}) {
-  if (toasts.length === 0) return null
-
-  return (
-    <div style={{
-      position: 'fixed',
-      top: 20, right: 20,
-      zIndex: 9999,
-      display: 'flex', flexDirection: 'column', gap: 10,
-      pointerEvents: 'none',
-    }}>
-      {toasts.slice(-3).map(toast => (
-        <ToastItem key={toast.id} toast={toast} onClose={() => onClose(toast.id)} />
-      ))}
-    </div>
-  )
-}
-
-function ToastItem({ toast, onClose }: { toast: ToastData; onClose: () => void }) {
-  const ini = (n: string) => n?.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase() || 'U'
-
-  return (
-    <a
-      href={`/dashboard/chat?conv=${toast.conversationId}`}
-      style={{
-        display: 'flex', alignItems: 'center', gap: 12,
-        padding: '12px 14px',
-        background: '#fff',
-        border: '0.5px solid #e2e8f0',
-        borderRadius: 14,
-        boxShadow: '0 12px 32px rgba(0,0,0,0.12), 0 0 0 1px rgba(0,0,0,0.04)',
-        minWidth: 300, maxWidth: 380,
-        textDecoration: 'none',
-        pointerEvents: 'auto',
-        animation: 'slideInRight 0.3s cubic-bezier(.4,0,.2,1)',
-        cursor: 'pointer',
-      }}>
-      {/* Avatar */}
-      {toast.senderAvatar ? (
-        <img src={toast.senderAvatar} alt={toast.senderName}
-          style={{ width: 38, height: 38, borderRadius: 11, objectFit: 'cover', flexShrink: 0 }} />
-      ) : (
-        <div style={{
-          width: 38, height: 38,
-          background: 'linear-gradient(135deg, #0f172a, #4338ca)',
-          color: '#fff', borderRadius: 11,
-          display: 'flex', alignItems: 'center', justifyContent: 'center',
-          fontWeight: 700, fontSize: 13, flexShrink: 0,
-        }}>
-          {ini(toast.senderName)}
-        </div>
-      )}
-
-      {/* Content */}
-      <div style={{ flex: 1, minWidth: 0 }}>
-        <p style={{ fontSize: 13, fontWeight: 700, color: '#0f172a', marginBottom: 2 }}>
-          {toast.senderName}
-        </p>
-        <p style={{
-          fontSize: 12, color: '#64748b',
-          overflow: 'hidden', textOverflow: 'ellipsis',
-          display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' as const,
-          lineHeight: 1.5,
-        }}>
-          {toast.content}
-        </p>
-      </div>
+    <NotificationProvider userId={user.id}>
+    <div style={{ minHeight: '100vh', background: '#fafafa' }}>
 
       <style>{`
-        @keyframes slideInRight {
-          from { transform: translateX(110%); opacity: 0; }
-          to { transform: translateX(0); opacity: 1; }
+        @media (max-width: 768px) {
+          .desktop-sidebar { display: none !important; }
+          .desktop-main { margin-left: 0 !important; }
+          .mobile-bottom-nav-wrapper { display: block !important; }
+          .desktop-topbar { display: none !important; }
+          .mobile-topbar { display: flex !important; }
+        }
+        @media (min-width: 769px) {
+          .mobile-bottom-nav-wrapper { display: none !important; }
+          .mobile-topbar { display: none !important; }
         }
       `}</style>
-    </a>
+
+      {/* ====== DESKTOP SIDEBAR ====== */}
+      <aside className="desktop-sidebar" style={{ width: 240, position: 'fixed', top: 0, left: 0, height: '100%', background: '#fff', borderRight: '0.5px solid #e2e8f0', zIndex: 40, display: 'flex', flexDirection: 'column' }}>
+        {/* Logo */}
+        <div style={{ height: 64, padding: '0 20px', borderBottom: '0.5px solid #e2e8f0', display: 'flex', alignItems: 'center' }}>
+          <Link href="/dashboard" style={{ display: 'flex', alignItems: 'center', gap: 10, textDecoration: 'none' }}>
+            <div style={{ width: 32, height: 32, background: '#0f172a', borderRadius: 9, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <Scale size={15} color="#fff" strokeWidth={2.5} />
+            </div>
+            <span style={{ fontWeight: 800, fontSize: 15, color: '#0f172a', letterSpacing: '-0.3px' }}>Yuristim</span>
+            <span style={{ fontSize: 9, fontWeight: 700, background: '#dcfce7', color: '#166534', padding: '2px 6px', borderRadius: 4 }}>BETA</span>
+          </Link>
+        </div>
+
+        {/* Sidebar nav — client component */}
+        <SidebarNav />
+
+        {/* User */}
+        <div style={{ padding: 12, borderTop: '0.5px solid #e2e8f0' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 10px', borderRadius: 10 }}>
+            <div style={{ width: 34, height: 34, background: 'linear-gradient(135deg,#0f172a,#4338ca)', color: '#fff', borderRadius: 10, display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, fontSize: 12, flexShrink: 0 }}>
+              {initials}
+            </div>
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <p style={{ fontSize: 12, fontWeight: 700, color: '#0f172a', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{user.full_name}</p>
+              <p style={{ fontSize: 10, color: '#94a3b8', fontWeight: 600 }}>@{user.username} · {user.role === 'lawyer' ? 'Yurist' : 'Mijoz'}</p>
+            </div>
+            <LogoutButton />
+          </div>
+        </div>
+      </aside>
+
+      {/* ====== MAIN CONTENT ====== */}
+      <div className="desktop-main" style={{ marginLeft: 240, display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
+
+        {/* Desktop topbar */}
+        <header className="desktop-topbar" style={{ height: 64, background: '#fff', borderBottom: '0.5px solid #e2e8f0', display: 'flex', alignItems: 'center', justifyContent: 'flex-end', padding: '0 24px', position: 'sticky', top: 0, zIndex: 30 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            <button style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: '#64748b', padding: 8, borderRadius: 9 }}>
+              <Bell size={17} />
+            </button>
+            <Link href="/dashboard/profile" style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '6px 12px', borderRadius: 10, textDecoration: 'none' }}>
+              <div style={{ width: 30, height: 30, background: 'linear-gradient(135deg,#0f172a,#4338ca)', color: '#fff', borderRadius: 9, display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: 11 }}>
+                {initials}
+              </div>
+              <span style={{ fontSize: 13, fontWeight: 600, color: '#0f172a' }}>{user.full_name?.split(' ')[0]}</span>
+            </Link>
+          </div>
+        </header>
+
+        {/* Mobile topbar */}
+        <header className="mobile-topbar" style={{ height: 56, background: '#fff', borderBottom: '0.5px solid #e2e8f0', alignItems: 'center', justifyContent: 'space-between', padding: '0 16px', position: 'sticky', top: 0, zIndex: 30 }}>
+          <Link href="/dashboard" style={{ display: 'flex', alignItems: 'center', gap: 8, textDecoration: 'none' }}>
+            <div style={{ width: 28, height: 28, background: '#0f172a', borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <Scale size={13} color="#fff" />
+            </div>
+            <span style={{ fontWeight: 800, fontSize: 15, color: '#0f172a' }}>Yuristim</span>
+          </Link>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+            <button style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#64748b', padding: 4 }}>
+              <Bell size={18} />
+            </button>
+            <Link href="/dashboard/profile">
+              <div style={{ width: 30, height: 30, background: 'linear-gradient(135deg,#0f172a,#4338ca)', color: '#fff', borderRadius: 9, display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: 11 }}>
+                {initials}
+              </div>
+            </Link>
+          </div>
+        </header>
+
+        {/* Page content */}
+        <main style={{ flex: 1, padding: '24px 16px 100px' }}>
+          {children}
+        </main>
+      </div>
+
+      {/* ====== MOBILE BOTTOM NAV ====== */}
+      <div className="mobile-bottom-nav-wrapper">
+        <BottomNav />
+      </div>
+    </div>
+    </NotificationProvider>
   )
 }
