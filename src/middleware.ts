@@ -6,7 +6,15 @@ const JWT_SECRET = new TextEncoder().encode(
 )
 const COOKIE_NAME = 'yuristim_session'
 
-async function verifyToken(token: string): Promise<boolean> {
+const ADMIN_JWT_SECRET = new TextEncoder().encode(
+  process.env.ADMIN_JWT_SECRET || 'default-admin-secret-please-change'
+)
+const ADMIN_COOKIE_NAME = 'admin_token'
+
+// ─────────────────────────────────────────
+// Oddiy foydalanuvchi token tekshiruvi
+// ─────────────────────────────────────────
+async function verifyUserToken(token: string): Promise<boolean> {
   try {
     await jwtVerify(token, JWT_SECRET)
     return true
@@ -15,10 +23,50 @@ async function verifyToken(token: string): Promise<boolean> {
   }
 }
 
+// ─────────────────────────────────────────
+// Admin token tekshiruvi
+// ─────────────────────────────────────────
+async function verifyAdminToken(token: string): Promise<boolean> {
+  try {
+    const { payload } = await jwtVerify(token, ADMIN_JWT_SECRET)
+    return payload.role === 'admin'
+  } catch {
+    return false
+  }
+}
+
 export async function middleware(request: NextRequest) {
-  const token = request.cookies.get(COOKIE_NAME)?.value
-  const isValid = token ? await verifyToken(token) : false
   const path = request.nextUrl.pathname
+
+  // ═══════════════════════════════════════
+  // ADMIN ROUTES
+  // ═══════════════════════════════════════
+  if (path.startsWith('/admin')) {
+    const adminToken = request.cookies.get(ADMIN_COOKIE_NAME)?.value
+    const isAdmin = adminToken ? await verifyAdminToken(adminToken) : false
+
+    // /admin/login - login bo'lmasa kirish mumkin
+    if (path === '/admin/login') {
+      if (isAdmin) {
+        // Allaqachon admin — admin panelga
+        return NextResponse.redirect(new URL('/admin', request.url))
+      }
+      return NextResponse.next()
+    }
+
+    // Boshqa /admin/* sahifalari — login bo'lmasa /admin/login ga
+    if (!isAdmin) {
+      return NextResponse.redirect(new URL('/admin/login', request.url))
+    }
+
+    return NextResponse.next()
+  }
+
+  // ═══════════════════════════════════════
+  // ODDIY FOYDALANUVCHI ROUTES
+  // ═══════════════════════════════════════
+  const token = request.cookies.get(COOKIE_NAME)?.value
+  const isValid = token ? await verifyUserToken(token) : false
 
   // /dashboard ga kirish — login bo'lmasa /auth/login ga
   if (path.startsWith('/dashboard') && !isValid) {
@@ -34,5 +82,5 @@ export async function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ['/dashboard/:path*', '/auth/:path*'],
+  matcher: ['/dashboard/:path*', '/auth/:path*', '/admin/:path*'],
 }
