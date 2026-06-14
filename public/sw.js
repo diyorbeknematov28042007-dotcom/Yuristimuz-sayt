@@ -1,165 +1,163 @@
 // ════════════════════════════════════════════════
-// YURISTIM SERVICE WORKER
-// PWA + Push Notifications
+// YURISTIM SERVICE WORKER v2
+// Push notifications + offline support
 // ════════════════════════════════════════════════
 
-const CACHE_NAME = 'yuristim-v1'
+const CACHE_NAME = 'yuristim-v2'
 const OFFLINE_URL = '/offline.html'
 
-// ─────────────────────────────────────────────
-// O'RNATISH (install)
-// Asosiy fayllarni cache'ga oladi
-// ─────────────────────────────────────────────
+const PRECACHE_URLS = [
+  '/offline.html',
+  '/icon-192.png',
+  '/icon-512.png',
+  '/manifest.json',
+]
+
+// INSTALL
 self.addEventListener('install', (event) => {
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
-      return cache.addAll([
-        '/offline.html',
-        '/icon-192.png',
-        '/icon-512.png',
-        '/manifest.json',
-      ]).catch(() => {
-        // Agar fayllar yo'q bo'lsa, skip qilamiz
-        return Promise.resolve()
+      return cache.addAll(PRECACHE_URLS).catch((err) => {
+        console.warn('SW: precache xato:', err)
       })
     })
   )
-  // Yangi SW darhol faollasin
   self.skipWaiting()
 })
 
-// ─────────────────────────────────────────────
-// FAOLLASHTIRISH (activate)
-// Eski cache'larni tozalaydi
-// ─────────────────────────────────────────────
+// ACTIVATE
 self.addEventListener('activate', (event) => {
   event.waitUntil(
-    caches.keys().then((names) => {
+    caches.keys().then((keys) => {
       return Promise.all(
-        names
-          .filter((name) => name !== CACHE_NAME)
-          .map((name) => caches.delete(name))
+        keys
+          .filter((key) => key !== CACHE_NAME)
+          .map((key) => caches.delete(key))
       )
     }).then(() => self.clients.claim())
   )
 })
 
-// ─────────────────────────────────────────────
-// FETCH STRATEGIYA
-// Network-first, fallback to cache, fallback to offline
-// ─────────────────────────────────────────────
+// FETCH - har doim Response qaytaradi
 self.addEventListener('fetch', (event) => {
   const { request } = event
 
-  // Faqat GET so'rovlar uchun
+  // Faqat GET so'rovlar
   if (request.method !== 'GET') return
 
-  // API so'rovlarini cache qilmaymiz
-  if (request.url.includes('/api/')) return
-  if (request.url.includes('supabase.co')) return
-  if (request.url.includes('googleapis.com')) return
+  // Faqat HTTP(S)
+  if (!request.url.startsWith('http')) return
 
-  // Faqat o'z domain'imizdagi so'rovlar
+  // Supabase, Google API, va /api/ uchun cache yo'q
   const url = new URL(request.url)
-  if (url.origin !== self.location.origin) return
+  if (
+    url.hostname.includes('supabase.co') ||
+    url.hostname.includes('googleapis.com') ||
+    url.pathname.startsWith('/api/')
+  ) {
+    return
+  }
 
-  // HTML so'rovlar uchun network-first
+  // Navigation request (HTML) - network-first, offline fallback
   if (request.mode === 'navigate') {
     event.respondWith(
-      fetch(request)
-        .catch(() => caches.match(OFFLINE_URL))
+      (async () => {
+        try {
+          const networkResponse = await fetch(request)
+          return networkResponse
+        } catch (err) {
+          const cache = await caches.open(CACHE_NAME)
+          const cached = await cache.match(OFFLINE_URL)
+          if (cached) return cached
+          return new Response(
+            '<html><body><h1>Offline</h1><p>Internet aloqasi yo\'q</p></body></html>',
+            { status: 503, headers: { 'Content-Type': 'text/html' } }
+          )
+        }
+      })()
     )
     return
   }
 
-  // Boshqa resurslarga network-first, fallback cache
+  // Boshqa GET (CSS, JS, rasm) - cache-first, network fallback
   event.respondWith(
-    fetch(request)
-      .then((response) => {
-        // Muvaffaqiyatli javobni cache'ga qo'shamiz
-        if (response && response.status === 200) {
-          const responseClone = response.clone()
-          caches.open(CACHE_NAME).then((cache) => {
-            cache.put(request, responseClone)
-          })
+    (async () => {
+      try {
+        const cache = await caches.open(CACHE_NAME)
+        const cached = await cache.match(request)
+        if (cached) return cached
+
+        const networkResponse = await fetch(request)
+
+        if (
+          networkResponse &&
+          networkResponse.status === 200 &&
+          url.origin === self.location.origin
+        ) {
+          cache.put(request, networkResponse.clone()).catch(() => {})
         }
-        return response
-      })
-      .catch(() => caches.match(request))
+
+        return networkResponse
+      } catch (err) {
+        return new Response('Resurs yuklanmadi', {
+          status: 503,
+          headers: { 'Content-Type': 'text/plain' },
+        })
+      }
+    })()
   )
 })
 
-// ─────────────────────────────────────────────
-// PUSH NOTIFICATIONS
-// Faza 2.5b da to'liq ishlaydi
-// ─────────────────────────────────────────────
+// PUSH
 self.addEventListener('push', (event) => {
-  if (!event.data) return
-
-  let payload = {}
-  try {
-    payload = event.data.json()
-  } catch (e) {
-    payload = { title: 'Yuristim', body: event.data.text() }
+  let data = {
+    title: 'Yuristim',
+    body: 'Yangi xabar keldi',
+    icon: '/icon-192.png',
+    badge: '/icon-192.png',
+    tag: 'yuristim-msg',
+    data: { url: '/dashboard/chat' },
   }
 
-  const {
-    title = 'Yuristim',
-    body = 'Yangi xabar',
-    icon = '/icon-192.png',
-    badge = '/icon-192.png',
-    tag = 'yuristim-msg',
-    data = {},
-  } = payload
-
-  const options = {
-    body,
-    icon,
-    badge,
-    tag,
-    data,
-    requireInteraction: false,
-    vibrate: [200, 100, 200],
-    lang: 'uz',
-    dir: 'ltr',
+  if (event.data) {
+    try {
+      data = { ...data, ...event.data.json() }
+    } catch (e) {
+      data.body = event.data.text() || data.body
+    }
   }
 
   event.waitUntil(
-    self.registration.showNotification(title, options)
-  )
-})
-
-// ─────────────────────────────────────────────
-// NOTIFICATION CLICK
-// Foydalanuvchi bildirishnomani bosganda
-// ─────────────────────────────────────────────
-self.addEventListener('notificationclick', (event) => {
-  event.notification.close()
-
-  const url = event.notification.data?.url || '/dashboard/chat'
-
-  event.waitUntil(
-    self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clientList) => {
-      // Agar Yuristim allaqachon ochiq bo'lsa - shu tab'ga o'tish
-      for (const client of clientList) {
-        if (client.url.includes(self.location.origin) && 'focus' in client) {
-          client.navigate(url)
-          return client.focus()
-        }
-      }
-      // Yo'q bo'lsa - yangi tab ochish
-      if (self.clients.openWindow) {
-        return self.clients.openWindow(url)
-      }
+    self.registration.showNotification(data.title, {
+      body: data.body,
+      icon: data.icon,
+      badge: data.badge,
+      tag: data.tag,
+      data: data.data,
+      vibrate: [200, 100, 200],
+      requireInteraction: false,
     })
   )
 })
 
-// ─────────────────────────────────────────────
-// BACKGROUND SYNC (kelajak uchun zaxira)
-// ─────────────────────────────────────────────
-self.addEventListener('sync', (event) => {
-  if (event.tag === 'sync-messages') {
-    // Faza 2.5b da to'ldiriladi
-  }
+// NOTIFICATION CLICK
+self.addEventListener('notificationclick', (event) => {
+  event.notification.close()
+  const targetUrl = (event.notification.data && event.notification.data.url) || '/dashboard/chat'
+
+  event.waitUntil(
+    self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clientsList) => {
+      for (const client of clientsList) {
+        if (client.url.includes(self.location.origin) && 'focus' in client) {
+          client.focus()
+          if ('navigate' in client) {
+            return client.navigate(targetUrl)
+          }
+        }
+      }
+      if (self.clients.openWindow) {
+        return self.clients.openWindow(targetUrl)
+      }
+    })
+  )
 })
