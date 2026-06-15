@@ -1,346 +1,668 @@
+// ════════════════════════════════════════════════
+// MENING E'LONLARIM SAHIFASI
+// /src/app/dashboard/my-ads/page.tsx
+// ════════════════════════════════════════════════
+
 'use client'
 
 import { useState, useEffect } from 'react'
 import { supabase } from '@/lib/supabase'
 import Link from 'next/link'
-import { Plus, Scale, User, MapPin, Star, BadgeCheck, MessageCircle, X, ChevronRight, Briefcase } from 'lucide-react'
+import {
+  Plus, MapPin, MessageCircle, X, Trash2, CheckCircle2, Clock, AlertCircle,
+  Eye, Calendar, Briefcase, AlertTriangle, Loader2, FileText, ChevronLeft
+} from 'lucide-react'
 import AdTermsModal from '@/components/AdTermsModal'
 
 const CATEGORIES = ['Oilaviy', 'Biznes', 'Mulk', 'Mehnat', 'Soliq', 'Jinoyat', 'Shartnoma', 'Migratsiya']
 const CITIES = ["Toshkent","Samarqand","Buxoro","Namangan","Andijon","Farg'ona","Nukus","Qarshi","Termiz","Jizzax"]
 
-export default function AdsPage() {
+interface MyAd {
+  id: string
+  title: string
+  description: string
+  category: string
+  city: string | null
+  budget_min: number | null
+  budget_max: number | null
+  status: string
+  views_count: number
+  created_at: string
+  updated_at: string
+  poster_role: string
+  responses_count: number
+  moderation_score: number
+  moderation_reason: string | null
+  rejected_at: string | null
+  approved_at: string | null
+}
+
+type StatusFilter = 'all' | 'open' | 'pending_review' | 'rejected' | 'in_progress' | 'closed'
+
+export default function MyAdsPage() {
   const [user, setUser] = useState<any>(null)
-  const [tab, setTab] = useState<'lawyer'|'client'>('lawyer')
-  const [ads, setAds] = useState<any[]>([])
+  const [ads, setAds] = useState<MyAd[]>([])
   const [loading, setLoading] = useState(true)
+  const [filter, setFilter] = useState<StatusFilter>('all')
   const [showCreate, setShowCreate] = useState(false)
-  const [catFilter, setCatFilter] = useState('')
-  const [form, setForm] = useState({ title:'', description:'', category:'', city:'', budget_min:'', budget_max:'' })
+  const [form, setForm] = useState({ title: '', description: '', category: '', city: '', budget_min: '', budget_max: '' })
   const [creating, setCreating] = useState(false)
   const [err, setErr] = useState('')
   const [showTerms, setShowTerms] = useState(false)
   const [statusInfo, setStatusInfo] = useState<{ riskLevel: 'low' | 'medium' | 'high', message: string } | null>(null)
+  const [deleteConfirm, setDeleteConfirm] = useState<MyAd | null>(null)
+  const [deleting, setDeleting] = useState(false)
 
   useEffect(() => {
-    fetch('/api/auth/me').then(r => r.json()).then(d => setUser(d.user))
-    fetchAds('lawyer', '')
+    fetch('/api/auth/me').then(r => r.json()).then(d => {
+      setUser(d.user)
+      if (d.user) fetchMyAds(d.user.id)
+    })
   }, [])
 
-  const fetchAds = async (role: string, cat: string) => {
+  const fetchMyAds = async (userId: string) => {
     setLoading(true)
-    const { data } = await supabase.rpc('get_ads', { p_role_filter: role, p_category: cat || null, p_limit: 30, p_offset: 0 })
-    setAds(data || [])
+    const { data, error } = await supabase.rpc('get_my_ads', {
+      p_user_id: userId,
+      p_status: null,
+    })
+    if (!error) setAds(data || [])
     setLoading(false)
   }
 
-  const switchTab = (t: 'lawyer'|'client') => { setTab(t); setCatFilter(''); fetchAds(t, '') }
-  const toggleCat = (c: string) => { const nc = c === catFilter ? '' : c; setCatFilter(nc); fetchAds(tab, nc) }
+  const filteredAds = ads.filter(a => {
+    if (filter === 'all') return true
+    if (filter === 'rejected') return a.status === 'rejected' || a.status === 'auto_rejected'
+    return a.status === filter
+  })
 
+  // Count'lar
+  const counts = {
+    all: ads.length,
+    open: ads.filter(a => a.status === 'open').length,
+    pending_review: ads.filter(a => a.status === 'pending_review').length,
+    rejected: ads.filter(a => a.status === 'rejected' || a.status === 'auto_rejected').length,
+    in_progress: ads.filter(a => a.status === 'in_progress').length,
+    closed: ads.filter(a => a.status === 'closed').length,
+  }
+
+  // E'lon yaratish
   const createAd = async (e: React.FormEvent) => {
-    e.preventDefault(); setCreating(true); setErr('')
-    if (!form.title || !form.description || !form.category) { setErr("Majburiy maydonlarni to'ldiring"); setCreating(false); return }
-    const res = await fetch('/api/ads/create', { method:'POST', headers:{'Content-Type':'application/json'},
-      body: JSON.stringify({ title: form.title, description: form.description, category: form.category, city: form.city||null, budget_min: form.budget_min ? parseFloat(form.budget_min) : null, budget_max: form.budget_max ? parseFloat(form.budget_max) : null }) })
+    e.preventDefault()
+    setCreating(true)
+    setErr('')
+    if (!form.title || !form.description || !form.category) {
+      setErr("Majburiy maydonlarni to'ldiring")
+      setCreating(false)
+      return
+    }
+
+    const res = await fetch('/api/ads/create', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        title: form.title,
+        description: form.description,
+        category: form.category,
+        city: form.city || null,
+        budget_min: form.budget_min ? parseFloat(form.budget_min) : null,
+        budget_max: form.budget_max ? parseFloat(form.budget_max) : null,
+      })
+    })
     const d = await res.json()
     if (!res.ok) {
-      // Etika qoidalari hali tasdiqlanmagan bo'lsa, modal'ni ochamiz
       if (d.needsTerms) {
         setCreating(false)
         setShowTerms(true)
         return
       }
-      setErr(d.error||"Xatolik"); setCreating(false); return
+      setErr(d.error || "Xatolik")
+      setCreating(false)
+      return
     }
-    setShowCreate(false); setForm({ title:'', description:'', category:'', city:'', budget_min:'', budget_max:'' })
-    // Status message ko'rsatish - 3 ta xavf darajasi
+
+    setShowCreate(false)
+    setForm({ title: '', description: '', category: '', city: '', budget_min: '', budget_max: '' })
     if (d.riskLevel && d.message) {
       setStatusInfo({ riskLevel: d.riskLevel, message: d.message })
-      setTimeout(() => setStatusInfo(null), 12000)  // 12 soniya (matn uzun)
+      setTimeout(() => setStatusInfo(null), 12000)
     }
-    fetchAds(tab, catFilter); setCreating(false)
+    if (user) fetchMyAds(user.id)
+    setCreating(false)
   }
 
-  // Etika qoidalari tasdiqlangach, e'lon yaratishni davom ettirish
   const handleTermsAccepted = () => {
     setShowTerms(false)
-    // Avtomatik qayta yuborish — fake event bilan
-    setTimeout(() => {
-      const fakeEvent = { preventDefault: () => {} } as React.FormEvent
-      createAd(fakeEvent)
-    }, 200)
+    setTimeout(() => createAd({ preventDefault: () => {} } as React.FormEvent), 200)
   }
 
-  const ini = (n: string) => n?.split(' ').map(w => w[0]).join('').slice(0,2).toUpperCase() || 'U'
+  // E'lon o'chirish
+  const handleDelete = async () => {
+    if (!deleteConfirm || deleting) return
+    setDeleting(true)
+    try {
+      const res = await fetch('/api/ads/delete', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ adId: deleteConfirm.id }),
+      })
+      const d = await res.json()
+      if (!res.ok) {
+        alert(d.error || "O'chirishda xato")
+      } else {
+        setAds(prev => prev.filter(a => a.id !== deleteConfirm.id))
+        setDeleteConfirm(null)
+      }
+    } catch (err: any) {
+      alert("Tarmoq xatosi: " + err.message)
+    } finally {
+      setDeleting(false)
+    }
+  }
 
   return (
-    <div style={{ maxWidth: 760, margin: '0 auto' }}>
+    <div style={{ maxWidth: 760, margin: '0 auto', paddingBottom: 80 }}>
 
       {/* Header */}
-      <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom: 20 }}>
-        <h1 style={{ fontSize: 22, fontWeight: 800, color: '#0f172a', letterSpacing: '-0.4px' }}>E'lonlar</h1>
-        <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-          <Link href="/dashboard/my-ads"
-            style={{ display: 'flex', alignItems: 'center', gap: 6, background: '#fff', color: '#475569', border: '0.5px solid #e2e8f0', padding: '9px 14px', borderRadius: 10, fontSize: 12.5, fontWeight: 600, textDecoration: 'none', transition: 'all 150ms' }}>
-            <Briefcase size={13} /> Mening e'lonlarim
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+          <Link href="/dashboard/ads" style={{
+            display: 'flex', alignItems: 'center', gap: 4,
+            color: '#64748b', textDecoration: 'none', fontSize: 12, fontWeight: 500,
+          }}>
+            <ChevronLeft size={14} />
           </Link>
-          <button onClick={() => setShowCreate(true)}
-            style={{ display:'flex', alignItems:'center', gap:7, background:'#0f172a', color:'#fff', border:'none', padding:'10px 18px', borderRadius:11, fontSize:13.5, fontWeight:700, cursor:'pointer', boxShadow:'0 2px 8px rgba(15,23,42,0.2)' }}>
-            <Plus size={15} /> Yangi
-          </button>
+          <h1 style={{ fontSize: 22, fontWeight: 800, color: '#0f172a', letterSpacing: '-0.4px' }}>
+            Mening e'lonlarim
+          </h1>
         </div>
+        <button onClick={() => setShowCreate(true)} style={{
+          display: 'flex', alignItems: 'center', gap: 7,
+          background: '#0f172a', color: '#fff', border: 'none',
+          padding: '10px 16px', borderRadius: 11,
+          fontSize: 13, fontWeight: 700, cursor: 'pointer',
+          boxShadow: '0 2px 8px rgba(15,23,42,0.2)',
+        }}>
+          <Plus size={14} /> Yangi
+        </button>
       </div>
 
-      {/* Tabs */}
-      <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:6, background:'#f1f5f9', borderRadius:13, padding:4, marginBottom:16 }}>
-        {([['lawyer', <Scale size={14}/>, "Yurist e'lonlari"], ['client', <User size={14}/>, "Mijoz e'lonlari"]] as const).map(([val, icon, label]) => (
-          <button key={val} onClick={() => switchTab(val)}
-            style={{ display:'flex', alignItems:'center', justifyContent:'center', gap:7, padding:'10px', borderRadius:10, border:'none', cursor:'pointer', fontSize:13, fontWeight:600, transition:'all 150ms',
-              background: tab === val ? '#fff' : 'transparent',
-              color: tab === val ? '#0f172a' : '#64748b',
-              boxShadow: tab === val ? '0 1px 6px rgba(0,0,0,0.07)' : 'none' }}>
-            {icon}{label}
-          </button>
-        ))}
-      </div>
-
-      {/* Category filter chips */}
-      <div style={{ display:'flex', gap:7, overflowX:'auto', paddingBottom:4, marginBottom:20, scrollbarWidth:'none' }}>
-        {CATEGORIES.map(c => (
-          <button key={c} onClick={() => toggleCat(c)}
-            style={{ flexShrink:0, padding:'6px 14px', borderRadius:100, border:`1px solid ${catFilter===c?'#0f172a':'#e2e8f0'}`, cursor:'pointer', fontSize:12, fontWeight:600, transition:'all 150ms',
-              background: catFilter===c ? '#0f172a' : '#fff', color: catFilter===c ? '#fff' : '#475569' }}>
-            {c}
-          </button>
-        ))}
+      {/* Filter tabs */}
+      <div style={{
+        display: 'flex', gap: 6, overflowX: 'auto',
+        marginBottom: 14, paddingBottom: 4,
+      }}>
+        {([
+          { id: 'all' as StatusFilter, label: 'Hammasi', count: counts.all, color: '#64748b' },
+          { id: 'open' as StatusFilter, label: 'Faol', count: counts.open, color: '#16a34a' },
+          { id: 'pending_review' as StatusFilter, label: 'Kutilmoqda', count: counts.pending_review, color: '#d97706' },
+          { id: 'rejected' as StatusFilter, label: 'Rad etilgan', count: counts.rejected, color: '#dc2626' },
+          { id: 'in_progress' as StatusFilter, label: 'Jarayonda', count: counts.in_progress, color: '#4338ca' },
+          { id: 'closed' as StatusFilter, label: 'Yopilgan', count: counts.closed, color: '#94a3b8' },
+        ]).map(tab => {
+          const isActive = filter === tab.id
+          return (
+            <button key={tab.id} onClick={() => setFilter(tab.id)} style={{
+              display: 'flex', alignItems: 'center', gap: 6,
+              padding: '7px 12px',
+              background: isActive ? '#0f172a' : '#fff',
+              color: isActive ? '#fff' : '#475569',
+              border: `1px solid ${isActive ? '#0f172a' : '#e2e8f0'}`,
+              borderRadius: 8, fontSize: 12, fontWeight: 600,
+              cursor: 'pointer', whiteSpace: 'nowrap', flexShrink: 0,
+              fontFamily: 'inherit',
+            }}>
+              {tab.label}
+              {tab.count > 0 && (
+                <span style={{
+                  background: isActive ? 'rgba(255,255,255,0.2)' : '#f1f5f9',
+                  color: isActive ? '#fff' : tab.color,
+                  padding: '1px 6px', borderRadius: 999,
+                  fontSize: 10, fontWeight: 700,
+                }}>{tab.count}</span>
+              )}
+            </button>
+          )
+        })}
       </div>
 
       {/* List */}
       {loading ? (
-        <div style={{ display:'flex', flexDirection:'column', gap:10 }}>
-          {[1,2,3].map(i => <div key={i} style={{ height:130, background:'#f8fafc', borderRadius:16, animation:'pulse 1.5s ease infinite' }} />)}
+        <div style={{ padding: 60, textAlign: 'center', color: '#94a3b8' }}>
+          <Loader2 size={20} style={{ animation: 'spin 1s linear infinite' }} />
         </div>
-      ) : ads.length === 0 ? (
-        <div style={{ textAlign:'center', padding:'56px 20px', background:'#fafafa', borderRadius:18, border:'0.5px solid #f1f5f9' }}>
-          <div style={{ fontSize:40, marginBottom:12 }}>📋</div>
-          <p style={{ fontSize:14, fontWeight:600, color:'#64748b', marginBottom:4 }}>E'lonlar yo'q</p>
-          <p style={{ fontSize:12, color:'#94a3b8' }}>Birinchi e'lonni siz joylang!</p>
+      ) : filteredAds.length === 0 ? (
+        <div style={{
+          padding: 60, textAlign: 'center',
+          background: '#fff', border: '1px solid #e2e8f0',
+          borderRadius: 14,
+        }}>
+          <FileText size={32} color="#cbd5e1" style={{ marginBottom: 10 }} />
+          <p style={{ fontSize: 13, color: '#64748b', fontWeight: 500, marginBottom: 14 }}>
+            {filter === 'all'
+              ? "Sizning hali e'lonlaringiz yo'q"
+              : "Bu kategoriya bo'yicha e'lon yo'q"}
+          </p>
+          {filter === 'all' && (
+            <button onClick={() => setShowCreate(true)} style={{
+              padding: '10px 18px', background: '#0f172a',
+              color: '#fff', border: 'none', borderRadius: 10,
+              fontSize: 13, fontWeight: 600, cursor: 'pointer',
+              fontFamily: 'inherit',
+            }}>
+              Birinchi e'lon yarating
+            </button>
+          )}
         </div>
       ) : (
-        <div style={{ display:'flex', flexDirection:'column', gap:10 }}>
-          {ads.map(ad => (
-            <div key={ad.id} style={{ background:'#fff', border:'0.5px solid #e2e8f0', borderRadius:18, padding:18, transition:'all 200ms' }}
-              onMouseEnter={e => { const el = e.currentTarget as HTMLElement; el.style.borderColor='#0f172a'; el.style.boxShadow='0 4px 16px rgba(0,0,0,0.06)' }}
-              onMouseLeave={e => { const el = e.currentTarget as HTMLElement; el.style.borderColor='#e2e8f0'; el.style.boxShadow='none' }}>
-
-              {/* Poster info */}
-              <div style={{ display:'flex', alignItems:'center', gap:10, marginBottom:12, paddingBottom:12, borderBottom:'0.5px solid #f8fafc' }}>
-                <div style={{ width:36, height:36, background: ad.poster_role==='lawyer' ? 'linear-gradient(135deg,#0f172a,#4338ca)' : '#f1f5f9', color: ad.poster_role==='lawyer' ? '#fff' : '#64748b', borderRadius:10, display:'flex', alignItems:'center', justifyContent:'center', fontWeight:700, fontSize:12, flexShrink:0 }}>
-                  {ini(ad.poster_name)}
-                </div>
-                <div style={{ flex:1 }}>
-                  <div style={{ display:'flex', alignItems:'center', gap:5 }}>
-                    <span style={{ fontSize:13.5, fontWeight:700, color:'#0f172a' }}>{ad.poster_name}</span>
-                    {ad.poster_verified && <BadgeCheck size={13} color="#3b82f6" />}
-                  </div>
-                  <span style={{ fontSize:11, color:'#94a3b8' }}>@{ad.poster_username}</span>
-                </div>
-                <div style={{ display:'flex', alignItems:'center', gap:6 }}>
-                  {ad.poster_role==='lawyer' && parseFloat(ad.poster_rating)>0 && (
-                    <div style={{ display:'flex', alignItems:'center', gap:3 }}>
-                      <Star size={11} color="#f59e0b" fill="#f59e0b" />
-                      <span style={{ fontSize:12, fontWeight:700, color:'#0f172a' }}>{parseFloat(ad.poster_rating).toFixed(1)}</span>
-                    </div>
-                  )}
-                  <span style={{ fontSize:10, fontWeight:700, background:'#eef2ff', color:'#4338ca', padding:'3px 9px', borderRadius:5 }}>{ad.category}</span>
-                </div>
-              </div>
-
-              {/* Ad content */}
-              <h3 style={{ fontSize:15, fontWeight:700, color:'#0f172a', marginBottom:6, lineHeight:1.3 }}>{ad.title}</h3>
-              <p style={{ fontSize:13, color:'#475569', lineHeight:1.65, marginBottom:12 }}>{ad.description}</p>
-
-              {/* Footer */}
-              <div style={{ display:'flex', alignItems:'center', gap:12, flexWrap:'wrap' }}>
-                {ad.city && <span style={{ display:'flex', alignItems:'center', gap:4, fontSize:12, color:'#94a3b8' }}><MapPin size={11}/>{ad.city}</span>}
-                {(ad.budget_min||ad.budget_max) && (
-                  <span style={{ fontSize:12, color:'#475569', fontWeight:600 }}>
-                    {ad.budget_min?`${parseInt(ad.budget_min).toLocaleString()}`:''}
-                    {ad.budget_min&&ad.budget_max?' – ':''}
-                    {ad.budget_max?`${parseInt(ad.budget_max).toLocaleString()} so'm`:''}
-                  </span>
-                )}
-                <div style={{ flex:1 }} />
-                {user?.id !== ad.poster_id && (
-                  <Link href={`/dashboard/chat?user=${ad.poster_id}`}
-                    style={{ display:'flex', alignItems:'center', gap:6, background:'#0f172a', color:'#fff', padding:'8px 16px', borderRadius:10, fontSize:12.5, fontWeight:600, textDecoration:'none' }}>
-                    <MessageCircle size={13}/> Yozish
-                  </Link>
-                )}
-              </div>
-            </div>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+          {filteredAds.map(ad => (
+            <MyAdCard key={ad.id} ad={ad} onDelete={() => setDeleteConfirm(ad)} />
           ))}
         </div>
       )}
 
-      {/* Create modal */}
+      {/* Create Modal */}
       {showCreate && (
-        <div style={{ position:'fixed', inset:0, background:'rgba(15,23,42,0.5)', zIndex:100, display:'flex', alignItems:'flex-end', justifyContent:'center', backdropFilter:'blur(6px)' }}
-          onClick={e => { if(e.target===e.currentTarget) setShowCreate(false) }}>
-          <div style={{ background:'#fff', borderRadius:'22px 22px 0 0', padding:28, width:'100%', maxWidth:600, maxHeight:'92vh', overflowY:'auto', animation:'slideUp 0.3s cubic-bezier(.4,0,.2,1)' }}>
-            <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:22 }}>
-              <h2 style={{ fontSize:18, fontWeight:800, color:'#0f172a', letterSpacing:'-0.3px' }}>Yangi e'lon</h2>
-              <button onClick={() => setShowCreate(false)} style={{ width:32, height:32, background:'#f1f5f9', border:'none', borderRadius:8, cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center' }}>
-                <X size={15} color="#475569"/>
-              </button>
-            </div>
-
-            <form onSubmit={createAd} style={{ display:'flex', flexDirection:'column', gap:14 }}>
-              <div>
-                <label style={L}>Sarlavha *</label>
-                <input value={form.title} onChange={e=>setForm(f=>({...f,title:e.target.value}))} style={I} placeholder="Qisqa va aniq sarlavha" required/>
-              </div>
-              <div>
-                <label style={L}>Kategoriya *</label>
-                <select value={form.category} onChange={e=>setForm(f=>({...f,category:e.target.value}))} style={I} required>
-                  <option value="">Tanlang</option>
-                  {CATEGORIES.map(c=><option key={c}>{c}</option>)}
-                </select>
-              </div>
-              <div>
-                <label style={L}>Tavsif *</label>
-                <textarea value={form.description} onChange={e=>setForm(f=>({...f,description:e.target.value}))} style={{...I,minHeight:80,resize:'vertical' as const}} placeholder={user?.role==='lawyer'?"Xizmat tavsifi, tajriba, shartlar...":"Muammoingizni batafsil yozing..."} rows={3} required/>
-              </div>
-              <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:10 }}>
-                <div>
-                  <label style={L}>Shahar</label>
-                  <select value={form.city} onChange={e=>setForm(f=>({...f,city:e.target.value}))} style={I}>
-                    <option value="">Tanlang</option>
-                    {CITIES.map(c=><option key={c}>{c}</option>)}
-                  </select>
-                </div>
-                <div>
-                  <label style={L}>Narx (so'm)</label>
-                  <input value={form.budget_min} onChange={e=>setForm(f=>({...f,budget_min:e.target.value}))} style={I} placeholder="200 000" type="number"/>
-                </div>
-              </div>
-
-              {err && <div style={{ padding:12, borderRadius:10, background:'#fef2f2', border:'1px solid #fecaca', fontSize:13, color:'#991b1b' }}>{err}</div>}
-
-              <button type="submit" disabled={creating} style={{ display:'flex', alignItems:'center', justifyContent:'center', gap:8, padding:'13px', background:'#0f172a', color:'#fff', border:'none', borderRadius:12, fontSize:14, fontWeight:700, cursor:creating?'not-allowed':'pointer', opacity:creating?0.7:1, boxShadow:'0 4px 12px rgba(15,23,42,0.2)' }}>
-                {creating ? 'Joylashtirilmoqda...' : "E'lonni joylashtirish →"}
-              </button>
-            </form>
-          </div>
-        </div>
-      )}
-
-      <style>{`
-        @keyframes pulse { 0%,100%{opacity:1}50%{opacity:0.4} }
-        @keyframes slideUp { from{transform:translateY(100%)}to{transform:translateY(0)} }
-      `}</style>
-
-      {/* Etika qoidalari modal */}
-      {showTerms && (
-        <AdTermsModal
-          onAccept={handleTermsAccepted}
-          onCancel={() => setShowTerms(false)}
+        <CreateAdModal
+          form={form}
+          setForm={setForm}
+          onSubmit={createAd}
+          onClose={() => { setShowCreate(false); setErr('') }}
+          creating={creating}
+          err={err}
         />
       )}
 
-      {/* Status banner — 3 ta xavf darajasi */}
-      {statusInfo && (
-        <div style={{
-          position: 'fixed',
-          bottom: 20,
-          left: 16,
-          right: 16,
-          maxWidth: 520,
-          margin: '0 auto',
-          padding: '16px 18px',
-          background:
-            statusInfo.riskLevel === 'low' ? '#f0fdf4' :
-            statusInfo.riskLevel === 'medium' ? '#fef3c7' :
-            '#fef2f2',
-          border: `1px solid ${
-            statusInfo.riskLevel === 'low' ? '#bbf7d0' :
-            statusInfo.riskLevel === 'medium' ? '#fde68a' :
-            '#fecaca'
-          }`,
-          borderRadius: 14,
-          boxShadow: '0 10px 30px rgba(0,0,0,0.15)',
-          zIndex: 90,
-          display: 'flex',
-          gap: 12,
-          alignItems: 'flex-start',
-        }}>
-          {/* Icon */}
-          <div style={{
-            width: 36,
-            height: 36,
-            borderRadius: 10,
-            background:
-              statusInfo.riskLevel === 'low' ? '#16a34a' :
-              statusInfo.riskLevel === 'medium' ? '#d97706' :
-              '#dc2626',
-            color: '#fff',
-            fontSize: 18,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            flexShrink: 0,
-            fontWeight: 700,
-          }}>
-            {statusInfo.riskLevel === 'low' ? '✓' :
-             statusInfo.riskLevel === 'medium' ? '⏳' :
-             '⚠'}
-          </div>
+      {/* Etika modal */}
+      {showTerms && <AdTermsModal onAccept={handleTermsAccepted} onCancel={() => setShowTerms(false)} />}
 
-          {/* Matn */}
-          <div style={{ flex: 1, minWidth: 0 }}>
-            <div style={{
-              fontSize: 13,
-              fontWeight: 700,
-              color:
-                statusInfo.riskLevel === 'low' ? '#15803d' :
-                statusInfo.riskLevel === 'medium' ? '#92400e' :
-                '#991b1b',
-              marginBottom: 4,
-            }}>
-              {statusInfo.riskLevel === 'low' ? 'Avtomatik tasdiqlandi' :
-               statusInfo.riskLevel === 'medium' ? 'Joylashtirildi (tekshiriladi)' :
-               'Tekshirish kutilmoqda'}
-            </div>
-            <div style={{
-              fontSize: 12,
-              lineHeight: 1.55,
-              color:
-                statusInfo.riskLevel === 'low' ? '#166534' :
-                statusInfo.riskLevel === 'medium' ? '#9a3412' :
-                '#991b1b',
-            }}>
-              {statusInfo.message}
-            </div>
-          </div>
+      {/* Status banner */}
+      {statusInfo && <StatusBanner info={statusInfo} onClose={() => setStatusInfo(null)} />}
 
-          <button
-            onClick={() => setStatusInfo(null)}
-            style={{
-              background: 'transparent',
-              border: 'none',
-              cursor: 'pointer',
-              padding: 4,
-              color: '#64748b',
-              display: 'flex',
-              alignSelf: 'flex-start',
-            }}>
-            <X size={14} />
-          </button>
-        </div>
+      {/* Delete tasdiqlash modal */}
+      {deleteConfirm && (
+        <DeleteConfirmModal
+          ad={deleteConfirm}
+          onConfirm={handleDelete}
+          onCancel={() => setDeleteConfirm(null)}
+          deleting={deleting}
+        />
       )}
+
+      <style>{`
+        @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+      `}</style>
     </div>
   )
 }
 
-const L: React.CSSProperties = { display:'block', fontSize:12, fontWeight:600, color:'#475569', marginBottom:6 }
-const I: React.CSSProperties = { width:'100%', padding:'10px 14px', fontSize:14, background:'#fff', border:'1px solid #e2e8f0', borderRadius:10, color:'#0f172a', outline:'none', fontFamily:'inherit', boxSizing:'border-box' }
+// ─────────────────────────────────────────
+// Mening e'lon kartochkasi
+// ─────────────────────────────────────────
+function MyAdCard({ ad, onDelete }: { ad: MyAd, onDelete: () => void }) {
+  const status = getStatusInfo(ad)
+
+  return (
+    <div style={{
+      background: '#fff',
+      border: '1px solid #e2e8f0',
+      borderRadius: 14,
+      padding: 16,
+      position: 'relative',
+    }}>
+      {/* Top - status + delete */}
+      <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 10, marginBottom: 10 }}>
+        <div style={{
+          display: 'inline-flex', alignItems: 'center', gap: 5,
+          padding: '4px 10px',
+          background: status.bg, border: `1px solid ${status.border}`,
+          borderRadius: 999, fontSize: 11, fontWeight: 700,
+          color: status.color,
+        }}>
+          {status.icon}
+          {status.label}
+        </div>
+        <button onClick={onDelete} aria-label="O'chirish" style={{
+          background: '#fef2f2', color: '#dc2626',
+          border: 'none', borderRadius: 8,
+          padding: 6, cursor: 'pointer',
+          display: 'flex',
+        }}>
+          <Trash2 size={13} />
+        </button>
+      </div>
+
+      {/* Title + description */}
+      <h3 style={{ fontSize: 14.5, fontWeight: 700, color: '#0f172a', marginBottom: 6, lineHeight: 1.35 }}>
+        {ad.title}
+      </h3>
+      <p style={{
+        fontSize: 12.5, color: '#64748b', lineHeight: 1.55, marginBottom: 10,
+        display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical',
+        overflow: 'hidden',
+      }}>
+        {ad.description}
+      </p>
+
+      {/* Moderation message (agar bor bo'lsa) */}
+      {(ad.status === 'rejected' || ad.status === 'auto_rejected') && ad.moderation_reason && (
+        <div style={{
+          padding: '10px 12px',
+          background: '#fef2f2', border: '1px solid #fecaca',
+          borderRadius: 10, marginBottom: 10,
+          fontSize: 11.5, color: '#991b1b', lineHeight: 1.5,
+        }}>
+          <strong>Rad etish sababi:</strong> {ad.moderation_reason}
+        </div>
+      )}
+
+      {ad.status === 'pending_review' && (
+        <div style={{
+          padding: '10px 12px',
+          background: '#fef3c7', border: '1px solid #fde68a',
+          borderRadius: 10, marginBottom: 10,
+          fontSize: 11.5, color: '#92400e', lineHeight: 1.5,
+        }}>
+          <strong>⏳ Admin tasdiqlashini kutmoqda.</strong> Saytda ko'rinmaydi.
+        </div>
+      )}
+
+      {/* Meta */}
+      <div style={{
+        display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap',
+        fontSize: 11, color: '#94a3b8',
+      }}>
+        <span style={{
+          padding: '2px 7px', background: '#eef2ff', color: '#4338ca',
+          borderRadius: 5, fontSize: 10, fontWeight: 700, letterSpacing: '0.3px',
+        }}>
+          {ad.category}
+        </span>
+        {ad.city && (
+          <span style={{ display: 'flex', alignItems: 'center', gap: 3 }}>
+            <MapPin size={10} /> {ad.city}
+          </span>
+        )}
+        {ad.budget_min && (
+          <span style={{ display: 'flex', alignItems: 'center', gap: 3 }}>
+            💰 {ad.budget_min.toLocaleString()}{ad.budget_max ? ` - ${ad.budget_max.toLocaleString()}` : ''} so'm
+          </span>
+        )}
+        <span style={{ display: 'flex', alignItems: 'center', gap: 3 }}>
+          <Eye size={10} /> {ad.views_count}
+        </span>
+        <span style={{ display: 'flex', alignItems: 'center', gap: 3 }}>
+          <Calendar size={10} /> {timeAgo(ad.created_at)}
+        </span>
+      </div>
+    </div>
+  )
+}
+
+// ─────────────────────────────────────────
+// Status info helper
+// ─────────────────────────────────────────
+function getStatusInfo(ad: MyAd) {
+  if (ad.status === 'open') return {
+    label: 'Faol', bg: '#f0fdf4', border: '#bbf7d0', color: '#15803d',
+    icon: <CheckCircle2 size={11} />,
+  }
+  if (ad.status === 'pending_review') return {
+    label: 'Tekshirilmoqda', bg: '#fef3c7', border: '#fde68a', color: '#92400e',
+    icon: <Clock size={11} />,
+  }
+  if (ad.status === 'rejected' || ad.status === 'auto_rejected') return {
+    label: 'Rad etilgan', bg: '#fef2f2', border: '#fecaca', color: '#b91c1c',
+    icon: <AlertCircle size={11} />,
+  }
+  if (ad.status === 'in_progress') return {
+    label: 'Jarayonda', bg: '#eef2ff', border: '#c7d2fe', color: '#4338ca',
+    icon: <Clock size={11} />,
+  }
+  if (ad.status === 'closed') return {
+    label: 'Yopilgan', bg: '#f8fafc', border: '#e2e8f0', color: '#64748b',
+    icon: <CheckCircle2 size={11} />,
+  }
+  return {
+    label: ad.status, bg: '#f8fafc', border: '#e2e8f0', color: '#64748b',
+    icon: <FileText size={11} />,
+  }
+}
+
+function timeAgo(iso: string): string {
+  const diff = Date.now() - new Date(iso).getTime()
+  const minutes = Math.floor(diff / 60000)
+  const hours = Math.floor(diff / 3600000)
+  const days = Math.floor(diff / 86400000)
+  if (minutes < 1) return 'hozir'
+  if (minutes < 60) return `${minutes} daq oldin`
+  if (hours < 24) return `${hours} soat oldin`
+  if (days < 7) return `${days} kun oldin`
+  return new Date(iso).toLocaleDateString('uz-UZ')
+}
+
+// ─────────────────────────────────────────
+// Create modal
+// ─────────────────────────────────────────
+function CreateAdModal({ form, setForm, onSubmit, onClose, creating, err }: any) {
+  return (
+    <div style={{
+      position: 'fixed', inset: 0,
+      background: 'rgba(15,23,42,0.5)',
+      zIndex: 100, display: 'flex',
+      alignItems: 'flex-end', justifyContent: 'center',
+      animation: 'fadeIn 200ms',
+    }}>
+      <div style={{
+        background: '#fff', borderRadius: '20px 20px 0 0',
+        maxWidth: 600, width: '100%',
+        maxHeight: '90vh', overflowY: 'auto',
+        animation: 'slideUp 250ms',
+      }}>
+        {/* Header */}
+        <div style={{
+          padding: '18px 20px',
+          borderBottom: '1px solid #e2e8f0',
+          display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+          position: 'sticky', top: 0, background: '#fff',
+        }}>
+          <h2 style={{ fontSize: 16, fontWeight: 700, color: '#0f172a' }}>
+            Yangi e'lon
+          </h2>
+          <button onClick={onClose} style={{
+            background: '#f1f5f9', border: 'none',
+            borderRadius: 8, padding: 6, cursor: 'pointer',
+            display: 'flex',
+          }}>
+            <X size={16} />
+          </button>
+        </div>
+
+        <form onSubmit={onSubmit} style={{ padding: 20, display: 'flex', flexDirection: 'column', gap: 14 }}>
+          <div>
+            <label style={L}>Sarlavha *</label>
+            <input value={form.title} onChange={(e: any) => setForm((f: any) => ({ ...f, title: e.target.value }))}
+              style={I} placeholder="Mol-mulk taqsimoti haqida maslahat" maxLength={200} />
+          </div>
+          <div>
+            <label style={L}>Tavsif *</label>
+            <textarea value={form.description} onChange={(e: any) => setForm((f: any) => ({ ...f, description: e.target.value }))}
+              style={{ ...I, minHeight: 100, fontFamily: 'inherit', resize: 'vertical' }}
+              placeholder="Vaziyatingizni batafsil yozing..." maxLength={5000} />
+          </div>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+            <div>
+              <label style={L}>Kategoriya *</label>
+              <select value={form.category} onChange={(e: any) => setForm((f: any) => ({ ...f, category: e.target.value }))} style={I}>
+                <option value="">Tanlang...</option>
+                {CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
+              </select>
+            </div>
+            <div>
+              <label style={L}>Shahar</label>
+              <select value={form.city} onChange={(e: any) => setForm((f: any) => ({ ...f, city: e.target.value }))} style={I}>
+                <option value="">Tanlang...</option>
+                {CITIES.map(c => <option key={c} value={c}>{c}</option>)}
+              </select>
+            </div>
+          </div>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+            <div>
+              <label style={L}>Narx (dan)</label>
+              <input value={form.budget_min} onChange={(e: any) => setForm((f: any) => ({ ...f, budget_min: e.target.value }))}
+                style={I} placeholder="200 000" type="number" />
+            </div>
+            <div>
+              <label style={L}>Narx (gacha)</label>
+              <input value={form.budget_max} onChange={(e: any) => setForm((f: any) => ({ ...f, budget_max: e.target.value }))}
+                style={I} placeholder="500 000" type="number" />
+            </div>
+          </div>
+
+          {err && (
+            <div style={{
+              padding: 12, borderRadius: 10,
+              background: '#fef2f2', border: '1px solid #fecaca',
+              fontSize: 13, color: '#991b1b',
+            }}>
+              {err}
+            </div>
+          )}
+
+          <button type="submit" disabled={creating} style={{
+            display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+            padding: '13px', background: '#0f172a', color: '#fff',
+            border: 'none', borderRadius: 12, fontSize: 14, fontWeight: 700,
+            cursor: creating ? 'not-allowed' : 'pointer',
+            opacity: creating ? 0.7 : 1,
+            boxShadow: '0 4px 12px rgba(15,23,42,0.2)',
+          }}>
+            {creating ? (
+              <><Loader2 size={14} style={{ animation: 'spin 1s linear infinite' }} /> Joylashtirilmoqda...</>
+            ) : (
+              "E'lonni joylashtirish →"
+            )}
+          </button>
+        </form>
+      </div>
+      <style>{`
+        @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
+      `}</style>
+    </div>
+  )
+}
+
+// ─────────────────────────────────────────
+// Status banner
+// ─────────────────────────────────────────
+function StatusBanner({ info, onClose }: any) {
+  const colors = {
+    low: { bg: '#f0fdf4', border: '#bbf7d0', text: '#15803d', accent: '#16a34a' },
+    medium: { bg: '#fef3c7', border: '#fde68a', text: '#92400e', accent: '#d97706' },
+    high: { bg: '#fef2f2', border: '#fecaca', text: '#991b1b', accent: '#dc2626' },
+  }[info.riskLevel as 'low' | 'medium' | 'high']
+
+  return (
+    <div style={{
+      position: 'fixed', bottom: 20, left: 16, right: 16, maxWidth: 520,
+      margin: '0 auto', padding: '16px 18px',
+      background: colors.bg, border: `1px solid ${colors.border}`,
+      borderRadius: 14, boxShadow: '0 10px 30px rgba(0,0,0,0.15)',
+      zIndex: 90, display: 'flex', gap: 12, alignItems: 'flex-start',
+    }}>
+      <div style={{
+        width: 36, height: 36, borderRadius: 10,
+        background: colors.accent, color: '#fff', fontSize: 18,
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+        flexShrink: 0, fontWeight: 700,
+      }}>
+        {info.riskLevel === 'low' ? '✓' : info.riskLevel === 'medium' ? '⏳' : '⚠'}
+      </div>
+      <div style={{ flex: 1, minWidth: 0 }}>
+        <div style={{ fontSize: 13, fontWeight: 700, color: colors.text, marginBottom: 4 }}>
+          {info.riskLevel === 'low' ? 'Avtomatik tasdiqlandi' :
+           info.riskLevel === 'medium' ? 'Joylashtirildi (tekshiriladi)' :
+           'Tekshirish kutilmoqda'}
+        </div>
+        <div style={{ fontSize: 12, lineHeight: 1.55, color: colors.text }}>
+          {info.message}
+        </div>
+      </div>
+      <button onClick={onClose} style={{
+        background: 'transparent', border: 'none', cursor: 'pointer',
+        padding: 4, color: '#64748b', display: 'flex',
+        alignSelf: 'flex-start',
+      }}>
+        <X size={14} />
+      </button>
+    </div>
+  )
+}
+
+// ─────────────────────────────────────────
+// Delete confirm modal
+// ─────────────────────────────────────────
+function DeleteConfirmModal({ ad, onConfirm, onCancel, deleting }: any) {
+  return (
+    <div style={{
+      position: 'fixed', inset: 0, background: 'rgba(15,23,42,0.6)',
+      zIndex: 110, display: 'flex',
+      alignItems: 'center', justifyContent: 'center',
+      padding: 16, backdropFilter: 'blur(4px)',
+    }}>
+      <div style={{
+        background: '#fff', borderRadius: 16,
+        maxWidth: 400, width: '100%', padding: 22,
+      }}>
+        <div style={{
+          width: 44, height: 44, background: '#fef2f2',
+          border: '1px solid #fecaca', borderRadius: 12,
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          marginBottom: 14,
+        }}>
+          <AlertTriangle size={20} color="#dc2626" />
+        </div>
+        <h2 style={{ fontSize: 16, fontWeight: 700, color: '#0f172a', marginBottom: 6 }}>
+          E'lonni o'chirish?
+        </h2>
+        <p style={{ fontSize: 13, color: '#64748b', lineHeight: 1.55, marginBottom: 14 }}>
+          <strong>"{ad.title}"</strong> e'lonini butunlay o'chirmoqchimisiz? Bu amalni qaytarib bo'lmaydi.
+        </p>
+        <div style={{ display: 'flex', gap: 8 }}>
+          <button onClick={onCancel} disabled={deleting} style={{
+            flex: 1, padding: '11px 14px',
+            background: '#fff', color: '#64748b',
+            border: '1px solid #e2e8f0', borderRadius: 10,
+            fontSize: 13, fontWeight: 600, cursor: 'pointer',
+            fontFamily: 'inherit',
+          }}>
+            Bekor
+          </button>
+          <button onClick={onConfirm} disabled={deleting} style={{
+            flex: 1, padding: '11px 14px',
+            background: '#dc2626', color: '#fff',
+            border: 'none', borderRadius: 10,
+            fontSize: 13, fontWeight: 600,
+            cursor: deleting ? 'wait' : 'pointer',
+            display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
+            fontFamily: 'inherit',
+          }}>
+            {deleting ? <Loader2 size={13} style={{ animation: 'spin 1s linear infinite' }} /> : <Trash2 size={13} />}
+            O'chirish
+          </button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+const L: React.CSSProperties = {
+  display: 'block', fontSize: 12, fontWeight: 600, color: '#475569', marginBottom: 6
+}
+const I: React.CSSProperties = {
+  width: '100%', padding: '10px 14px', fontSize: 14,
+  background: '#fff', border: '1px solid #e2e8f0', borderRadius: 10,
+  color: '#0f172a', outline: 'none', fontFamily: 'inherit', boxSizing: 'border-box'
+}
