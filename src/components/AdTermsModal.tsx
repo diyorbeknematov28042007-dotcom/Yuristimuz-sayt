@@ -8,7 +8,6 @@ import { useState } from 'react'
 import { X, AlertTriangle, FileText, Lock, ShieldX, Heart, Scale, Eye, CheckCircle2, Loader2 } from 'lucide-react'
 
 interface Props {
-  userId: string
   onAccept: () => void
   onCancel: () => void
 }
@@ -52,7 +51,7 @@ const RULES = [
   },
 ]
 
-export default function AdTermsModal({ userId, onAccept, onCancel }: Props) {
+export default function AdTermsModal({ onAccept, onCancel }: Props) {
   const [agreed, setAgreed] = useState(false)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
@@ -66,7 +65,6 @@ export default function AdTermsModal({ userId, onAccept, onCancel }: Props) {
       const res = await fetch('/api/ads/accept-terms', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ userId }),
       })
       const data = await res.json()
 
