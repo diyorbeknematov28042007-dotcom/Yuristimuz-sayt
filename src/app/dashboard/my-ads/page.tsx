@@ -20,7 +20,7 @@ export default function AdsPage() {
   const [creating, setCreating] = useState(false)
   const [err, setErr] = useState('')
   const [showTerms, setShowTerms] = useState(false)
-  const [statusInfo, setStatusInfo] = useState<{ status: string, message: string } | null>(null)
+  const [statusInfo, setStatusInfo] = useState<{ riskLevel: 'low' | 'medium' | 'high', message: string } | null>(null)
 
   useEffect(() => {
     fetch('/api/auth/me').then(r => r.json()).then(d => setUser(d.user))
@@ -53,10 +53,10 @@ export default function AdsPage() {
       setErr(d.error||"Xatolik"); setCreating(false); return
     }
     setShowCreate(false); setForm({ title:'', description:'', category:'', city:'', budget_min:'', budget_max:'' })
-    // Status message ko'rsatish (open / pending_review / auto_rejected)
-    if (d.status && d.message) {
-      setStatusInfo({ status: d.status, message: d.message })
-      setTimeout(() => setStatusInfo(null), 8000)  // 8 soniyada yopilish
+    // Status message ko'rsatish - 3 ta xavf darajasi
+    if (d.riskLevel && d.message) {
+      setStatusInfo({ riskLevel: d.riskLevel, message: d.message })
+      setTimeout(() => setStatusInfo(null), 12000)  // 12 soniya (matn uzun)
     }
     fetchAds(tab, catFilter); setCreating(false)
   }
@@ -248,52 +248,81 @@ export default function AdsPage() {
         />
       )}
 
-      {/* Status banner — e'lon joylangach */}
+      {/* Status banner — 3 ta xavf darajasi */}
       {statusInfo && (
         <div style={{
           position: 'fixed',
           bottom: 20,
           left: 16,
           right: 16,
-          maxWidth: 500,
+          maxWidth: 520,
           margin: '0 auto',
-          padding: '14px 16px',
+          padding: '16px 18px',
           background:
-            statusInfo.status === 'open' ? '#f0fdf4' :
-            statusInfo.status === 'pending_review' ? '#fef3c7' :
+            statusInfo.riskLevel === 'low' ? '#f0fdf4' :
+            statusInfo.riskLevel === 'medium' ? '#fef3c7' :
             '#fef2f2',
           border: `1px solid ${
-            statusInfo.status === 'open' ? '#bbf7d0' :
-            statusInfo.status === 'pending_review' ? '#fde68a' :
+            statusInfo.riskLevel === 'low' ? '#bbf7d0' :
+            statusInfo.riskLevel === 'medium' ? '#fde68a' :
             '#fecaca'
           }`,
-          borderRadius: 12,
+          borderRadius: 14,
           boxShadow: '0 10px 30px rgba(0,0,0,0.15)',
           zIndex: 90,
           display: 'flex',
-          gap: 10,
+          gap: 12,
           alignItems: 'flex-start',
         }}>
+          {/* Icon */}
           <div style={{
-            fontSize: 20,
+            width: 36,
+            height: 36,
+            borderRadius: 10,
+            background:
+              statusInfo.riskLevel === 'low' ? '#16a34a' :
+              statusInfo.riskLevel === 'medium' ? '#d97706' :
+              '#dc2626',
+            color: '#fff',
+            fontSize: 18,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
             flexShrink: 0,
+            fontWeight: 700,
           }}>
-            {statusInfo.status === 'open' ? '✓' :
-             statusInfo.status === 'pending_review' ? '⏳' :
-             '✗'}
+            {statusInfo.riskLevel === 'low' ? '✓' :
+             statusInfo.riskLevel === 'medium' ? '⏳' :
+             '⚠'}
           </div>
-          <div style={{
-            flex: 1,
-            fontSize: 13,
-            lineHeight: 1.5,
-            color:
-              statusInfo.status === 'open' ? '#15803d' :
-              statusInfo.status === 'pending_review' ? '#92400e' :
-              '#991b1b',
-            fontWeight: 500,
-          }}>
-            {statusInfo.message}
+
+          {/* Matn */}
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <div style={{
+              fontSize: 13,
+              fontWeight: 700,
+              color:
+                statusInfo.riskLevel === 'low' ? '#15803d' :
+                statusInfo.riskLevel === 'medium' ? '#92400e' :
+                '#991b1b',
+              marginBottom: 4,
+            }}>
+              {statusInfo.riskLevel === 'low' ? 'Avtomatik tasdiqlandi' :
+               statusInfo.riskLevel === 'medium' ? 'Joylashtirildi (tekshiriladi)' :
+               'Tekshirish kutilmoqda'}
+            </div>
+            <div style={{
+              fontSize: 12,
+              lineHeight: 1.55,
+              color:
+                statusInfo.riskLevel === 'low' ? '#166534' :
+                statusInfo.riskLevel === 'medium' ? '#9a3412' :
+                '#991b1b',
+            }}>
+              {statusInfo.message}
+            </div>
           </div>
+
           <button
             onClick={() => setStatusInfo(null)}
             style={{
@@ -303,6 +332,7 @@ export default function AdsPage() {
               padding: 4,
               color: '#64748b',
               display: 'flex',
+              alignSelf: 'flex-start',
             }}>
             <X size={14} />
           </button>
