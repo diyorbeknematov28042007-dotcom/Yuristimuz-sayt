@@ -1,29 +1,35 @@
 // ════════════════════════════════════════════════
-// E'LON YARATISH API (moderation bilan)
+// E'LON YARATISH API (moderation bilan) - TUZATILGAN
 // /src/app/api/ads/create/route.ts
 // ════════════════════════════════════════════════
 
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
+import { getSession } from '@/lib/auth'
 import { patternCheck, geminiModeration, decideModeration } from '@/lib/ad-moderation'
 
 export async function POST(req: NextRequest) {
   try {
+    // 1) Foydalanuvchi cookie'dan olish (xavfsiz)
+    const user = await getSession()
+    if (!user) {
+      return NextResponse.json({ error: 'Tizimga kiring' }, { status: 401 })
+    }
+
     const body = await req.json()
-    const {
-      posterId,
-      title,
-      description,
-      category,
-      city,
-      budgetMin,
-      budgetMax,
-    } = body
     
-    // Validatsiya
-    if (!posterId || !title || !description || !category) {
+    // 2) Body'dan parametrlarni olish - snake_case yoki camelCase qabul qilamiz
+    const title = (body.title || '').trim()
+    const description = (body.description || '').trim()
+    const category = body.category || ''
+    const city = body.city || null
+    const budgetMin = body.budget_min ?? body.budgetMin ?? null
+    const budgetMax = body.budget_max ?? body.budgetMax ?? null
+
+    // 3) Validatsiya
+    if (!title || !description || !category) {
       return NextResponse.json(
-        { error: 'Majburiy maydonlar to\'ldirilmagan' },
+        { error: 'Sarlavha, tavsif va kategoriya majburiy' },
         { status: 400 }
       )
     }
@@ -39,58 +45,48 @@ export async function POST(req: NextRequest) {
         { status: 400 }
       )
     }
-    
+
     const supabase = createClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
       process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
     )
-    
-    // 1) Etika tasdiqlash holatini tekshirish
+
+    // 4) Etika tasdiqlash holatini tekshirish
     const { data: termsAccepted } = await supabase.rpc('check_ad_terms_accepted', {
-      p_user_id: posterId
+      p_user_id: user.id,
     })
-    
+
     if (!termsAccepted) {
       return NextResponse.json(
         { error: 'Avval e\'lon yozish qoidalariga rozi bo\'ling', needsTerms: true },
         { status: 403 }
       )
     }
-    
-    // 2) Foydalanuvchi rolini olish
-    const { data: userData } = await supabase
-      .from('app_users')
-      .select('role')
-      .eq('id', posterId)
-      .single()
-    
-    if (!userData) {
-      return NextResponse.json({ error: 'Foydalanuvchi topilmadi' }, { status: 404 })
-    }
-    
-    const role = (userData.role === 'lawyer' ? 'lawyer' : 'client') as 'lawyer' | 'client'
-    
-    // 3) Moderatsiya — pattern check + Gemini
+
+    // 5) Foydalanuvchi roli (yurist/mijoz)
+    const role = (user.role === 'lawyer' ? 'lawyer' : 'client') as 'lawyer' | 'client'
+
+    // 6) Moderatsiya — pattern check + Gemini
     const fullText = `${title}\n\n${description}`
     const pattern = patternCheck(fullText)
     const gemini = await geminiModeration(title, description, category, role)
     const decision = decideModeration(pattern, gemini, role)
-    
-    // 4) E'lon yaratish
+
+    // 7) E'lon yaratish
     const { data: adId, error: createError } = await supabase.rpc('create_ad_with_moderation', {
-      p_poster_id: posterId,
-      p_title: title.trim(),
-      p_description: description.trim(),
+      p_poster_id: user.id,
+      p_title: title,
+      p_description: description,
       p_category: category,
-      p_city: city || null,
-      p_budget_min: budgetMin || null,
-      p_budget_max: budgetMax || null,
+      p_city: city,
+      p_budget_min: budgetMin,
+      p_budget_max: budgetMax,
       p_status: decision.status,
       p_moderation_score: decision.score,
       p_moderation_flags: decision.flags,
       p_moderation_reason: decision.reason,
     })
-    
+
     if (createError) {
       console.error('E\'lon yaratish xato:', createError)
       return NextResponse.json(
@@ -98,16 +94,15 @@ export async function POST(req: NextRequest) {
         { status: 500 }
       )
     }
-    
-    // 5) Natijani qaytaramiz
+
+    // 8) Natijani qaytaramiz
     return NextResponse.json({
       success: true,
       adId,
       status: decision.status,
       message: getStatusMessage(decision.status, decision.reason),
-      score: decision.score,  // debug uchun
     })
-    
+
   } catch (err: any) {
     console.error('Ad create API xato:', err)
     return NextResponse.json(
