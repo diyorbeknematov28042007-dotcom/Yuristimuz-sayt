@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { supabase } from '@/lib/supabase'
 import Link from 'next/link'
 import { Plus, Scale, User, MapPin, Star, BadgeCheck, MessageCircle, X, ChevronRight, Briefcase } from 'lucide-react'
+import AdTermsModal from '@/components/AdTermsModal'
 
 const CATEGORIES = ['Oilaviy', 'Biznes', 'Mulk', 'Mehnat', 'Soliq', 'Jinoyat', 'Shartnoma', 'Migratsiya']
 const CITIES = ["Toshkent","Samarqand","Buxoro","Namangan","Andijon","Farg'ona","Nukus","Qarshi","Termiz","Jizzax"]
@@ -18,6 +19,8 @@ export default function AdsPage() {
   const [form, setForm] = useState({ title:'', description:'', category:'', city:'', budget_min:'', budget_max:'' })
   const [creating, setCreating] = useState(false)
   const [err, setErr] = useState('')
+  const [showTerms, setShowTerms] = useState(false)
+  const [statusInfo, setStatusInfo] = useState<{ status: string, message: string } | null>(null)
 
   useEffect(() => {
     fetch('/api/auth/me').then(r => r.json()).then(d => setUser(d.user))
@@ -40,9 +43,32 @@ export default function AdsPage() {
     const res = await fetch('/api/ads/create', { method:'POST', headers:{'Content-Type':'application/json'},
       body: JSON.stringify({ title: form.title, description: form.description, category: form.category, city: form.city||null, budget_min: form.budget_min ? parseFloat(form.budget_min) : null, budget_max: form.budget_max ? parseFloat(form.budget_max) : null }) })
     const d = await res.json()
-    if (!res.ok) { setErr(d.error||"Xatolik"); setCreating(false); return }
+    if (!res.ok) {
+      // Etika qoidalari hali tasdiqlanmagan bo'lsa, modal'ni ochamiz
+      if (d.needsTerms) {
+        setCreating(false)
+        setShowTerms(true)
+        return
+      }
+      setErr(d.error||"Xatolik"); setCreating(false); return
+    }
     setShowCreate(false); setForm({ title:'', description:'', category:'', city:'', budget_min:'', budget_max:'' })
+    // Status message ko'rsatish (open / pending_review / auto_rejected)
+    if (d.status && d.message) {
+      setStatusInfo({ status: d.status, message: d.message })
+      setTimeout(() => setStatusInfo(null), 8000)  // 8 soniyada yopilish
+    }
     fetchAds(tab, catFilter); setCreating(false)
+  }
+
+  // Etika qoidalari tasdiqlangach, e'lon yaratishni davom ettirish
+  const handleTermsAccepted = () => {
+    setShowTerms(false)
+    // Avtomatik qayta yuborish — fake event bilan
+    setTimeout(() => {
+      const fakeEvent = { preventDefault: () => {} } as React.FormEvent
+      createAd(fakeEvent)
+    }, 200)
   }
 
   const ini = (n: string) => n?.split(' ').map(w => w[0]).join('').slice(0,2).toUpperCase() || 'U'
@@ -213,6 +239,75 @@ export default function AdsPage() {
         @keyframes pulse { 0%,100%{opacity:1}50%{opacity:0.4} }
         @keyframes slideUp { from{transform:translateY(100%)}to{transform:translateY(0)} }
       `}</style>
+
+      {/* Etika qoidalari modal */}
+      {showTerms && (
+        <AdTermsModal
+          onAccept={handleTermsAccepted}
+          onCancel={() => setShowTerms(false)}
+        />
+      )}
+
+      {/* Status banner — e'lon joylangach */}
+      {statusInfo && (
+        <div style={{
+          position: 'fixed',
+          bottom: 20,
+          left: 16,
+          right: 16,
+          maxWidth: 500,
+          margin: '0 auto',
+          padding: '14px 16px',
+          background:
+            statusInfo.status === 'open' ? '#f0fdf4' :
+            statusInfo.status === 'pending_review' ? '#fef3c7' :
+            '#fef2f2',
+          border: `1px solid ${
+            statusInfo.status === 'open' ? '#bbf7d0' :
+            statusInfo.status === 'pending_review' ? '#fde68a' :
+            '#fecaca'
+          }`,
+          borderRadius: 12,
+          boxShadow: '0 10px 30px rgba(0,0,0,0.15)',
+          zIndex: 90,
+          display: 'flex',
+          gap: 10,
+          alignItems: 'flex-start',
+        }}>
+          <div style={{
+            fontSize: 20,
+            flexShrink: 0,
+          }}>
+            {statusInfo.status === 'open' ? '✓' :
+             statusInfo.status === 'pending_review' ? '⏳' :
+             '✗'}
+          </div>
+          <div style={{
+            flex: 1,
+            fontSize: 13,
+            lineHeight: 1.5,
+            color:
+              statusInfo.status === 'open' ? '#15803d' :
+              statusInfo.status === 'pending_review' ? '#92400e' :
+              '#991b1b',
+            fontWeight: 500,
+          }}>
+            {statusInfo.message}
+          </div>
+          <button
+            onClick={() => setStatusInfo(null)}
+            style={{
+              background: 'transparent',
+              border: 'none',
+              cursor: 'pointer',
+              padding: 4,
+              color: '#64748b',
+              display: 'flex',
+            }}>
+            <X size={14} />
+          </button>
+        </div>
+      )}
     </div>
   )
 }
