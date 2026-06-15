@@ -95,12 +95,48 @@ export async function POST(req: NextRequest) {
       )
     }
 
-    // 8) Natijani qaytaramiz
+    // 8) Adminga bildirishnoma yuborish (o'rta va yuqori xavf uchun)
+    if (decision.needsAdminNotification) {
+      // Barcha admin'larga (hozir bitta admin bor, lekin kelajakda ko'p bo'lishi mumkin)
+      const { data: adminUsers } = await supabase
+        .from('app_users')
+        .select('id')
+        .eq('role', 'admin')
+      
+      if (adminUsers && adminUsers.length > 0) {
+        const notificationTitle =
+          decision.riskLevel === 'high'
+            ? '🔴 Xavfli e\'lon tasdiqlash kutmoqda'
+            : '🟡 Tekshirilishi kerak bo\'lgan e\'lon'
+        
+        const notificationBody =
+          decision.riskLevel === 'high'
+            ? `"${title.slice(0, 60)}${title.length > 60 ? '...' : ''}" — yuqori xavf (${decision.score}/100). Sayt'da ko'rinmaydi, tasdiqlanishi kerak.`
+            : `"${title.slice(0, 60)}${title.length > 60 ? '...' : ''}" — o'rta xavf (${decision.score}/100). E'lon joylangan, lekin tekshirib chiqishingiz tavsiya etiladi.`
+        
+        // Har bir admin'ga bildirishnoma
+        await Promise.all(
+          adminUsers.map((admin: any) =>
+            supabase.rpc('create_notification', {
+              p_user_id: admin.id,
+              p_type: decision.riskLevel === 'high' ? 'ad_high_risk' : 'ad_medium_risk',
+              p_title: notificationTitle,
+              p_body: notificationBody,
+              p_link: `/admin/ads/${adId}`,
+              p_metadata: { adId, score: decision.score, riskLevel: decision.riskLevel },
+            })
+          )
+        )
+      }
+    }
+
+    // 9) Foydalanuvchiga matn — xavf darajasi va status'ga qarab
     return NextResponse.json({
       success: true,
       adId,
       status: decision.status,
-      message: getStatusMessage(decision.status, decision.reason),
+      riskLevel: decision.riskLevel,
+      message: getStatusMessage(decision.riskLevel),
     })
 
   } catch (err: any) {
@@ -112,14 +148,20 @@ export async function POST(req: NextRequest) {
   }
 }
 
-function getStatusMessage(status: string, reason: string | null): string {
-  switch (status) {
-    case 'open':
-      return 'E\'lon muvaffaqiyatli joylashtirildi!'
-    case 'pending_review':
-      return 'E\'lon yuborildi. Admin tomonidan tekshirilmoqda, 1-2 soatda javob beramiz.'
-    case 'auto_rejected':
-      return `E'lon rad etildi. ${reason || 'Sayt qoidalariga mos kelmadi.'} Iltimos, qoidalarni qayta o'qib, yangi e'lon yarating.`
+// ─────────────────────────────────────────
+// Foydalanuvchiga ko'rsatiladigan matn — xavf darajasi asosida
+// ─────────────────────────────────────────
+function getStatusMessage(riskLevel: 'low' | 'medium' | 'high'): string {
+  switch (riskLevel) {
+    case 'low':
+      return 'Sizning e\'loningiz Yuristim AI tomonidan xavfsiz deb topildi va saytda joylashtirildi. ✓ Avtomatik tasdiqlandi.'
+    
+    case 'medium':
+      return 'E\'loningiz saytda joylashtirildi. AI tomonidan tekshirilgan, lekin qo\'shimcha admin nazoratiga olindi. Agar muammoli topilsa, sabab bilan o\'chirilishi mumkin.'
+    
+    case 'high':
+      return 'Sizning e\'loningiz Yuristim AI tomonidan xavfli deb topildi va admin tasdiqlash uchun yuborildi. Tasdiqlanmaguncha saytda ko\'rinmaydi. Admin tomonidan ko\'rib chiqilgach javob beramiz.'
+    
     default:
       return 'E\'lon yaratildi'
   }
