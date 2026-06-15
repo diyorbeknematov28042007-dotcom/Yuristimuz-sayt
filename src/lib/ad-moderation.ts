@@ -212,6 +212,8 @@ export interface ModerationDecision {
   score: number
   flags: any
   reason: string | null
+  riskLevel: 'low' | 'medium' | 'high'  // YANGI — UI'da matn farqlash uchun
+  needsAdminNotification: boolean        // YANGI — o'rta xavf admin'ga xabar
 }
 
 export function decideModeration(
@@ -265,33 +267,42 @@ export function decideModeration(
     role: role,
   }
   
-  // Qaror — rol asosida turli threshold'lar
+  // ═══════════════════════════════════════════════════
+  // YANGI MANTIQ — 3 ta xavf darajasi
+  // ═══════════════════════════════════════════════════
   let status: 'open' | 'pending_review' | 'auto_rejected'
+  let riskLevel: 'low' | 'medium' | 'high'
+  let needsAdminNotification = false
   let reason: string | null = null
   
-  if (role === 'lawyer') {
-    // Yurist uchun yumshoq: 0-50 auto, 50-80 review, 80+ reject
-    if (score < 50) status = 'open'
-    else if (score < 80) status = 'pending_review'
-    else {
-      status = 'auto_rejected'
-      reason = gemini.reason || 'E\'lon sayt qoidalariga mos kelmadi'
-    }
+  // Threshold'lar rol asosida
+  const lowMax = role === 'lawyer' ? 50 : 30      // Past xavf chegarasi
+  const mediumMax = role === 'lawyer' ? 80 : 70   // O'rta xavf chegarasi
+  
+  if (score < lowMax) {
+    // ✅ PAST XAVF — to'liq AI o'tkazadi
+    status = 'open'
+    riskLevel = 'low'
+    needsAdminNotification = false
+  } else if (score < mediumMax) {
+    // ⚠️ O'RTA XAVF — joylandi LEKIN admin xabardor
+    status = 'open'              // Saytda KO'RINADI
+    riskLevel = 'medium'
+    needsAdminNotification = true  // Admin tekshirsin
+    reason = gemini.reason || 'O\'rta xavfli — admin tomonidan tekshiriladi'
   } else {
-    // Mijoz uchun qattiq: 0-30 auto, 30-70 review, 70+ reject
-    if (score < 30) status = 'open'
-    else if (score < 70) status = 'pending_review'
-    else {
-      status = 'auto_rejected'
-      reason = gemini.reason || 'E\'lon sayt qoidalariga mos kelmadi'
-      
-      // Aniq sabablar
-      if (pattern.hasCard) reason = 'Karta raqami yozish taqiqlanadi'
-      else if (!gemini.is_legal) reason = 'E\'lon huquqiy mavzuga oid emas'
-      else if (gemini.is_toxic) reason = 'E\'londa haqorat yoki tahdid mavjud'
-      else if (pattern.spamKeywords.length >= 2) reason = 'Spam belgilar aniqlandi'
-    }
+    // 🔴 YUQORI XAVF — admin tasdiqlamaguncha ko'rinmaydi
+    status = 'pending_review'    // Saytda KO'RINMAYDI
+    riskLevel = 'high'
+    needsAdminNotification = true
+    
+    // Aniq sabablar (foydalanuvchi ko'radi)
+    if (pattern.hasCard) reason = 'Karta raqami yozish taqiqlanadi'
+    else if (!gemini.is_legal) reason = 'E\'lon huquqiy mavzuga oid emas'
+    else if (gemini.is_toxic) reason = 'E\'londa haqorat yoki tahdid belgilari mavjud'
+    else if (pattern.spamKeywords.length >= 2) reason = 'Spam belgilar aniqlandi'
+    else reason = gemini.reason || 'AI tekshiruvi xavfli deb topdi'
   }
   
-  return { status, score, flags, reason }
+  return { status, score, flags, reason, riskLevel, needsAdminNotification }
 }
