@@ -10,6 +10,7 @@ import {
 } from 'lucide-react'
 import ShareButton from '@/components/lawyer/ShareButton'
 import PublicReviewsBox from '@/components/reviews/PublicReviewsBox'
+import LocationDisplay from '@/components/map/LocationDisplay'
 
 // ─────────────────────────────────────────────
 // Data fetching
@@ -303,6 +304,20 @@ export default async function PublicLawyerPage(
             {lawyer.workplace && (
               <p style={{ fontSize: 13, color: '#64748b' }}>{lawyer.workplace}</p>
             )}
+          </Section>
+        )}
+
+        {/* ═══════════════════════════════════ */}
+        {/* OFIS JOYLASHUVI — XARITA                */}
+        {/* ═══════════════════════════════════ */}
+        {lawyer.latitude && lawyer.longitude && (
+          <Section title="Ofis manzili" icon={<MapPin size={15} color="#475569" />}>
+            <LocationDisplay
+              latitude={Number(lawyer.latitude)}
+              longitude={Number(lawyer.longitude)}
+              officeAddress={lawyer.office_address}
+              lawyerName={lawyer.full_name}
+            />
           </Section>
         )}
 
