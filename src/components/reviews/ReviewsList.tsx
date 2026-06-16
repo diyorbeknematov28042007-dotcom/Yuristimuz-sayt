@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { Star, MessageSquare, MoreHorizontal, ChevronDown, Loader2, Reply, Info, TrendingUp } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 import StarRating from './StarRating'
+import ReportButton from '@/components/ReportButton'
 
 type Review = {
   id: string
@@ -290,9 +291,14 @@ export default function ReviewsList({
                   <p style={{ fontSize: 13, fontWeight: 700, color: '#0f172a' }}>
                     {r.client_full_name}
                   </p>
-                  <span style={{ fontSize: 11, color: '#94a3b8', flexShrink: 0 }}>
-                    {fmtDate(r.created_at)}
-                  </span>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 2, flexShrink: 0 }}>
+                    <span style={{ fontSize: 11, color: '#94a3b8' }}>
+                      {fmtDate(r.created_at)}
+                    </span>
+                    {!isOwnProfile && (
+                      <ReportButton targetType="review" targetId={r.id} variant="icon" size={13} />
+                    )}
+                  </div>
                 </div>
                 <div style={{ marginTop: 4 }}>
                   <StarRating value={r.rating} readonly size={13} />
