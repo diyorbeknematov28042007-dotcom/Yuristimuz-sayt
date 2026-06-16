@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { supabase } from '@/lib/supabase'
 import Link from 'next/link'
 import { Plus, Scale, User, MapPin, Star, BadgeCheck, MessageCircle, X, ChevronRight, Briefcase } from 'lucide-react'
+import ReportButton from '@/components/ReportButton'
 
 const CATEGORIES = ['Oilaviy', 'Biznes', 'Mulk', 'Mehnat', 'Soliq', 'Jinoyat', 'Shartnoma', 'Migratsiya']
 const CITIES = ["Toshkent","Samarqand","Buxoro","Namangan","Andijon","Farg'ona","Nukus","Qarshi","Termiz","Jizzax"]
@@ -146,10 +147,13 @@ export default function AdsPage() {
                 )}
                 <div style={{ flex:1 }} />
                 {user?.id !== ad.poster_id && (
-                  <Link href={`/dashboard/chat?user=${ad.poster_id}`}
-                    style={{ display:'flex', alignItems:'center', gap:6, background:'#0f172a', color:'#fff', padding:'8px 16px', borderRadius:10, fontSize:12.5, fontWeight:600, textDecoration:'none' }}>
-                    <MessageCircle size={13}/> Yozish
-                  </Link>
+                  <>
+                    <ReportButton targetType="ad" targetId={ad.id} variant="icon" size={15} />
+                    <Link href={`/dashboard/chat?user=${ad.poster_id}`}
+                      style={{ display:'flex', alignItems:'center', gap:6, background:'#0f172a', color:'#fff', padding:'8px 16px', borderRadius:10, fontSize:12.5, fontWeight:600, textDecoration:'none' }}>
+                      <MessageCircle size={13}/> Yozish
+                    </Link>
+                  </>
                 )}
               </div>
             </div>
