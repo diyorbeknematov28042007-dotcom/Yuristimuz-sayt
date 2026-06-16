@@ -9,6 +9,7 @@ import {
   Bell, Volume2, VolumeX, MessageCircle, Smartphone, Loader2
 } from 'lucide-react'
 import AvatarUpload from '@/components/profile/AvatarUpload'
+import LocationPicker from '@/components/map/LocationPicker'
 import { useNotifications } from '@/contexts/NotificationContext'
 import { subscribeToPush, unsubscribeFromPush, getSubscriptionStatus } from '@/lib/push-subscription'
 
@@ -56,6 +57,10 @@ export default function SettingsPage() {
     social_linkedin: '',
     website: '',
     public_phone: '',
+    // Xarita — ofis joylashuvi
+    latitude: '',
+    longitude: '',
+    office_address: '',
   })
   const [lawyerSaved, setLawyerSaved] = useState(false)
   const [lawyerSaving, setLawyerSaving] = useState(false)
@@ -111,6 +116,9 @@ export default function SettingsPage() {
               social_linkedin: lp[0].social_linkedin || '',
               website: lp[0].website || '',
               public_phone: lp[0].public_phone || '',
+              latitude: lp[0].latitude?.toString() || '',
+              longitude: lp[0].longitude?.toString() || '',
+              office_address: lp[0].office_address || '',
             })
           }
         }
@@ -799,6 +807,35 @@ export default function SettingsPage() {
               {lawyerSaving ? 'Saqlanmoqda...' : <><Save size={15} /> Yurist ma'lumotlarini saqlash</>}
             </button>
           </form>
+        </div>
+      )}
+
+      {/* ════════════════════════════════════════ */}
+      {/* OFIS JOYLASHUVI — XARITA (faqat yurist)   */}
+      {/* ════════════════════════════════════════ */}
+      {user?.role === 'lawyer' && (
+        <div style={{
+          background: '#fff', borderRadius: 18, padding: 28, marginTop: 20,
+          border: '1px solid #e2e8f0', boxShadow: '0 1px 3px rgba(0,0,0,0.04)',
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 6 }}>
+            <div style={{
+              width: 38, height: 38, borderRadius: 11, background: '#fef2f2',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+            }}>
+              <MapPin size={19} color="#dc2626" />
+            </div>
+            <p style={{ fontWeight: 700, color: '#0f172a', fontSize: 15 }}>Ofis joylashuvi</p>
+          </div>
+          <p style={{ fontSize: 13, color: '#64748b', marginBottom: 18, marginLeft: 48 }}>
+            Mijozlar sizni xaritadan topishi uchun ofisingiz joyini belgilang. Faqat tasdiqlangan yuristlar xaritada ko'rinadi.
+          </p>
+          <LocationPicker
+            userId={user.id}
+            initialLat={lawyerForm.latitude ? parseFloat(lawyerForm.latitude) : null}
+            initialLng={lawyerForm.longitude ? parseFloat(lawyerForm.longitude) : null}
+            initialAddress={lawyerForm.office_address || null}
+          />
         </div>
       )}
 
