@@ -162,7 +162,7 @@ export default function ResolveActions({ reportId, targetType, targetOwnerBlocke
       {selectedAction && selectedAction !== 'no_action' && (
         <div style={{ marginBottom: 14 }}>
           <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: '#475569', marginBottom: 6 }}>
-            Izoh / sabab {selectedAction !== 'no_action' && '*'}
+            Izoh / sabab *
           </label>
           <textarea
             value={note}
