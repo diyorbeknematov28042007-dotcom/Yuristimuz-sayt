@@ -3,11 +3,11 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '@/lib/supabase'
 import Link from 'next/link'
-import { Plus, Scale, User, MapPin, Star, BadgeCheck, MessageCircle, X, ChevronRight, Briefcase } from 'lucide-react'
+import { Plus, Scale, User, MapPin, Star, BadgeCheck, MessageCircle, Briefcase, Calendar } from 'lucide-react'
 import ReportButton from '@/components/ReportButton'
-
-const CATEGORIES = ['Oilaviy', 'Biznes', 'Mulk', 'Mehnat', 'Soliq', 'Jinoyat', 'Shartnoma', 'Migratsiya']
-const CITIES = ["Toshkent","Samarqand","Buxoro","Namangan","Andijon","Farg'ona","Nukus","Qarshi","Termiz","Jizzax"]
+import AdFormModal from '@/components/AdFormModal'
+import AdTermsModal from '@/components/AdTermsModal'
+import { AD_CATEGORIES, formatPrice, formatAdDate } from '@/lib/ads-constants'
 
 export default function AdsPage() {
   const [user, setUser] = useState<any>(null)
@@ -16,9 +16,8 @@ export default function AdsPage() {
   const [loading, setLoading] = useState(true)
   const [showCreate, setShowCreate] = useState(false)
   const [catFilter, setCatFilter] = useState('')
-  const [form, setForm] = useState({ title:'', description:'', category:'', city:'', budget_min:'', budget_max:'' })
-  const [creating, setCreating] = useState(false)
-  const [err, setErr] = useState('')
+  const [showTerms, setShowTerms] = useState(false)
+  const [statusInfo, setStatusInfo] = useState<{ riskLevel: string, message: string } | null>(null)
 
   useEffect(() => {
     fetch('/api/auth/me').then(r => r.json()).then(d => setUser(d.user))
@@ -35,15 +34,14 @@ export default function AdsPage() {
   const switchTab = (t: 'lawyer'|'client') => { setTab(t); setCatFilter(''); fetchAds(t, '') }
   const toggleCat = (c: string) => { const nc = c === catFilter ? '' : c; setCatFilter(nc); fetchAds(tab, nc) }
 
-  const createAd = async (e: React.FormEvent) => {
-    e.preventDefault(); setCreating(true); setErr('')
-    if (!form.title || !form.description || !form.category) { setErr("Majburiy maydonlarni to'ldiring"); setCreating(false); return }
-    const res = await fetch('/api/ads/create', { method:'POST', headers:{'Content-Type':'application/json'},
-      body: JSON.stringify({ title: form.title, description: form.description, category: form.category, city: form.city||null, budget_min: form.budget_min ? parseFloat(form.budget_min) : null, budget_max: form.budget_max ? parseFloat(form.budget_max) : null }) })
-    const d = await res.json()
-    if (!res.ok) { setErr(d.error||"Xatolik"); setCreating(false); return }
-    setShowCreate(false); setForm({ title:'', description:'', category:'', city:'', budget_min:'', budget_max:'' })
-    fetchAds(tab, catFilter); setCreating(false)
+  // E'lon muvaffaqiyatli yaratildi
+  const handleAdSuccess = (d: any) => {
+    setShowCreate(false)
+    if (d.riskLevel && d.message) {
+      setStatusInfo({ riskLevel: d.riskLevel, message: d.message })
+      setTimeout(() => setStatusInfo(null), 12000)
+    }
+    fetchAds(tab, catFilter)
   }
 
   const ini = (n: string) => n?.split(' ').map(w => w[0]).join('').slice(0,2).toUpperCase() || 'U'
@@ -81,7 +79,7 @@ export default function AdsPage() {
 
       {/* Category filter chips */}
       <div style={{ display:'flex', gap:7, overflowX:'auto', paddingBottom:4, marginBottom:20, scrollbarWidth:'none' }}>
-        {CATEGORIES.map(c => (
+        {AD_CATEGORIES.map(c => (
           <button key={c} onClick={() => toggleCat(c)}
             style={{ flexShrink:0, padding:'6px 14px', borderRadius:100, border:`1px solid ${catFilter===c?'#0f172a':'#e2e8f0'}`, cursor:'pointer', fontSize:12, fontWeight:600, transition:'all 150ms',
               background: catFilter===c ? '#0f172a' : '#fff', color: catFilter===c ? '#fff' : '#475569' }}>
@@ -136,22 +134,35 @@ export default function AdsPage() {
               <p style={{ fontSize:13, color:'#475569', lineHeight:1.65, marginBottom:12 }}>{ad.description}</p>
 
               {/* Footer */}
-              <div style={{ display:'flex', alignItems:'center', gap:12, flexWrap:'wrap' }}>
+              <div style={{ display:'flex', alignItems:'center', gap:10, flexWrap:'wrap' }}>
                 {ad.city && <span style={{ display:'flex', alignItems:'center', gap:4, fontSize:12, color:'#94a3b8' }}><MapPin size={11}/>{ad.city}</span>}
-                {(ad.budget_min||ad.budget_max) && (
-                  <span style={{ fontSize:12, color:'#475569', fontWeight:600 }}>
-                    {ad.budget_min?`${parseInt(ad.budget_min).toLocaleString()}`:''}
-                    {ad.budget_min&&ad.budget_max?' – ':''}
-                    {ad.budget_max?`${parseInt(ad.budget_max).toLocaleString()} so'm`:''}
+
+                {/* Narx — yashil ramka ichida (audit A1) */}
+                {(ad.budget_min || ad.budget_max) && (
+                  <span style={{ display:'flex', alignItems:'center', gap:5, fontSize:12, color:'#15803d', fontWeight:700, background:'#f0fdf4', border:'1px solid #bbf7d0', padding:'4px 10px', borderRadius:8 }}>
+                    {ad.budget_min ? `${formatPrice(ad.budget_min)}` : ''}
+                    {ad.budget_min && ad.budget_max ? ' – ' : ''}
+                    {ad.budget_max ? `${formatPrice(ad.budget_max)}` : ''} so'm
+                    {ad.is_negotiable ? ' dan' : ''}
                   </span>
                 )}
+
+                {/* Sana (audit A4) */}
+                {ad.created_at && (
+                  <span style={{ display:'flex', alignItems:'center', gap:4, fontSize:11.5, color:'#94a3b8' }}>
+                    <Calendar size={11}/>{formatAdDate(ad.created_at)}
+                  </span>
+                )}
+
                 <div style={{ flex:1 }} />
                 {user?.id !== ad.poster_id && (
                   <>
-                    <ReportButton targetType="ad" targetId={ad.id} variant="icon" size={15} />
+                    {/* Shikoyat — qizil tugma (audit A2) */}
+                    <ReportButton targetType="ad" targetId={ad.id} variant="danger-button" size={13} />
+                    {/* Suhbatni boshlash (audit A3) */}
                     <Link href={`/dashboard/chat?user=${ad.poster_id}`}
                       style={{ display:'flex', alignItems:'center', gap:6, background:'#0f172a', color:'#fff', padding:'8px 16px', borderRadius:10, fontSize:12.5, fontWeight:600, textDecoration:'none' }}>
-                      <MessageCircle size={13}/> Yozish
+                      <MessageCircle size={13}/> Suhbatni boshlash
                     </Link>
                   </>
                 )}
@@ -161,65 +172,37 @@ export default function AdsPage() {
         </div>
       )}
 
-      {/* Create modal */}
+      {/* E'lon yaratish modali (umumiy komponent) */}
       {showCreate && (
-        <div style={{ position:'fixed', inset:0, background:'rgba(15,23,42,0.5)', zIndex:100, display:'flex', alignItems:'flex-end', justifyContent:'center', backdropFilter:'blur(6px)' }}
-          onClick={e => { if(e.target===e.currentTarget) setShowCreate(false) }}>
-          <div style={{ background:'#fff', borderRadius:'22px 22px 0 0', padding:28, width:'100%', maxWidth:600, maxHeight:'92vh', overflowY:'auto', animation:'slideUp 0.3s cubic-bezier(.4,0,.2,1)' }}>
-            <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:22 }}>
-              <h2 style={{ fontSize:18, fontWeight:800, color:'#0f172a', letterSpacing:'-0.3px' }}>Yangi e'lon</h2>
-              <button onClick={() => setShowCreate(false)} style={{ width:32, height:32, background:'#f1f5f9', border:'none', borderRadius:8, cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center' }}>
-                <X size={15} color="#475569"/>
-              </button>
-            </div>
+        <AdFormModal
+          userRole={user?.role}
+          onClose={() => setShowCreate(false)}
+          onSuccess={handleAdSuccess}
+          onNeedsTerms={() => { setShowCreate(false); setShowTerms(true) }}
+        />
+      )}
 
-            <form onSubmit={createAd} style={{ display:'flex', flexDirection:'column', gap:14 }}>
-              <div>
-                <label style={L}>Sarlavha *</label>
-                <input value={form.title} onChange={e=>setForm(f=>({...f,title:e.target.value}))} style={I} placeholder="Qisqa va aniq sarlavha" required/>
-              </div>
-              <div>
-                <label style={L}>Kategoriya *</label>
-                <select value={form.category} onChange={e=>setForm(f=>({...f,category:e.target.value}))} style={I} required>
-                  <option value="">Tanlang</option>
-                  {CATEGORIES.map(c=><option key={c}>{c}</option>)}
-                </select>
-              </div>
-              <div>
-                <label style={L}>Tavsif *</label>
-                <textarea value={form.description} onChange={e=>setForm(f=>({...f,description:e.target.value}))} style={{...I,minHeight:80,resize:'vertical' as const}} placeholder={user?.role==='lawyer'?"Xizmat tavsifi, tajriba, shartlar...":"Muammoingizni batafsil yozing..."} rows={3} required/>
-              </div>
-              <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:10 }}>
-                <div>
-                  <label style={L}>Shahar</label>
-                  <select value={form.city} onChange={e=>setForm(f=>({...f,city:e.target.value}))} style={I}>
-                    <option value="">Tanlang</option>
-                    {CITIES.map(c=><option key={c}>{c}</option>)}
-                  </select>
-                </div>
-                <div>
-                  <label style={L}>Narx (so'm)</label>
-                  <input value={form.budget_min} onChange={e=>setForm(f=>({...f,budget_min:e.target.value}))} style={I} placeholder="200 000" type="number"/>
-                </div>
-              </div>
+      {/* Etika qoidalari modali */}
+      {showTerms && (
+        <AdTermsModal
+          onCancel={() => setShowTerms(false)}
+          onAccept={() => { setShowTerms(false); setShowCreate(true) }}
+        />
+      )}
 
-              {err && <div style={{ padding:12, borderRadius:10, background:'#fef2f2', border:'1px solid #fecaca', fontSize:13, color:'#991b1b' }}>{err}</div>}
-
-              <button type="submit" disabled={creating} style={{ display:'flex', alignItems:'center', justifyContent:'center', gap:8, padding:'13px', background:'#0f172a', color:'#fff', border:'none', borderRadius:12, fontSize:14, fontWeight:700, cursor:creating?'not-allowed':'pointer', opacity:creating?0.7:1, boxShadow:'0 4px 12px rgba(15,23,42,0.2)' }}>
-                {creating ? 'Joylashtirilmoqda...' : "E'lonni joylashtirish →"}
-              </button>
-            </form>
-          </div>
+      {/* Status banner (AI moderatsiya natijasi) */}
+      {statusInfo && (
+        <div style={{ position:'fixed', bottom:20, left:'50%', transform:'translateX(-50%)', zIndex:200, maxWidth:480, width:'calc(100% - 32px)', padding:'14px 18px', borderRadius:14, fontSize:13, lineHeight:1.5, boxShadow:'0 10px 40px rgba(0,0,0,0.2)',
+          background: statusInfo.riskLevel === 'high' ? '#fef2f2' : statusInfo.riskLevel === 'medium' ? '#fffbeb' : '#f0fdf4',
+          border: `1px solid ${statusInfo.riskLevel === 'high' ? '#fecaca' : statusInfo.riskLevel === 'medium' ? '#fde68a' : '#bbf7d0'}`,
+          color: statusInfo.riskLevel === 'high' ? '#991b1b' : statusInfo.riskLevel === 'medium' ? '#92400e' : '#15803d' }}>
+          {statusInfo.message}
         </div>
       )}
 
       <style>{`
         @keyframes pulse { 0%,100%{opacity:1}50%{opacity:0.4} }
-        @keyframes slideUp { from{transform:translateY(100%)}to{transform:translateY(0)} }
       `}</style>
     </div>
   )
 }
-
-const L: React.CSSProperties = { display:'block', fontSize:12, fontWeight:600, color:'#475569', marginBottom:6 }
-const I: React.CSSProperties = { width:'100%', padding:'10px 14px', fontSize:14, background:'#fff', border:'1px solid #e2e8f0', borderRadius:10, color:'#0f172a', outline:'none', fontFamily:'inherit', boxSizing:'border-box' }
