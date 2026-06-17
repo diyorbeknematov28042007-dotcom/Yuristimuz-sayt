@@ -21,15 +21,27 @@ export async function POST(req: NextRequest) {
     // 2) Body'dan parametrlarni olish - snake_case yoki camelCase qabul qilamiz
     const title = (body.title || '').trim()
     const description = (body.description || '').trim()
-    const category = body.category || ''
+    // Kategoriyalar: massiv (yangi) yoki bitta (eski) — ikkalasini ham qo'llab-quvvatlaymiz
+    const categories: string[] = Array.isArray(body.categories)
+      ? body.categories.filter((c: any) => typeof c === 'string' && c.trim()).slice(0, 4)
+      : (body.category ? [body.category] : [])
+    const category = categories[0] || body.category || ''  // orqaga moslik
     const city = body.city || null
+    const isNegotiable = body.is_negotiable ?? body.isNegotiable ?? false
     const budgetMin = body.budget_min ?? body.budgetMin ?? null
     const budgetMax = body.budget_max ?? body.budgetMax ?? null
 
     // 3) Validatsiya
-    if (!title || !description || !category) {
+    if (!title || !description || categories.length === 0) {
       return NextResponse.json(
-        { error: 'Sarlavha, tavsif va kategoriya majburiy' },
+        { error: 'Sarlavha, tavsif va kamida bitta kategoriya majburiy' },
+        { status: 400 }
+      )
+    }
+    // Kelishiladi bo'lsa ham minimal narx kerak (audit C2)
+    if (isNegotiable && (budgetMin === null || budgetMin === '' || Number(budgetMin) <= 0)) {
+      return NextResponse.json(
+        { error: 'Kelishiladi tanlansa ham, boshlang\'ich (minimal) narx kiritilishi shart' },
         { status: 400 }
       )
     }
@@ -85,6 +97,8 @@ export async function POST(req: NextRequest) {
       p_moderation_score: decision.score,
       p_moderation_flags: decision.flags,
       p_moderation_reason: decision.reason,
+      p_categories: categories,
+      p_is_negotiable: isNegotiable,
     })
 
     if (createError) {
