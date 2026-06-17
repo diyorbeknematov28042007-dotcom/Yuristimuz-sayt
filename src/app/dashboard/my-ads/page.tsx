@@ -231,7 +231,7 @@ export default function MyAdsPage() {
       )}
 
       {/* Etika modal */}
-      {showTerms && <AdTermsModal onAccept={handleTermsAccepted} onCancel={() => setShowTerms(false)} />}
+      {showTerms && <AdTermsModal onAccept={() => { setShowTerms(false); setShowCreate(true) }} onCancel={() => setShowTerms(false)} />}
 
       {/* Status banner */}
       {statusInfo && <StatusBanner info={statusInfo} onClose={() => setStatusInfo(null)} />}
