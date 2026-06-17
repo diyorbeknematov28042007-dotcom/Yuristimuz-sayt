@@ -11,7 +11,7 @@ interface Props {
   targetType: 'ad' | 'review' | 'user' | 'message'
   targetId: string
   // Ko'rinish varianti
-  variant?: 'icon' | 'text' | 'menu-item'
+  variant?: 'icon' | 'text' | 'menu-item' | 'danger-button'
   size?: number
 }
 
@@ -121,6 +121,26 @@ export default function ReportButton({ targetType, targetId, variant = 'icon', s
             fontFamily: 'inherit',
             width: '100%',
             textAlign: 'left',
+          }}>
+          <Flag size={size} /> Shikoyat qilish
+        </button>
+      )}
+      {variant === 'danger-button' && (
+        <button
+          onClick={(e) => { e.stopPropagation(); e.preventDefault(); setOpen(true) }}
+          style={{
+            background: '#fff',
+            border: '1px solid #fecaca',
+            cursor: 'pointer',
+            padding: '8px 14px',
+            borderRadius: 10,
+            color: '#dc2626',
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: 6,
+            fontSize: 12.5,
+            fontWeight: 600,
+            fontFamily: 'inherit',
           }}>
           <Flag size={size} /> Shikoyat qilish
         </button>
