@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from 'react'
 import Link from 'next/link'
 import { supabase } from '@/lib/supabase'
-import { Search, MapPin, Star, BadgeCheck, ChevronRight, Clock, Users, Sparkles, Rocket, Megaphone, Zap } from 'lucide-react'
+import { Search, MapPin, Star, BadgeCheck, ChevronRight, Clock, Users, Sparkles, Rocket, Megaphone, ArrowRight, Briefcase } from 'lucide-react'
 import DashboardMapPreview from '@/components/map/DashboardMapPreview'
 
 // Yangiliklar — swipe qiluvchi e'lonlar
@@ -25,10 +25,18 @@ const NEWS_ITEMS = [
     accent: '#7dd3fc',
   },
   {
+    icon: Briefcase,
+    badge: 'Vakansiya',
+    title: 'Startup jamoamizda vakansiyalar',
+    desc: 'Yuristim jamoasiga qo\'shiling — dasturchi, marketolog va boshqa yo\'nalishlar bo\'yicha imkoniyatlar',
+    gradient: 'linear-gradient(135deg, #134e4a, #0f766e)',
+    accent: '#5eead4',
+  },
+  {
     icon: Sparkles,
     badge: 'Yangi',
     title: 'AI yordamchi ishga tushdi',
-    desc: 'Huquqiy savollaringizga sun\'iy intellekt orqali bepul javob oling',
+    desc: 'Boshlang\'ich huquqiy yordam olish uchun sun\'iy intellekt yordamchimizni sinab ko\'ring',
     gradient: 'linear-gradient(135deg, #312e81, #6d28d9)',
     accent: '#c4b5fd',
   },
@@ -225,14 +233,14 @@ export default function DashboardPage() {
         </div>
         <div style={{ flex: 1, minWidth: 0 }}>
           <p style={{ fontWeight: 700, color: '#fff', fontSize: 14.5, marginBottom: 3 }}>Yuristim AI Virtual Ko'makchi</p>
-          <p style={{ fontSize: 12, color: 'rgba(255,255,255,0.65)', lineHeight: 1.4 }}>Boshlang'ich yuridik maslahatni sun'iy intellekt orqali bepul oling</p>
+          <p style={{ fontSize: 12, color: 'rgba(255,255,255,0.65)', lineHeight: 1.4 }}>Boshlang'ich huquqiy yordam olish uchun sun'iy intellekt yordamchimizni sinab ko'ring</p>
         </div>
         <span style={{
-          display: 'flex', alignItems: 'center', gap: 5, flexShrink: 0,
-          background: 'rgba(255,255,255,0.12)', padding: '9px 15px', borderRadius: 11,
+          display: 'flex', alignItems: 'center', gap: 6, flexShrink: 0,
+          background: 'rgba(255,255,255,0.12)', padding: '9px 16px', borderRadius: 11,
           fontSize: 13, fontWeight: 700, color: '#fff',
         }}>
-          <Zap size={14} color="#fde047" fill="#fde047" /> Boshlash
+          Boshlash <ArrowRight size={15} color="#fff" />
         </span>
       </Link>
 
