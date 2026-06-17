@@ -3,20 +3,51 @@
 import { useState, useEffect, useRef } from 'react'
 import Link from 'next/link'
 import { supabase } from '@/lib/supabase'
-import { Search, MapPin, Star, BadgeCheck, ChevronRight, Scale, Briefcase, Clock, Users, Sparkles, ArrowRight } from 'lucide-react'
+import { Search, MapPin, Star, BadgeCheck, ChevronRight, Clock, Users, Sparkles, Rocket, Megaphone, Zap } from 'lucide-react'
+import DashboardMapPreview from '@/components/map/DashboardMapPreview'
+
+// Yangiliklar — swipe qiluvchi e'lonlar
+const NEWS_ITEMS = [
+  {
+    icon: Rocket,
+    badge: '2-bosqich',
+    title: '2-bosqich yaqinlashmoqda',
+    desc: 'Tez kunda yangi imkoniyatlar: video konsultatsiya, hujjat tayyorlash va boshqalar',
+    gradient: 'linear-gradient(135deg, #1e1b4b, #4338ca)',
+    accent: '#a5b4fc',
+  },
+  {
+    icon: Megaphone,
+    badge: 'Jamoa',
+    title: 'Bizning jamoamizga qo\'shiling',
+    desc: 'Yurist sifatida ro\'yxatdan o\'ting va yangi mijozlarni toping',
+    gradient: 'linear-gradient(135deg, #0f172a, #1e293b)',
+    accent: '#7dd3fc',
+  },
+  {
+    icon: Sparkles,
+    badge: 'Yangi',
+    title: 'AI yordamchi ishga tushdi',
+    desc: 'Huquqiy savollaringizga sun\'iy intellekt orqali bepul javob oling',
+    gradient: 'linear-gradient(135deg, #312e81, #6d28d9)',
+    accent: '#c4b5fd',
+  },
+]
 
 const CATEGORIES = ['Oilaviy', 'Biznes', 'Mulk', 'Mehnat', 'Soliq', 'Jinoyat', 'Shartnoma', 'Migratsiya']
 
 export default function DashboardPage() {
   const [user, setUser] = useState<any>(null)
   const [lawyers, setLawyers] = useState<any[]>([])
-  const [stats, setStats] = useState({ lawyers: 0, ads: 0 })
   const [search, setSearch] = useState('')
   const [searchResults, setSearchResults] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   const [searching, setSearching] = useState(false)
   const [showDrop, setShowDrop] = useState(false)
   const searchRef = useRef<HTMLDivElement>(null)
+  // Yangiliklar karusel
+  const [newsIndex, setNewsIndex] = useState(0)
+  const newsTouchStart = useRef(0)
 
   useEffect(() => {
     fetchData()
@@ -40,15 +71,20 @@ export default function DashboardPage() {
     return () => clearTimeout(t)
   }, [search])
 
+  // Yangiliklar avtomatik almashishi (har 5 soniya)
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setNewsIndex((prev) => (prev + 1) % NEWS_ITEMS.length)
+    }, 5000)
+    return () => clearInterval(interval)
+  }, [])
+
   const fetchData = async () => {
     const res = await fetch('/api/auth/me')
     const { user: u } = await res.json()
     if (u) setUser(u)
     const { data: ld } = await supabase.rpc('get_lawyers', { p_limit: 6 })
     if (ld) setLawyers(ld)
-    const { count: lc } = await supabase.from('users').select('*', { count: 'exact', head: true }).eq('role', 'lawyer')
-    const { count: ac } = await supabase.from('ads').select('*', { count: 'exact', head: true }).eq('status', 'open')
-    setStats({ lawyers: lc || 0, ads: ac || 0 })
     setLoading(false)
   }
 
@@ -60,7 +96,7 @@ export default function DashboardPage() {
       {/* Greeting */}
       <div style={{ marginBottom: 24 }}>
         <h1 style={{ fontSize: 24, fontWeight: 800, color: '#0f172a', letterSpacing: '-0.5px', marginBottom: 2 }}>
-          Salom, {user?.full_name?.split(' ')[0] || '...'} 👋
+          Assalomu alaykum, {user?.full_name?.split(' ')[0] || '...'}
         </h1>
         <p style={{ fontSize: 13, color: '#64748b' }}>
           {user?.role === 'lawyer' ? 'Bugun yangi mijozlar topish vaqti' : 'Huquqiy muammongizni yechaylik'}
@@ -112,66 +148,96 @@ export default function DashboardPage() {
       </div>
 
       {/* Stats */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 24 }}>
-        <div style={{ background: '#0f172a', borderRadius: 18, padding: '20px 22px', position: 'relative', overflow: 'hidden' }}>
-          <div style={{ position: 'absolute', top: -20, right: -20, width: 80, height: 80, background: 'rgba(99,102,241,0.15)', borderRadius: '50%' }} />
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }}>
-            <div style={{ width: 30, height: 30, background: 'rgba(255,255,255,0.1)', borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              <Scale size={15} color="#a5b4fc" />
-            </div>
-            <span style={{ fontSize: 11, fontWeight: 600, color: 'rgba(255,255,255,0.5)', textTransform: 'uppercase', letterSpacing: '0.8px' }}>Yuristlar</span>
-          </div>
-          <div style={{ fontSize: 32, fontWeight: 900, color: '#fff', letterSpacing: '-1px', lineHeight: 1 }}>
-            {stats.lawyers}<span style={{ color: '#6366f1' }}>+</span>
-          </div>
+      {/* Yangiliklar — swipe karusel */}
+      <div style={{ marginBottom: 24 }}>
+        <div
+          onTouchStart={(e) => { newsTouchStart.current = e.touches[0].clientX }}
+          onTouchEnd={(e) => {
+            const diff = newsTouchStart.current - e.changedTouches[0].clientX
+            if (diff > 50) setNewsIndex((p) => (p + 1) % NEWS_ITEMS.length)
+            if (diff < -50) setNewsIndex((p) => (p - 1 + NEWS_ITEMS.length) % NEWS_ITEMS.length)
+          }}
+          style={{ position: 'relative', overflow: 'hidden', borderRadius: 18 }}
+        >
+          {NEWS_ITEMS.map((news, i) => {
+            const Icon = news.icon
+            const isActive = i === newsIndex
+            return (
+              <div
+                key={i}
+                style={{
+                  display: isActive ? 'block' : 'none',
+                  background: news.gradient,
+                  borderRadius: 18, padding: '22px 24px',
+                  position: 'relative', overflow: 'hidden',
+                  animation: isActive ? 'newsFade 0.5s ease' : 'none',
+                }}
+              >
+                <div style={{ position: 'absolute', top: -30, right: -30, width: 120, height: 120, background: 'rgba(255,255,255,0.06)', borderRadius: '50%' }} />
+                <div style={{ position: 'absolute', bottom: -40, right: 30, width: 80, height: 80, background: 'rgba(255,255,255,0.04)', borderRadius: '50%' }} />
+
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 14, position: 'relative' }}>
+                  <div style={{ width: 38, height: 38, background: 'rgba(255,255,255,0.12)', borderRadius: 11, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <Icon size={19} color={news.accent} />
+                  </div>
+                  <span style={{
+                    fontSize: 10.5, fontWeight: 700, color: news.accent,
+                    background: 'rgba(255,255,255,0.1)', padding: '4px 10px', borderRadius: 999,
+                    textTransform: 'uppercase', letterSpacing: '0.5px',
+                  }}>
+                    {news.badge}
+                  </span>
+                </div>
+
+                <h3 style={{ fontSize: 18, fontWeight: 800, color: '#fff', marginBottom: 6, letterSpacing: '-0.3px', position: 'relative' }}>
+                  {news.title}
+                </h3>
+                <p style={{ fontSize: 13, color: 'rgba(255,255,255,0.7)', lineHeight: 1.55, position: 'relative', maxWidth: 480 }}>
+                  {news.desc}
+                </p>
+              </div>
+            )
+          })}
         </div>
 
-        <div style={{ background: '#fff', border: '0.5px solid #e2e8f0', borderRadius: 18, padding: '20px 22px', position: 'relative', overflow: 'hidden' }}>
-          <div style={{ position: 'absolute', top: -20, right: -20, width: 80, height: 80, background: 'rgba(99,102,241,0.05)', borderRadius: '50%' }} />
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }}>
-            <div style={{ width: 30, height: 30, background: '#f8fafc', borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center', border: '0.5px solid #e2e8f0' }}>
-              <Briefcase size={15} color="#64748b" />
-            </div>
-            <span style={{ fontSize: 11, fontWeight: 600, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.8px' }}>Faol e'lonlar</span>
-          </div>
-          <div style={{ fontSize: 32, fontWeight: 900, color: '#0f172a', letterSpacing: '-1px', lineHeight: 1 }}>
-            {stats.ads}<span style={{ color: '#6366f1' }}>+</span>
-          </div>
+        {/* Karusel nuqtalari */}
+        <div style={{ display: 'flex', justifyContent: 'center', gap: 6, marginTop: 12 }}>
+          {NEWS_ITEMS.map((_, i) => (
+            <button
+              key={i}
+              onClick={() => setNewsIndex(i)}
+              aria-label={`Yangilik ${i + 1}`}
+              style={{
+                width: i === newsIndex ? 22 : 7, height: 7, borderRadius: 999,
+                background: i === newsIndex ? '#0f172a' : '#cbd5e1',
+                border: 'none', cursor: 'pointer', transition: 'all 0.3s', padding: 0,
+              }}
+            />
+          ))}
         </div>
       </div>
 
       {/* AI Banner */}
-      <Link href="/dashboard/chat" style={{ display: 'flex', alignItems: 'center', gap: 14, padding: '14px 18px', background: 'linear-gradient(135deg, #1e1b4b, #312e81)', borderRadius: 16, textDecoration: 'none', marginBottom: 24, position: 'relative', overflow: 'hidden' }}>
+      <Link href="/dashboard/chat" style={{ display: 'flex', alignItems: 'center', gap: 14, padding: '16px 18px', background: 'linear-gradient(135deg, #1e1b4b, #312e81)', borderRadius: 16, textDecoration: 'none', marginBottom: 24, position: 'relative', overflow: 'hidden' }}>
         <div style={{ position: 'absolute', right: -20, top: -20, width: 100, height: 100, background: 'rgba(99,102,241,0.2)', borderRadius: '50%' }} />
-        <div style={{ width: 40, height: 40, background: 'rgba(255,255,255,0.1)', borderRadius: 11, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-          <Sparkles size={20} color="#a5b4fc" />
+        <div style={{ width: 44, height: 44, background: 'rgba(255,255,255,0.1)', borderRadius: 12, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+          <Sparkles size={21} color="#a5b4fc" />
         </div>
-        <div style={{ flex: 1 }}>
-          <p style={{ fontWeight: 700, color: '#fff', fontSize: 14, marginBottom: 2 }}>AI Huquqiy Konsultant</p>
-          <p style={{ fontSize: 12, color: 'rgba(255,255,255,0.6)' }}>Savolingizga darhol javob oling — bepul</p>
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <p style={{ fontWeight: 700, color: '#fff', fontSize: 14.5, marginBottom: 3 }}>Yuristim AI Virtual Ko'makchi</p>
+          <p style={{ fontSize: 12, color: 'rgba(255,255,255,0.65)', lineHeight: 1.4 }}>Boshlang'ich yuridik maslahatni sun'iy intellekt orqali bepul oling</p>
         </div>
-        <ArrowRight size={16} color="rgba(255,255,255,0.4)" style={{ flexShrink: 0 }} />
+        <span style={{
+          display: 'flex', alignItems: 'center', gap: 5, flexShrink: 0,
+          background: 'rgba(255,255,255,0.12)', padding: '9px 15px', borderRadius: 11,
+          fontSize: 13, fontWeight: 700, color: '#fff',
+        }}>
+          <Zap size={14} color="#fde047" fill="#fde047" /> Boshlash
+        </span>
       </Link>
 
-      {/* Map placeholder */}
-      <div style={{ background: '#fff', border: '0.5px solid #e2e8f0', borderRadius: 18, overflow: 'hidden', marginBottom: 24 }}>
-        <div style={{ height: 90, background: 'linear-gradient(135deg, #f1f5f9, #e2e8f0)', display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative' }}>
-          {[...Array(12)].map((_, i) => (
-            <div key={i} style={{ position: 'absolute', width: 6, height: 6, background: '#cbd5e1', borderRadius: '50%', top: `${20 + Math.random() * 60}%`, left: `${5 + i * 8}%`, opacity: 0.5 }} />
-          ))}
-          <div style={{ zIndex: 1, display: 'flex', alignItems: 'center', gap: 6, background: 'rgba(255,255,255,0.9)', padding: '7px 14px', borderRadius: 10, backdropFilter: 'blur(8px)', border: '0.5px solid #e2e8f0' }}>
-            <MapPin size={14} color="#4338ca" />
-            <span style={{ fontSize: 12, fontWeight: 600, color: '#0f172a' }}>Xarita — Faza 2 da</span>
-          </div>
-        </div>
-        <div style={{ padding: '12px 16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-          <div>
-            <p style={{ fontSize: 13, fontWeight: 600, color: '#0f172a' }}>Yaqin atrofdagi advokat</p>
-            <p style={{ fontSize: 11, color: '#94a3b8', marginTop: 1 }}>Yandex Maps integratsiyasi tez kunda</p>
-          </div>
-          <span style={{ fontSize: 10, fontWeight: 700, background: '#eef2ff', color: '#4338ca', padding: '4px 9px', borderRadius: 6 }}>Tez kunda</span>
-        </div>
-      </div>
+      {/* Jonli mini-xarita */}
+      <DashboardMapPreview />
 
       {/* Lawyers */}
       <div>
@@ -238,6 +304,7 @@ export default function DashboardPage() {
       <style>{`
         @keyframes spin { to { transform: rotate(360deg); } }
         @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.4; } }
+        @keyframes newsFade { from { opacity: 0; transform: translateX(20px); } to { opacity: 1; transform: translateX(0); } }
       `}</style>
     </div>
   )
