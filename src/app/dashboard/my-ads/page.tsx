@@ -9,19 +9,20 @@ import { useState, useEffect } from 'react'
 import { supabase } from '@/lib/supabase'
 import Link from 'next/link'
 import {
-  Plus, MapPin, MessageCircle, X, Trash2, CheckCircle2, Clock, AlertCircle,
-  Eye, Calendar, Briefcase, AlertTriangle, Loader2, FileText, ChevronLeft
+  Plus, MapPin, X, Trash2, CheckCircle2, Clock, AlertCircle,
+  Eye, Calendar, AlertTriangle, Loader2, FileText, ChevronLeft
 } from 'lucide-react'
 import AdTermsModal from '@/components/AdTermsModal'
-
-const CATEGORIES = ['Oilaviy', 'Biznes', 'Mulk', 'Mehnat', 'Soliq', 'Jinoyat', 'Shartnoma', 'Migratsiya']
-const CITIES = ["Toshkent","Samarqand","Buxoro","Namangan","Andijon","Farg'ona","Nukus","Qarshi","Termiz","Jizzax"]
+import AdFormModal from '@/components/AdFormModal'
+import { formatPrice, formatAdDate } from '@/lib/ads-constants'
 
 interface MyAd {
   id: string
   title: string
   description: string
   category: string
+  categories?: string[]
+  is_negotiable?: boolean
   city: string | null
   budget_min: number | null
   budget_max: number | null
@@ -45,9 +46,6 @@ export default function MyAdsPage() {
   const [loading, setLoading] = useState(true)
   const [filter, setFilter] = useState<StatusFilter>('all')
   const [showCreate, setShowCreate] = useState(false)
-  const [form, setForm] = useState({ title: '', description: '', category: '', city: '', budget_min: '', budget_max: '' })
-  const [creating, setCreating] = useState(false)
-  const [err, setErr] = useState('')
   const [showTerms, setShowTerms] = useState(false)
   const [statusInfo, setStatusInfo] = useState<{ riskLevel: 'low' | 'medium' | 'high', message: string } | null>(null)
   const [deleteConfirm, setDeleteConfirm] = useState<MyAd | null>(null)
@@ -86,54 +84,14 @@ export default function MyAdsPage() {
     closed: ads.filter(a => a.status === 'closed').length,
   }
 
-  // E'lon yaratish
-  const createAd = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setCreating(true)
-    setErr('')
-    if (!form.title || !form.description || !form.category) {
-      setErr("Majburiy maydonlarni to'ldiring")
-      setCreating(false)
-      return
-    }
-
-    const res = await fetch('/api/ads/create', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        title: form.title,
-        description: form.description,
-        category: form.category,
-        city: form.city || null,
-        budget_min: form.budget_min ? parseFloat(form.budget_min) : null,
-        budget_max: form.budget_max ? parseFloat(form.budget_max) : null,
-      })
-    })
-    const d = await res.json()
-    if (!res.ok) {
-      if (d.needsTerms) {
-        setCreating(false)
-        setShowTerms(true)
-        return
-      }
-      setErr(d.error || "Xatolik")
-      setCreating(false)
-      return
-    }
-
+  // E'lon muvaffaqiyatli yaratildi (AdFormModal'dan)
+  const handleAdSuccess = (d: any) => {
     setShowCreate(false)
-    setForm({ title: '', description: '', category: '', city: '', budget_min: '', budget_max: '' })
     if (d.riskLevel && d.message) {
       setStatusInfo({ riskLevel: d.riskLevel, message: d.message })
       setTimeout(() => setStatusInfo(null), 12000)
     }
     if (user) fetchMyAds(user.id)
-    setCreating(false)
-  }
-
-  const handleTermsAccepted = () => {
-    setShowTerms(false)
-    setTimeout(() => createAd({ preventDefault: () => {} } as React.FormEvent), 200)
   }
 
   // E'lon o'chirish
@@ -262,15 +220,13 @@ export default function MyAdsPage() {
         </div>
       )}
 
-      {/* Create Modal */}
+      {/* E'lon yaratish modali (umumiy komponent) */}
       {showCreate && (
-        <CreateAdModal
-          form={form}
-          setForm={setForm}
-          onSubmit={createAd}
-          onClose={() => { setShowCreate(false); setErr('') }}
-          creating={creating}
-          err={err}
+        <AdFormModal
+          userRole={user?.role}
+          onClose={() => setShowCreate(false)}
+          onSuccess={handleAdSuccess}
+          onNeedsTerms={() => { setShowCreate(false); setShowTerms(true) }}
         />
       )}
 
@@ -374,27 +330,32 @@ function MyAdCard({ ad, onDelete }: { ad: MyAd, onDelete: () => void }) {
         display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap',
         fontSize: 11, color: '#94a3b8',
       }}>
-        <span style={{
-          padding: '2px 7px', background: '#eef2ff', color: '#4338ca',
-          borderRadius: 5, fontSize: 10, fontWeight: 700, letterSpacing: '0.3px',
-        }}>
-          {ad.category}
-        </span>
+        {/* Yo'nalishlar (bir nechta bo'lishi mumkin) */}
+        {(ad.categories && ad.categories.length > 0 ? ad.categories : [ad.category]).map((cat, i) => (
+          <span key={i} style={{
+            padding: '2px 7px', background: '#eef2ff', color: '#4338ca',
+            borderRadius: 5, fontSize: 10, fontWeight: 700, letterSpacing: '0.3px',
+          }}>
+            {cat}
+          </span>
+        ))}
         {ad.city && (
           <span style={{ display: 'flex', alignItems: 'center', gap: 3 }}>
             <MapPin size={10} /> {ad.city}
           </span>
         )}
+        {/* Narx — yashil ramka (audit B1) */}
         {ad.budget_min && (
-          <span style={{ display: 'flex', alignItems: 'center', gap: 3 }}>
-            💰 {ad.budget_min.toLocaleString()}{ad.budget_max ? ` - ${ad.budget_max.toLocaleString()}` : ''} so'm
+          <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, color: '#15803d', fontWeight: 700, background: '#f0fdf4', border: '1px solid #bbf7d0', padding: '3px 9px', borderRadius: 7 }}>
+            {formatPrice(ad.budget_min)}{ad.budget_max ? ` – ${formatPrice(ad.budget_max)}` : ''} so'm{ad.is_negotiable ? ' dan' : ''}
           </span>
         )}
-        <span style={{ display: 'flex', alignItems: 'center', gap: 3 }}>
-          <Eye size={10} /> {ad.views_count}
+        {/* Ko'rishlar — sariq ramka (audit B3) */}
+        <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, color: '#a16207', fontWeight: 600, background: '#fefce8', border: '1px solid #fef08a', padding: '3px 9px', borderRadius: 7 }}>
+          <Eye size={11} /> {ad.views_count}
         </span>
         <span style={{ display: 'flex', alignItems: 'center', gap: 3 }}>
-          <Calendar size={10} /> {timeAgo(ad.created_at)}
+          <Calendar size={10} /> {formatAdDate(ad.created_at)}
         </span>
       </div>
     </div>
@@ -431,128 +392,6 @@ function getStatusInfo(ad: MyAd) {
   }
 }
 
-function timeAgo(iso: string): string {
-  const diff = Date.now() - new Date(iso).getTime()
-  const minutes = Math.floor(diff / 60000)
-  const hours = Math.floor(diff / 3600000)
-  const days = Math.floor(diff / 86400000)
-  if (minutes < 1) return 'hozir'
-  if (minutes < 60) return `${minutes} daq oldin`
-  if (hours < 24) return `${hours} soat oldin`
-  if (days < 7) return `${days} kun oldin`
-  return new Date(iso).toLocaleDateString('uz-UZ')
-}
-
-// ─────────────────────────────────────────
-// Create modal
-// ─────────────────────────────────────────
-function CreateAdModal({ form, setForm, onSubmit, onClose, creating, err }: any) {
-  return (
-    <div style={{
-      position: 'fixed', inset: 0,
-      background: 'rgba(15,23,42,0.5)',
-      zIndex: 100, display: 'flex',
-      alignItems: 'flex-end', justifyContent: 'center',
-      animation: 'fadeIn 200ms',
-    }}>
-      <div style={{
-        background: '#fff', borderRadius: '20px 20px 0 0',
-        maxWidth: 600, width: '100%',
-        maxHeight: '90vh', overflowY: 'auto',
-        animation: 'slideUp 250ms',
-      }}>
-        {/* Header */}
-        <div style={{
-          padding: '18px 20px',
-          borderBottom: '1px solid #e2e8f0',
-          display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-          position: 'sticky', top: 0, background: '#fff',
-        }}>
-          <h2 style={{ fontSize: 16, fontWeight: 700, color: '#0f172a' }}>
-            Yangi e'lon
-          </h2>
-          <button onClick={onClose} style={{
-            background: '#f1f5f9', border: 'none',
-            borderRadius: 8, padding: 6, cursor: 'pointer',
-            display: 'flex',
-          }}>
-            <X size={16} />
-          </button>
-        </div>
-
-        <form onSubmit={onSubmit} style={{ padding: 20, display: 'flex', flexDirection: 'column', gap: 14 }}>
-          <div>
-            <label style={L}>Sarlavha *</label>
-            <input value={form.title} onChange={(e: any) => setForm((f: any) => ({ ...f, title: e.target.value }))}
-              style={I} placeholder="Mol-mulk taqsimoti haqida maslahat" maxLength={200} />
-          </div>
-          <div>
-            <label style={L}>Tavsif *</label>
-            <textarea value={form.description} onChange={(e: any) => setForm((f: any) => ({ ...f, description: e.target.value }))}
-              style={{ ...I, minHeight: 100, fontFamily: 'inherit', resize: 'vertical' }}
-              placeholder="Vaziyatingizni batafsil yozing..." maxLength={5000} />
-          </div>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
-            <div>
-              <label style={L}>Kategoriya *</label>
-              <select value={form.category} onChange={(e: any) => setForm((f: any) => ({ ...f, category: e.target.value }))} style={I}>
-                <option value="">Tanlang...</option>
-                {CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
-              </select>
-            </div>
-            <div>
-              <label style={L}>Shahar</label>
-              <select value={form.city} onChange={(e: any) => setForm((f: any) => ({ ...f, city: e.target.value }))} style={I}>
-                <option value="">Tanlang...</option>
-                {CITIES.map(c => <option key={c} value={c}>{c}</option>)}
-              </select>
-            </div>
-          </div>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
-            <div>
-              <label style={L}>Narx (dan)</label>
-              <input value={form.budget_min} onChange={(e: any) => setForm((f: any) => ({ ...f, budget_min: e.target.value }))}
-                style={I} placeholder="200 000" type="number" />
-            </div>
-            <div>
-              <label style={L}>Narx (gacha)</label>
-              <input value={form.budget_max} onChange={(e: any) => setForm((f: any) => ({ ...f, budget_max: e.target.value }))}
-                style={I} placeholder="500 000" type="number" />
-            </div>
-          </div>
-
-          {err && (
-            <div style={{
-              padding: 12, borderRadius: 10,
-              background: '#fef2f2', border: '1px solid #fecaca',
-              fontSize: 13, color: '#991b1b',
-            }}>
-              {err}
-            </div>
-          )}
-
-          <button type="submit" disabled={creating} style={{
-            display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
-            padding: '13px', background: '#0f172a', color: '#fff',
-            border: 'none', borderRadius: 12, fontSize: 14, fontWeight: 700,
-            cursor: creating ? 'not-allowed' : 'pointer',
-            opacity: creating ? 0.7 : 1,
-            boxShadow: '0 4px 12px rgba(15,23,42,0.2)',
-          }}>
-            {creating ? (
-              <><Loader2 size={14} style={{ animation: 'spin 1s linear infinite' }} /> Joylashtirilmoqda...</>
-            ) : (
-              "E'lonni joylashtirish →"
-            )}
-          </button>
-        </form>
-      </div>
-      <style>{`
-        @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
-      `}</style>
-    </div>
-  )
-}
 
 // ─────────────────────────────────────────
 // Status banner
@@ -656,13 +495,4 @@ function DeleteConfirmModal({ ad, onConfirm, onCancel, deleting }: any) {
       </div>
     </div>
   )
-}
-
-const L: React.CSSProperties = {
-  display: 'block', fontSize: 12, fontWeight: 600, color: '#475569', marginBottom: 6
-}
-const I: React.CSSProperties = {
-  width: '100%', padding: '10px 14px', fontSize: 14,
-  background: '#fff', border: '1px solid #e2e8f0', borderRadius: 10,
-  color: '#0f172a', outline: 'none', fontFamily: 'inherit', boxSizing: 'border-box'
 }
