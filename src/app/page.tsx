@@ -5,7 +5,7 @@ import Link from 'next/link'
 import {
   Scale, Search, MessageCircle, FileText, MapPin,
   CheckCircle2, ArrowRight, Shield, Users, Mail, Send, Instagram,
-  Sparkles, Building2, TrendingUp, Lock, Briefcase,
+  Sparkles, Building2, TrendingUp, Lock, Globe, Briefcase,
   Clock, BookOpen, Menu, X, Star
 } from 'lucide-react'
 
@@ -113,37 +113,43 @@ const phases = [
   },
 ]
 
-const founders = [
+// ── Asoschi ma'lumoti ──
+const founder = {
+  ini: 'DN',
+  name: 'Diyorbek Nematov',
+  role: 'Asoschi va rahbar',
+  // Rasm: /public ga rasm qo'ysangiz, shu yerga fayl nomini yozing (masalan '/founder.jpg').
+  // Bo'sh qoldirilsa — ism harflari (DN) ko'rsatiladi.
+  photo: '',
+  desc: "Huquqshunos va raqamli xizmatlar tadbirkori. Maqsadim — O'zbekistonda sifatli huquqiy yordamni har bir inson uchun ochiq, tushunarli va arzon qilish.",
+  telegram: 'https://t.me/yuristim_online',
+  instagram: 'https://www.instagram.com/yuristim.online?igsh=MWh6d2hueTVpcXUxdg%3D%3D&utm_source=qr',
+  email: 'diyorbeknematov07@gmail.com',
+}
+
+// ── Nega aynan Yuristim? (ustunliklar) ──
+const whyUs = [
+  { icon: <Shield size={22} />, title: 'Tasdiqlangan yuristlar', desc: "Har bir mutaxassis ma'muriyat tomonidan tekshiriladi. Faqat ishonchli yuristlar bilan ishlaysiz.", bg: '#eff6ff', c: '#1d4ed8' },
+  { icon: <MessageCircle size={22} />, title: 'Vositachisiz aloqa', desc: "Yurist bilan to'g'ridan-to'g'ri yozishasiz. Ortiqcha to'lov, vositachi yoki kechikish yo'q.", bg: '#f0fdf4', c: '#166534' },
+  { icon: <Sparkles size={22} />, title: 'AI 24/7 yoningizda', desc: "Sun'iy intellekt istalgan vaqtda boshlang'ich yo'nalish va javob beradi.", bg: '#faf5ff', c: '#7e22ce' },
+  { icon: <Globe size={22} />, title: "O'zbekiston uchun", desc: "Mahalliy qonunchilik asosida, o'zbek tilida. Bizning huquqiy tizimimizga moslangan.", bg: '#fff7ed', c: '#c2410c' },
+]
+
+// ── Bizga qo'shiling (ochiq o'rinlar) ──
+const openRoles = [
   {
-    type: 'founder' as const,
-    ini: 'DN',
-    name: 'Diyorbek Nematov',
-    role: 'Asoschi va rahbar',
-    desc: "Huquqshunos va raqamli xizmatlar tadbirkor. O'zbekistonda huquqiy yordamni hammaga ochiq qilish uchun ishlayapman.",
-    badge: 'ASOSCHI',
-    telegram: 'https://t.me/yuristim_online',
-    email: 'diyorbeknematov07@gmail.com',
-    handle: '@yuristim_online',
-  },
-  {
-    type: 'vacancy' as const,
-    ini: 'M',
-    name: 'Mentor va investor',
+    ini: 'MI',
+    title: 'Mentor va investor',
     role: 'Strategik hamkor',
-    badge: 'VAKANSIYA',
-    tags: ['Startap tajribasi', 'Investitsiya', 'Nazorat va yo\'nalish'],
-    desc: "Yuridik yoki texnologiya sohasida tajribali mentor va investor izlanmoqda. Birgalikda O'zbekiston huquqiy xizmatlar bozorini rivojlantiramiz.",
-    telegram: 'https://t.me/yuristim_online',
+    desc: "Yuridik yoki texnologiya sohasida tajribali mentor va investor izlanmoqda. Birgalikda O'zbekiston huquqiy bozorini rivojlantiramiz.",
+    tags: ['Startap tajribasi', 'Investitsiya', "Yo'nalish"],
   },
   {
-    type: 'vacancy' as const,
     ini: 'MK',
-    name: 'Marketing mutaxassisi',
-    role: 'Kontent va o\'sish',
-    badge: 'VAKANSIYA',
-    tags: ["SMM va kontent", "O'zbek bozori", 'Raqamli marketing'],
-    desc: "O'zbekiston raqamli bozorini yaxshi biladigan, ijtimoiy tarmoqlarda tajribasi bor marketing mutaxassisi kerak.",
-    telegram: 'https://t.me/yuristim_online',
+    title: 'Marketing mutaxassisi',
+    role: "Kontent va o'sish",
+    desc: "O'zbekiston raqamli bozorini yaxshi biladigan, ijtimoiy tarmoqlarda tajribali marketing mutaxassisi kerak.",
+    tags: ['SMM', 'Kontent', 'Raqamli marketing'],
   },
 ]
 
@@ -182,7 +188,7 @@ export default function HomePage() {
           {/* Desktop nav */}
           {!isMobile && (
             <nav style={{ display: 'flex', gap: 24, alignItems: 'center' }}>
-              {[['Imkoniyatlar', '#xizmatlar'], ['Rejalar', '#fazalar'], ['Jamoa', '#jamoa'], ['Aloqa', '#aloqa']].map(([label, href]) => (
+              {[['Nega biz', '#nega-biz'], ['Imkoniyatlar', '#xizmatlar'], ['Rejalar', '#fazalar'], ['Biz haqimizda', '#jamoa']].map(([label, href]) => (
                 <a key={href} href={href} style={{ fontSize: 13.5, fontWeight: 500, color: '#475569', textDecoration: 'none', transition: 'color 150ms' }}
                   onMouseEnter={e => (e.currentTarget as HTMLElement).style.color = '#0f172a'}
                   onMouseLeave={e => (e.currentTarget as HTMLElement).style.color = '#475569'}>
@@ -213,7 +219,7 @@ export default function HomePage() {
         {/* Mobile dropdown */}
         {isMobile && mobileMenu && (
           <div style={{ borderTop: '0.5px solid #f1f5f9', background: '#fff', padding: '12px 16px 16px' }}>
-            {[['Imkoniyatlar', '#xizmatlar'], ['Rejalar', '#fazalar'], ['Jamoa', '#jamoa'], ['Aloqa', '#aloqa']].map(([label, href]) => (
+            {[['Nega biz', '#nega-biz'], ['Imkoniyatlar', '#xizmatlar'], ['Rejalar', '#fazalar'], ['Biz haqimizda', '#jamoa']].map(([label, href]) => (
               <a key={href} href={href} onClick={() => setMobileMenu(false)}
                 style={{ display: 'block', padding: '10px 0', fontSize: 15, fontWeight: 500, color: '#0f172a', textDecoration: 'none', borderBottom: '0.5px solid #f8fafc' }}>
                 {label}
@@ -345,12 +351,40 @@ export default function HomePage() {
       </section>
 
       {/* ── FEATURES ── */}
-      <section style={{ padding: sp, background: '#fafafa', borderTop: '0.5px solid #f1f5f9' }}>
-        <div style={{ maxWidth: 1200, margin: '0 auto' }}>
+      {/* ── WHY US (Nega aynan Yuristim?) ── */}
+      <section style={{ padding: sp, background: '#fff' }} id="nega-biz">
+        <div style={{ maxWidth: 1100, margin: '0 auto' }}>
           <Fade>
             <div style={{ textAlign: 'center', marginBottom: isMobile ? 24 : 44 }}>
-              <p style={{ fontSize: 10, fontWeight: 700, color: '#4338ca', textTransform: 'uppercase', letterSpacing: '1.5px', marginBottom: 8 }}>Imkoniyatlar</p>
-              <h2 style={{ fontSize: isMobile ? 26 : 34, fontWeight: 800, color: '#0f172a', letterSpacing: '-0.5px' }}>Sizga nima beramiz?</h2>
+              <p style={{ fontSize: 10, fontWeight: 700, color: '#4338ca', textTransform: 'uppercase', letterSpacing: '1.5px', marginBottom: 8 }}>Nega aynan biz</p>
+              <h2 style={{ fontSize: isMobile ? 26 : 34, fontWeight: 800, color: '#0f172a', letterSpacing: '-0.5px', marginBottom: 10 }}>Nega aynan Yuristim?</h2>
+              <p style={{ color: '#64748b', fontSize: isMobile ? 13 : 15, maxWidth: 480, margin: '0 auto', lineHeight: 1.6 }}>
+                Huquqiy yordamni soddalashtiramiz — ishonchli, tezkor va hamma uchun ochiq
+              </p>
+            </div>
+          </Fade>
+          <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(2, 1fr)', gap: isMobile ? 10 : 16 }}>
+            {whyUs.map((w, i) => (
+              <Fade key={w.title} delay={i * 60}>
+                <div style={{ background: '#fafafa', border: '0.5px solid #e2e8f0', borderRadius: 18, padding: isMobile ? '18px' : '24px', display: 'flex', alignItems: 'flex-start', gap: 16, height: '100%', transition: 'all 200ms' }}
+                  onMouseEnter={e => { const el = e.currentTarget as HTMLElement; el.style.borderColor = '#0f172a'; el.style.background = '#fff' }}
+                  onMouseLeave={e => { const el = e.currentTarget as HTMLElement; el.style.borderColor = '#e2e8f0'; el.style.background = '#fafafa' }}>
+                  <div style={{ width: 50, height: 50, background: w.bg, color: w.c, borderRadius: 14, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                    {w.icon}
+                  </div>
+                  <div>
+                    <h3 style={{ fontWeight: 700, color: '#0f172a', marginBottom: 5, fontSize: isMobile ? 15 : 16.5 }}>{w.title}</h3>
+                    <p style={{ fontSize: isMobile ? 12.5 : 13.5, color: '#64748b', lineHeight: 1.65 }}>{w.desc}</p>
+                  </div>
+                </div>
+              </Fade>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ── FEATURES ── */}
+      <section style={{ padding: sp, background: '#fafafa', borderTop: '0.5px solid #f1f5f9' }}>
             </div>
           </Fade>
           <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(3, 1fr)', gap: isMobile ? 8 : 14 }}>
@@ -459,85 +493,99 @@ export default function HomePage() {
 
       {/* ── TEAM ── */}
       <section style={{ padding: sp, background: '#fff' }} id="jamoa">
-        <div style={{ maxWidth: 960, margin: '0 auto' }}>
+        <div style={{ maxWidth: 680, margin: '0 auto' }}>
           <Fade>
-            <div style={{ textAlign: 'center', marginBottom: isMobile ? 24 : 40 }}>
-              <p style={{ fontSize: 10, fontWeight: 700, color: '#4338ca', textTransform: 'uppercase', letterSpacing: '1.5px', marginBottom: 8 }}>Jamoa</p>
-              <h2 style={{ fontSize: isMobile ? 26 : 34, fontWeight: 800, color: '#0f172a', letterSpacing: '-0.5px' }}>Biz haqimizda</h2>
-              <p style={{ color: '#64748b', marginTop: 8, fontSize: isMobile ? 13 : 15 }}>Yuristim — O'zbekiston huquqiy yordamini raqamlashtirish missiyasi</p>
+            <div style={{ textAlign: 'center', marginBottom: isMobile ? 24 : 36 }}>
+              <p style={{ fontSize: 10, fontWeight: 700, color: '#4338ca', textTransform: 'uppercase', letterSpacing: '1.5px', marginBottom: 8 }}>Biz haqimizda</p>
+              <h2 style={{ fontSize: isMobile ? 26 : 34, fontWeight: 800, color: '#0f172a', letterSpacing: '-0.5px' }}>Platforma ortidagi inson</h2>
+              <p style={{ color: '#64748b', marginTop: 10, fontSize: isMobile ? 13 : 15, lineHeight: 1.65, maxWidth: 520, margin: '10px auto 0' }}>
+                Yuristim — O'zbekistonda huquqiy yordamni raqamlashtirish va har bir insonga ochiq qilish missiyasi bilan yaratilgan.
+              </p>
             </div>
           </Fade>
-          <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(3, 1fr)', gap: isMobile ? 10 : 14 }}>
-            {founders.map((f, i) => (
-              <Fade key={f.name} delay={i * 70}>
 
-                {f.type === 'founder' ? (
-                  /* ── Asoschi kartasi ── */
-                  <div style={{ border: '1.5px solid #0f172a', borderRadius: 18, padding: isMobile ? 18 : 22, background: '#fff', boxShadow: '0 4px 16px rgba(15,23,42,0.07)', position: 'relative', height: '100%' }}>
-                    <div style={{ position: 'absolute', top: -10, right: 16, background: '#0f172a', color: '#fff', fontSize: 9, fontWeight: 800, padding: '3px 10px', borderRadius: 4, letterSpacing: '0.5px' }}>{f.badge}</div>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 12 }}>
-                      <div style={{ width: isMobile ? 46 : 52, height: isMobile ? 46 : 52, background: 'linear-gradient(135deg,#0f172a,#4338ca)', color: '#fff', borderRadius: 13, display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, fontSize: 17, flexShrink: 0 }}>
-                        {f.ini}
-                      </div>
-                      <div>
-                        <p style={{ fontWeight: 700, color: '#0f172a', fontSize: 15, marginBottom: 2 }}>{f.name}</p>
-                        <p style={{ fontSize: 11, color: '#64748b', fontWeight: 600 }}>{f.role}</p>
-                      </div>
-                    </div>
-                    <p style={{ fontSize: isMobile ? 12 : 13, color: '#64748b', lineHeight: 1.65, marginBottom: 16 }}>{f.desc}</p>
-                    <div style={{ paddingTop: 14, borderTop: '0.5px solid #f1f5f9', display: 'flex', flexDirection: 'column', gap: 8 }}>
-                      <a href={f.telegram} target="_blank" rel="noopener noreferrer" style={{ display: 'flex', alignItems: 'center', gap: 9, fontSize: 12.5, color: '#4338ca', textDecoration: 'none', fontWeight: 600 }}>
-                        <span style={{ width: 28, height: 28, background: '#eef2ff', borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}><Send size={13} color="#4338ca" /></span>
-                        {'handle' in f ? f.handle : ''}
-                      </a>
-                      {'email' in f && (
-                        <a href={`mailto:${f.email}`} style={{ display: 'flex', alignItems: 'center', gap: 9, fontSize: 12, color: '#64748b', textDecoration: 'none' }}>
-                          <span style={{ width: 28, height: 28, background: '#f1f5f9', borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}><Mail size={13} color="#64748b" /></span>
-                          {f.email}
-                        </a>
-                      )}
-                    </div>
-                  </div>
+          <Fade>
+            {/* Asoschi kartasi */}
+            <div style={{ border: '1.5px solid #0f172a', borderRadius: 20, padding: isMobile ? 22 : 32, background: '#fff', boxShadow: '0 4px 20px rgba(15,23,42,0.07)', textAlign: 'center' }}>
+              {/* Avatar — rasm yoki inicial */}
+              <div style={{ width: isMobile ? 88 : 104, height: isMobile ? 88 : 104, borderRadius: '50%', margin: '0 auto 18px', overflow: 'hidden', border: '3px solid #f1f5f9', boxShadow: '0 4px 14px rgba(15,23,42,0.12)' }}>
+                {founder.photo ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img src={founder.photo} alt={founder.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                 ) : (
-                  /* ── Vakansiya kartasi ── */
-                  <div style={{ border: '1.5px dashed #cbd5e1', borderRadius: 18, padding: isMobile ? 18 : 22, background: '#fafafa', position: 'relative', height: '100%', display: 'flex', flexDirection: 'column' }}>
-                    <div style={{ position: 'absolute', top: -10, right: 16, background: '#fff7ed', color: '#c2410c', fontSize: 9, fontWeight: 800, padding: '3px 10px', borderRadius: 4, border: '0.5px solid #fed7aa', letterSpacing: '0.5px' }}>{f.badge}</div>
-
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 12 }}>
-                      <div style={{ width: isMobile ? 46 : 52, height: isMobile ? 46 : 52, background: '#f1f5f9', color: '#94a3b8', borderRadius: 13, display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, fontSize: 17, flexShrink: 0 }}>
-                        {f.ini}
-                      </div>
-                      <div>
-                        <p style={{ fontWeight: 700, color: '#0f172a', fontSize: 15, marginBottom: 2 }}>{f.name}</p>
-                        <p style={{ fontSize: 11, color: '#94a3b8', fontWeight: 600 }}>{f.role}</p>
-                      </div>
-                    </div>
-
-                    <p style={{ fontSize: isMobile ? 12 : 13, color: '#64748b', lineHeight: 1.65, marginBottom: 14, flex: 1 }}>{f.desc}</p>
-
-                    {'tags' in f && (
-                      <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginBottom: 14 }}>
-                        {f.tags.map((tag: string) => (
-                          <span key={tag} style={{ fontSize: 10, fontWeight: 600, background: '#fff', color: '#475569', padding: '3px 9px', borderRadius: 5, border: '0.5px solid #e2e8f0' }}>
-                            {tag}
-                          </span>
-                        ))}
-                      </div>
-                    )}
-
-                    <a href={f.telegram} target="_blank" rel="noopener noreferrer"
-                      style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 7, background: '#0f172a', color: '#fff', fontWeight: 600, fontSize: 13, padding: '11px', borderRadius: 11, textDecoration: 'none', marginTop: 'auto' }}>
-                      <Send size={14} /> Telegram orqali murojaat
-                    </a>
+                  <div style={{ width: '100%', height: '100%', background: 'linear-gradient(135deg,#0f172a,#4338ca)', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, fontSize: isMobile ? 30 : 36 }}>
+                    {founder.ini}
                   </div>
                 )}
-              </Fade>
-            ))}
-          </div>
+              </div>
+
+              <div style={{ display: 'inline-flex', alignItems: 'center', gap: 5, background: '#0f172a', color: '#fff', fontSize: 9.5, fontWeight: 800, padding: '4px 12px', borderRadius: 5, letterSpacing: '0.5px', marginBottom: 12 }}>
+                ASOSCHI
+              </div>
+
+              <h3 style={{ fontWeight: 800, color: '#0f172a', fontSize: isMobile ? 19 : 22, letterSpacing: '-0.3px', marginBottom: 4 }}>{founder.name}</h3>
+              <p style={{ fontSize: isMobile ? 12.5 : 13.5, color: '#4338ca', fontWeight: 600, marginBottom: 16 }}>{founder.role}</p>
+
+              <p style={{ fontSize: isMobile ? 13 : 14.5, color: '#475569', lineHeight: 1.75, maxWidth: 460, margin: '0 auto 22px' }}>
+                {founder.desc}
+              </p>
+
+              {/* Aloqa tugmalari */}
+              <div style={{ display: 'flex', gap: 10, justifyContent: 'center', flexWrap: 'wrap', paddingTop: 20, borderTop: '0.5px solid #f1f5f9' }}>
+                <a href={founder.telegram} target="_blank" rel="noopener noreferrer" style={{ display: 'inline-flex', alignItems: 'center', gap: 7, background: '#0f172a', color: '#fff', fontSize: 12.5, fontWeight: 600, padding: '9px 16px', borderRadius: 10, textDecoration: 'none' }}>
+                  <Send size={13} /> Telegram
+                </a>
+                <a href={founder.instagram} target="_blank" rel="noopener noreferrer" style={{ display: 'inline-flex', alignItems: 'center', gap: 7, background: '#fff', color: '#0f172a', fontSize: 12.5, fontWeight: 600, padding: '9px 16px', borderRadius: 10, textDecoration: 'none', border: '1px solid #e2e8f0' }}>
+                  <Instagram size={13} /> Instagram
+                </a>
+                <a href={`mailto:${founder.email}`} style={{ display: 'inline-flex', alignItems: 'center', gap: 7, background: '#fff', color: '#0f172a', fontSize: 12.5, fontWeight: 600, padding: '9px 16px', borderRadius: 10, textDecoration: 'none', border: '1px solid #e2e8f0' }}>
+                  <Mail size={13} /> Email
+                </a>
+              </div>
+            </div>
+          </Fade>
+
+          {/* Bizga qo'shiling — ochiq o'rinlar */}
+          <Fade>
+            <div style={{ marginTop: isMobile ? 32 : 44 }}>
+              <div style={{ textAlign: 'center', marginBottom: isMobile ? 18 : 24 }}>
+                <h3 style={{ fontSize: isMobile ? 18 : 22, fontWeight: 800, color: '#0f172a', letterSpacing: '-0.3px', marginBottom: 8 }}>Jamoaga qo'shiling</h3>
+                <p style={{ color: '#64748b', fontSize: isMobile ? 12.5 : 14, lineHeight: 1.6, maxWidth: 460, margin: '0 auto' }}>
+                  Yuristim o'smoqda. Missiyaga ishonadigan va birgalikda katta ish qilishni istagan hamkorlarni izlayapmiz.
+                </p>
+              </div>
+              <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(2, 1fr)', gap: isMobile ? 10 : 14 }}>
+                {openRoles.map(r => (
+                  <div key={r.title} style={{ border: '1.5px dashed #cbd5e1', borderRadius: 18, padding: isMobile ? 18 : 22, background: '#fafafa', display: 'flex', flexDirection: 'column' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 12 }}>
+                      <div style={{ width: 46, height: 46, background: '#f1f5f9', color: '#94a3b8', borderRadius: 13, display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, fontSize: 15, flexShrink: 0 }}>
+                        {r.ini}
+                      </div>
+                      <div style={{ flex: 1 }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                          <p style={{ fontWeight: 700, color: '#0f172a', fontSize: 14.5 }}>{r.title}</p>
+                          <span style={{ fontSize: 8.5, fontWeight: 800, background: '#fff7ed', color: '#c2410c', padding: '2px 7px', borderRadius: 4, border: '0.5px solid #fed7aa', letterSpacing: '0.5px' }}>OCHIQ</span>
+                        </div>
+                        <p style={{ fontSize: 11, color: '#94a3b8', fontWeight: 600, marginTop: 2 }}>{r.role}</p>
+                      </div>
+                    </div>
+                    <p style={{ fontSize: isMobile ? 12 : 13, color: '#64748b', lineHeight: 1.65, marginBottom: 14, flex: 1 }}>{r.desc}</p>
+                    <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginBottom: 16 }}>
+                      {r.tags.map(tag => (
+                        <span key={tag} style={{ fontSize: 10, fontWeight: 600, background: '#fff', color: '#475569', padding: '3px 9px', borderRadius: 5, border: '0.5px solid #e2e8f0' }}>{tag}</span>
+                      ))}
+                    </div>
+                    <a href={founder.telegram} target="_blank" rel="noopener noreferrer"
+                      style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 7, background: '#0f172a', color: '#fff', fontWeight: 600, fontSize: 13, padding: '11px', borderRadius: 11, textDecoration: 'none', marginTop: 'auto' }}>
+                      <Send size={14} /> Telegram orqali bog'lanish
+                    </a>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </Fade>
         </div>
       </section>
-
-      {/* ── CONTACT ── */}
       <section style={{ padding: sp2, background: '#fafafa', borderTop: '0.5px solid #f1f5f9' }} id="aloqa">
         <div style={{ maxWidth: 520, margin: '0 auto', textAlign: 'center' }}>
           <Fade>
