@@ -2,47 +2,101 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
-import { ArrowLeft, ChevronDown, ChevronUp } from 'lucide-react'
+import { ArrowLeft, ChevronDown, ChevronUp, Send } from 'lucide-react'
+
+// ════════════════════════════════════════════════
+// KO'P SO'RALADIGAN SAVOLLAR — yangi mantiq
+// Til: ravon o'zbekcha, professional, mijozga hurmat bilan
+// ════════════════════════════════════════════════
 
 const faqs = [
   {
     category: 'Platforma haqida',
     items: [
-      { q: "Platforma to'lovlimi?", a: "Beta versiyada hammasi bepul. Faza 2 dan (2026 Q3) boshlab yuristlar uchun ixtiyoriy Pro tarif joriy etiladi. Mijozlar uchun asosiy xizmatlar doimo bepul bo'lib qoladi." },
-      { q: "Yuristim ishonchli platformami?", a: "Ha. Barcha yuristlar admin tomonidan tekshiriladi. Verifikatsiya badge olgan yuristlar haqiqiy huquqiy ma'lumotga ega ekanligi tasdiqlangan." },
-      { q: "Mobil ilovasi bormi?", a: "Hozircha sayt mobile-optimallashtirilgan. Faza 3 da (2027) iOS va Android ilovalar chiqariladi." },
+      {
+        q: "Yuristim nima va u menga qanday yordam beradi?",
+        a: "Yuristim — O'zbekistondagi yuristlar va fuqarolarni bir joyda bog'laydigan huquqiy platforma. Bu yerda siz ishonchli yuristni topishingiz, ular bilan to'g'ridan-to'g'ri yozishishingiz, huquqiy e'lonlarni ko'rishingiz va sun'iy intellekt yordamida boshlang'ich maslahat olishingiz mumkin — barchasi bir ilovada."
+      },
+      {
+        q: "Platformadan foydalanish pullikmi?",
+        a: "Yo'q, hozircha platformaning barcha asosiy imkoniyatlari mutlaqo bepul. Yurist qidirish, yozishish va savol berish hech qanday to'lovsiz. Kelajakda yuristlar uchun qo'shimcha imkoniyatlar beruvchi ixtiyoriy tarif rejalari joriy etilishi mumkin, biroq fuqarolar uchun asosiy xizmatlar har doim bepul bo'lib qoladi."
+      },
+      {
+        q: "Yuristim ishonchli platformami?",
+        a: "Albatta. Platformadagi har bir yurist ma'muriyat tomonidan shaxsan tekshiriladi. Tasdiqdan o'tgan yuristlar maxsus belgi (tasdiqlangan nishon) bilan ajralib turadi — bu ularning malakasi va haqiqiyligi tasdiqlanganini bildiradi. Shu bois siz xotirjam bo'lib, ishonchli mutaxassisni tanlashingiz mumkin."
+      },
+      {
+        q: "Mobil ilova bormi?",
+        a: "Hozirda platforma telefon uchun to'liq moslashtirilgan — brauzer orqali qulay foydalanishingiz mumkin. Kelgusida iOS va Android uchun alohida ilovalar ishlab chiqilishi rejalashtirilgan. Yangiliklardan xabardor bo'lish uchun ijtimoiy tarmoqlarimizni kuzatib boring."
+      },
     ]
   },
   {
-    category: 'Hisob va kirish',
+    category: 'Ro\'yxatdan o\'tish va hisob',
     items: [
-      { q: "Ro'yxatdan o'tish uchun email kerakmi?", a: "Yo'q. Faqat login va parol bilan ro'yxatdan o'tasiz. Email ixtiyoriy — faqat parolni tiklash kerak bo'lganda ishlatiladi." },
-      { q: "Parolni unutsam nima qilaman?", a: "Kirishdagi 'Parolni unutdingizmi?' tugmasini bosing. Email manzilingizga 6 raqamli kod yuboriladi. Kod bilan yangi parol o'rnatasiz. Agar email qo'shilmagan bo'lsa, Telegram orqali admin bilan bog'laning." },
-      { q: "Loginimni o'zgartirsa bo'ladimi?", a: "Hozircha login o'zgartirilmaydi. Faza 2 da bu imkoniyat qo'shiladi." },
+      {
+        q: "Ro'yxatdan o'tish uchun nima kerak?",
+        a: "Ro'yxatdan o'tish juda oson — sizga faqat login (foydalanuvchi nomi) va parol kifoya. Bir necha soniyada hisob yaratib, platformadan foydalanishni boshlashingiz mumkin."
+      },
+      {
+        q: "Elektron pochta (email) kiritish majburiymi?",
+        a: "Yo'q, email kiritish majburiy emas. U faqat parolni unutgan taqdiringizda uni tiklash uchun asqotadi. Shu sababli, hisobingiz xavfsizligi uchun email qo'shib qo'yishni tavsiya qilamiz — bu ortiqcha tashvishlardan saqlaydi."
+      },
+      {
+        q: "Parolimni unutib qo'ysam, nima qilaman?",
+        a: "Xavotir olmang. Kirish sahifasidagi «Parolni unutdingizmi?» tugmasini bosing — email manzilingizga maxsus tiklash kodi yuboriladi va siz yangi parol o'rnatasiz. Agar hisobingizga email biriktirilmagan bo'lsa, ijtimoiy tarmoqlarimiz orqali biz bilan bog'laning, yordam beramiz."
+      },
     ]
   },
   {
     category: "E'lonlar",
     items: [
-      { q: "E'lon joylash bepulmi?", a: "Ha, Beta davr mo'bbaynida barcha e'lonlar bepul joylashtiriladi." },
-      { q: "E'lonni qanday o'chiraman?", a: "Hozircha e'lonni o'chirish uchun admin bilan bog'laning (Telegram: @lawyer_nematov). Faza 2 da shaxsiy boshqaruv paneli qo'shiladi." },
-      { q: "Qanday kategoriyalar mavjud?", a: "Oilaviy, Biznes, Mulk, Mehnat, Soliq, Jinoyat, Shartnoma va Migratsiya huquqi. Kelajakda kategoriyalar kengaytiriladi." },
+      {
+        q: "E'lon joylash uchun to'lov kerakmi?",
+        a: "Yo'q, e'lon joylash mutlaqo bepul. Huquqiy yordam izlayotgan bo'lsangiz yoki o'z xizmatlaringizni taklif qilmoqchi bo'lsangiz, bemalol e'lon joylashtiring."
+      },
+      {
+        q: "E'lonni qanday joylashtiraman va boshqaraman?",
+        a: "«E'lonlar» bo'limiga o'tib, «Yangi» tugmasini bosing. Kerakli yo'nalishlarni tanlang, tafsilotlarni kiriting va e'loningizni joylang. O'z e'lonlaringizni «Mening e'lonlarim» bo'limida istalgan vaqtda tahrirlashingiz yoki o'chirishingiz mumkin."
+      },
+      {
+        q: "Qanday huquqiy yo'nalishlar mavjud?",
+        a: "Platformada huquqning asosiy sohalari qamrab olingan: oilaviy, biznes, mulk, mehnat, soliq, jinoyat va shartnoma huquqi. Bitta e'longa bir nechta yo'nalish belgilashingiz mumkin — bu kerakli mutaxassisni topishni osonlashtiradi."
+      },
     ]
   },
   {
     category: 'Yuristlar uchun',
     items: [
-      { q: "Yurist sifatida qanday ro'yxatdan o'taman?", a: "Ro'yxatdan o'tishda 'Yurist' rolini tanlang. So'ng profilingizni to'ldiring — tajriba, ixtisoslik, bio. Verifikatsiya uchun admin bilan bog'laning." },
-      { q: "Verifikatsiya badge qanday olinadi?", a: "Admin tomonidan hujjatlarni tekshirgandan so'ng blue badge beriladi. Telegram: @lawyer_nematov orqali murojaat qiling." },
-      { q: "Pro tarif nima narxda bo'ladi?", a: "Faza 2 da taxminan 149,000 so'm/oy. Beta davr uchun hamma narsa bepul." },
+      {
+        q: "Yurist sifatida qanday ro'yxatdan o'taman?",
+        a: "Ro'yxatdan o'tishda «Yurist» rolini tanlang. So'ngra profilingizni to'ldiring: ish tajribangiz, ixtisosligingiz va o'zingiz haqingizdagi ma'lumotlarni kiriting. To'liq va aniq profil mijozlar ishonchini oshiradi va sizga ko'proq mijoz jalb qiladi."
+      },
+      {
+        q: "Tasdiqlangan nishonni qanday olaman?",
+        a: "Tasdiqlangan nishon — bu mijozlar oldidagi obro'ingiz kafolati. Uni olish uchun profilingizни to'ldirib, malakangizni tasdiqlovchi hujjatlar bilan ma'muriyatga murojaat qiling. Tekshiruvdan so'ng profilingizда maxsus belgi paydo bo'ladi va siz qidiruvda yuqori o'rinlarda ko'rinasiz."
+      },
+      {
+        q: "Mijozlar bilan qanday ishlayman?",
+        a: "Mijoz sizga yozganda «Suhbatlar» bo'limida xabar olasiz. Mijoz bilan to'g'ridan-to'g'ri yozishasiz, savollariga javob berasiz. Xizmat yakunlangach, mijoz sizga baho va sharh qoldiradi — bu reytingingizni oshiradi va kelajakda yangi mijozlar jalb qiladi."
+      },
     ]
   },
   {
-    category: 'Chat va AI',
+    category: 'Suhbat va sun\'iy intellekt',
     items: [
-      { q: "AI konsultant naqadar ishonchli?", a: "AI O'zbekiston qonunchiligiga asoslanib javob beradi, lekin xato qilishi mumkin. Muhim huquqiy masalalar uchun haqiqiy yurist bilan maslahatlashing." },
-      { q: "Chat tarixi saqlanadimi?", a: "Ha, suhbat tarixi saqlanaadi. Faqat siz va yurist ko'ra olasiz." },
-      { q: "Xizmatni qanday yakunlayman?", a: "Chat ichida 'Xizmat yakunlandi' tugmasini bosing. So'ng yuristga baho va sharh qoldiring." },
+      {
+        q: "Sun'iy intellekt maslahatchisiga ishonsa bo'ladimi?",
+        a: "Yuristim AI O'zbekiston qonunchiligi asosida boshlang'ich yo'nalish berish uchun mo'ljallangan va u hozir sinov (beta) bosqichida. U umumiy savollarga tez javob beradi, biroq xato qilishi ham mumkin. Shu bois jiddiy va muhim huquqiy masalalarda albatta malakali yurist bilan maslahatlashing."
+      },
+      {
+        q: "Suhbatlarim maxfiy saqlanadimi?",
+        a: "Ha, yozishmalaringiz maxfiy. Suhbatni faqat siz va siz yozishayotgan yurist ko'ra oladi. Shaxsiy ma'lumotlaringiz xavfsizligi biz uchun ustuvor."
+      },
+      {
+        q: "Yuristdan olgan xizmatimni qanday yakunlayman?",
+        a: "Suhbat oynasidagi «Yakunlash» tugmasini bosing. So'ngra yuristga baho (yulduzlar) va sharh qoldirishingiz mumkin. Sizning fikringiz boshqa fuqarolarga to'g'ri tanlov qilishda yordam beradi va sifatli xizmatni rag'batlantiradi."
+      },
     ]
   },
 ]
@@ -66,8 +120,8 @@ export default function FaqPage() {
           <ArrowLeft size={16} color="#475569" />
         </Link>
         <div>
-          <h1 style={{ fontSize: 20, fontWeight: 800, color: '#0f172a', letterSpacing: '-0.3px' }}>Ko'p beriladigan savollar</h1>
-          <p style={{ fontSize: 12, color: '#94a3b8', marginTop: 2 }}>Eng ko'p so'raladigan savollar va javoblar</p>
+          <h1 style={{ fontSize: 20, fontWeight: 800, color: '#0f172a', letterSpacing: '-0.3px' }}>Ko'p so'raladigan savollar</h1>
+          <p style={{ fontSize: 12, color: '#94a3b8', marginTop: 2 }}>Eng ko'p so'raladigan savollarga javoblar</p>
         </div>
       </div>
 
@@ -102,10 +156,10 @@ export default function FaqPage() {
       </div>
 
       <div style={{ marginTop: 32, padding: '20px', background: '#f8fafc', borderRadius: 16, border: '0.5px solid #e2e8f0', textAlign: 'center' }}>
-        <p style={{ fontSize: 13, color: '#64748b', marginBottom: 12 }}>Savolingiz javobsiz qoldimi?</p>
-        <a href="https://t.me/lawyer_nematov" target="_blank" rel="noopener noreferrer"
+        <p style={{ fontSize: 13, color: '#64748b', marginBottom: 12 }}>Savolingizga javob topa olmadingizmi?</p>
+        <a href="https://t.me/yuristim_online" target="_blank" rel="noopener noreferrer"
           style={{ display: 'inline-flex', alignItems: 'center', gap: 8, background: '#0f172a', color: '#fff', fontWeight: 600, fontSize: 13, padding: '10px 20px', borderRadius: 10, textDecoration: 'none' }}>
-          ✈️ Telegram orqali so'rang
+          <Send size={15} /> Telegram orqali so'rang
         </a>
       </div>
     </div>
