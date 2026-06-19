@@ -18,6 +18,18 @@ export default async function DashboardLayout({ children }: { children: React.Re
     .slice(0, 2)
     .toUpperCase() || 'U'
 
+  // Avatar: rasm bo'lsa rasm, bo'lmasa initials (har joyda ishlatiladi)
+  const Avatar = ({ size }: { size: number }) => (
+    <div style={{ width: size, height: size, borderRadius: Math.round(size * 0.29), overflow: 'hidden', flexShrink: 0, background: user.avatar_url ? '#f1f5f9' : 'linear-gradient(135deg,#0f172a,#4338ca)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+      {user.avatar_url ? (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img src={user.avatar_url} alt={user.full_name || ''} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+      ) : (
+        <span style={{ color: '#fff', fontWeight: 800, fontSize: Math.round(size * 0.35) }}>{initials}</span>
+      )}
+    </div>
+  )
+
   return (
     <NotificationProvider userId={user.id}>
     <SurveyModal />
@@ -56,9 +68,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
         {/* User */}
         <div style={{ padding: 12, borderTop: '0.5px solid #e2e8f0' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 10px', borderRadius: 10 }}>
-            <div style={{ width: 34, height: 34, background: 'linear-gradient(135deg,#0f172a,#4338ca)', color: '#fff', borderRadius: 10, display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, fontSize: 12, flexShrink: 0 }}>
-              {initials}
-            </div>
+            <Avatar size={34} />
             <div style={{ flex: 1, minWidth: 0 }}>
               <p style={{ fontSize: 12, fontWeight: 700, color: '#0f172a', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{user.full_name}</p>
               <p style={{ fontSize: 10, color: '#94a3b8', fontWeight: 600 }}>@{user.username} · {user.role === 'lawyer' ? 'Yurist' : 'Mijoz'}</p>
@@ -78,9 +88,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
               <Bell size={17} />
             </button>
             <Link href="/dashboard/profile" style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '6px 12px', borderRadius: 10, textDecoration: 'none' }}>
-              <div style={{ width: 30, height: 30, background: 'linear-gradient(135deg,#0f172a,#4338ca)', color: '#fff', borderRadius: 9, display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: 11 }}>
-                {initials}
-              </div>
+              <Avatar size={30} />
               <span style={{ fontSize: 13, fontWeight: 600, color: '#0f172a' }}>{user.full_name?.split(' ')[0]}</span>
             </Link>
           </div>
@@ -99,9 +107,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
               <Bell size={18} />
             </button>
             <Link href="/dashboard/profile">
-              <div style={{ width: 30, height: 30, background: 'linear-gradient(135deg,#0f172a,#4338ca)', color: '#fff', borderRadius: 9, display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: 11 }}>
-                {initials}
-              </div>
+              <Avatar size={30} />
             </Link>
           </div>
         </header>
