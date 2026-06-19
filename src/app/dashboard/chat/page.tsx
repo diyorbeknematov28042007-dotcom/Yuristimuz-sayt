@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef, Suspense } from 'react'
 import { useSearchParams } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
-import { Bot, Send, ArrowLeft, BadgeCheck, Star, Sparkles, CheckCheck, Loader2, Plus, AlertTriangle, ArrowRight, Search, X, Bell, Archive, ArchiveRestore, MessageCircle } from 'lucide-react'
+import { Scale, Send, ArrowLeft, BadgeCheck, Star, Sparkles, CheckCheck, Loader2, Plus, AlertTriangle, Search, X, Bell, Archive, ArchiveRestore, MessageCircle, MapPin, ShieldCheck, MoreVertical, Trash2, CheckCircle2 } from 'lucide-react'
 import Link from 'next/link'
 import { useNotifications } from '@/contexts/NotificationContext'
 
@@ -217,9 +217,26 @@ function ChatContent() {
   const [tabCounts, setTabCounts] = useState({ all: 0, unread: 0, archived: 0 })
   const searchDebounceRef = useRef<NodeJS.Timeout | null>(null)
   const [archivingId, setArchivingId] = useState<string | null>(null)
+  // Chat list: 3 nuqta menyu va o'chirish tasdiqlash
+  const [menuOpenId, setMenuOpenId] = useState<string | null>(null)
+  const [deleteConvConfirm, setDeleteConvConfirm] = useState<any>(null)
+  const [deletingConv, setDeletingConv] = useState(false)
+  // Chat ichi: partner ma'lumoti, xizmat yakunlash, reyting/sharh
+  const [partner, setPartner] = useState<any>(null)
+  const [showCompleteConfirm, setShowCompleteConfirm] = useState(false)
+  const [completing, setCompleting] = useState(false)
+  const [showReviewModal, setShowReviewModal] = useState(false)
+  const [reviewRating, setReviewRating] = useState(0)
+  const [reviewComment, setReviewComment] = useState('')
+  const [submittingReview, setSubmittingReview] = useState(false)
 
   // AI welcome xabari
-  const WELCOME_MSG = { role: 'ai' as const, content: "Assalomu alaykum! 👋\n\nMen **YuristimAI 0.1 beta** — O'zbekiston huquqshunos AI konsultantiman.\n\nSavolingizni yozing, men sizga aniq qonun moddalari va rasmiy manbalar bilan javob beraman. Bilmagan masalada to'g'ridan-to'g'ri ayitb beraman.\n\nQanday yordam kerak?" }
+  // Welcome xabari — mijoz ismi bilan shaxsiylashtirilgan
+  const buildWelcomeMsg = (name?: string) => ({
+    role: 'ai' as const,
+    content: `Assalomu alaykum${name ? ', ' + name : ''}!\n\nMen **YuristimAI 0.1 beta** — O'zbekiston qonunchiligi bo'yicha virtual yuridik konsultantman.\n\nSavolingizni yozing, men sizga mavjud normativ hujjatlar va rasmiy manbalar asosida javob beraman.\n\nQanday yordam kerak?`
+  })
+  const WELCOME_MSG = buildWelcomeMsg()
 
   const [aiMsgs, setAiMsgs] = useState<{ role: 'user' | 'ai'; content: string }[]>([WELCOME_MSG])
   const [aiInput, setAiInput] = useState('')
@@ -228,6 +245,17 @@ function ChatContent() {
   const aiEndRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLInputElement>(null)
   const aiInputRef = useRef<HTMLInputElement>(null)
+
+  // Chat ichi yoki AI ochilganda pastki navigatsiyani yashirish (audit C5/A4)
+  useEffect(() => {
+    const hideNav = !!active || showAI
+    if (hideNav) {
+      document.body.classList.add('chat-hide-bottom-nav')
+    } else {
+      document.body.classList.remove('chat-hide-bottom-nav')
+    }
+    return () => { document.body.classList.remove('chat-hide-bottom-nav') }
+  }, [active, showAI])
 
   // localStorage dan AI suhbat tarixini yuklash
   useEffect(() => {
@@ -254,7 +282,7 @@ function ChatContent() {
   // Yangi suhbat boshlash
   const startNewAiChat = () => {
     if (confirm("Yangi suhbat boshlamoqchimisiz? Joriy suhbat tarixingiz o'chiriladi.")) {
-      setAiMsgs([WELCOME_MSG])
+      setAiMsgs([buildWelcomeMsg(user?.full_name?.split(' ')[0])])
       try { localStorage.removeItem('yuristim_ai_history') } catch {}
     }
   }
@@ -283,10 +311,29 @@ function ChatContent() {
     fetch('/api/auth/me').then(r => r.json()).then(async d => {
       setUser(d.user)
       if (d.user) {
+        // Welcome xabarini mijoz ismi bilan yangilash (faqat agar AI suhbat boshlanmagan bo'lsa)
+        const firstName = d.user.full_name?.split(' ')[0]
+        setAiMsgs(prev => {
+          if (prev.length === 1 && prev[0].role === 'ai') {
+            return [buildWelcomeMsg(firstName)]
+          }
+          return prev
+        })
         await loadConversations(d.user.id, 'all', '')
+        // Online holatini yangilash (boshqalar ko'rishi uchun)
+        supabase.rpc('update_last_seen', { p_user_id: d.user.id })
       }
     })
   }, [])
+
+  // Davriy last_seen yangilash (har 60 soniyada, sahifa ochiq turganда)
+  useEffect(() => {
+    if (!user?.id) return
+    const interval = setInterval(() => {
+      supabase.rpc('update_last_seen', { p_user_id: user.id })
+    }, 60000)
+    return () => clearInterval(interval)
+  }, [user?.id])
 
   // Filter o'zgarsa qayta yuklash
   useEffect(() => {
@@ -319,11 +366,31 @@ function ChatContent() {
     setArchivingId(null)
   }
 
+  // Suhbatni o'chirish (double-confirm orqali)
+  const handleDeleteConv = async () => {
+    if (!user?.id || !deleteConvConfirm || deletingConv) return
+    setDeletingConv(true)
+    const { data } = await supabase.rpc('delete_conversation', {
+      p_user_id: user.id,
+      p_conversation_id: deleteConvConfirm.id,
+    })
+    if (data?.success) {
+      setConvs(prev => prev.filter(c => c.id !== deleteConvConfirm.id))
+      if (active?.id === deleteConvConfirm.id) setActive(null)
+      setDeleteConvConfirm(null)
+      if (user) loadConversations(user.id, filter, searchQuery)
+    } else {
+      alert(data?.error || "O'chirishda xato")
+    }
+    setDeletingConv(false)
+  }
+
   useEffect(() => { endRef.current?.scrollIntoView({ behavior: 'smooth' }) }, [msgs])
   useEffect(() => { aiEndRef.current?.scrollIntoView({ behavior: 'smooth' }) }, [aiMsgs])
 
   const openConv = async (c: any) => {
     setActive(c); setShowAI(false)
+    setPartner(null)
     const { data } = await supabase
       .from('messages').select('*').eq('conversation_id', c.id)
       .order('created_at', { ascending: true }).limit(60)
@@ -332,7 +399,66 @@ function ChatContent() {
     if (c.id) {
       await markAsRead(c.id)
     }
+    // Partner to'liq ma'lumoti (maqom, lokatsiya, online, suhbat holati)
+    if (user?.id) {
+      supabase.rpc('get_conversation_partner', { p_user_id: user.id, p_conversation_id: c.id })
+        .then(({ data: p }) => { if (p) setPartner(p) })
+      supabase.rpc('update_last_seen', { p_user_id: user.id })  // o'z faolligini yangilash
+    }
     setTimeout(() => inputRef.current?.focus(), 100)
+  }
+
+  // Online holati matni (audit C: 5daq/yaqinda/bugun)
+  const onlineStatus = (lastSeen: string | null): { text: string; online: boolean } => {
+    if (!lastSeen) return { text: '', online: false }
+    const diff = Date.now() - new Date(lastSeen).getTime()
+    const mins = Math.floor(diff / 60000)
+    if (mins < 5) return { text: 'tarmoqda', online: true }
+    if (mins < 60) return { text: 'yaqinda tarmoqda edi', online: false }
+    const hours = Math.floor(diff / 3600000)
+    if (hours < 24) return { text: 'bugun tarmoqda edi', online: false }
+    return { text: '', online: false }
+  }
+
+  // Xizmatni yakunlash (mijoz)
+  const handleCompleteService = async () => {
+    if (!user?.id || !active || completing) return
+    setCompleting(true)
+    const { data } = await supabase.rpc('complete_conversation', {
+      p_user_id: user.id, p_conversation_id: active.id,
+    })
+    setCompleting(false)
+    setShowCompleteConfirm(false)
+    if (data?.success) {
+      setPartner((p: any) => p ? { ...p, status: 'completed' } : p)
+      // Agar mijoz va partner yurist bo'lsa — sharh oynasini ochamiz
+      if (partner?.is_client && partner?.partner_role === 'lawyer') {
+        setShowReviewModal(true)
+      }
+    } else {
+      alert(data?.error || 'Xatolik yuz berdi')
+    }
+  }
+
+  // Sharh yuborish
+  const handleSubmitReview = async () => {
+    if (!user?.id || !partner || reviewRating === 0 || submittingReview) return
+    setSubmittingReview(true)
+    const { error } = await supabase.rpc('add_or_update_review', {
+      p_client_id: user.id,
+      p_lawyer_id: partner.partner_id,
+      p_rating: reviewRating,
+      p_comment: reviewComment.trim() || null,
+      p_conversation_id: active.id,
+    })
+    setSubmittingReview(false)
+    if (!error) {
+      setShowReviewModal(false)
+      setReviewRating(0)
+      setReviewComment('')
+    } else {
+      alert('Sharh yuborishda xato')
+    }
   }
 
   // 🔴 REAL-TIME: yangi xabarlarni va o'qildi statusini kuzatish
@@ -547,17 +673,17 @@ function ChatContent() {
         <button onClick={() => setShowAI(false)} style={{ width: 34, height: 34, background: '#f8fafc', border: '0.5px solid #e2e8f0', borderRadius: 9, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
           <ArrowLeft size={15} color="#475569" />
         </button>
-        <div style={{ width: 42, height: 42, background: 'linear-gradient(135deg,#7c3aed,#4338ca)', borderRadius: 12, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-          <Bot size={21} color="#fff" />
+        <div style={{ width: 42, height: 42, background: '#0f172a', borderRadius: 12, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+          <Scale size={20} color="#fff" strokeWidth={2.5} />
         </div>
         <div style={{ flex: 1 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
-            <span style={{ fontWeight: 700, color: '#0f172a', fontSize: 15 }}>YuristimAI</span>
-            <span style={{ fontSize: 9, fontWeight: 700, background: 'linear-gradient(135deg,#7c3aed,#4338ca)', color: '#fff', padding: '2px 8px', borderRadius: 4, letterSpacing: '0.3px' }}>0.1 BETA</span>
+            <span style={{ fontWeight: 700, color: '#0f172a', fontSize: 15 }}>Yuristim AI</span>
+            <span style={{ fontSize: 9, fontWeight: 700, background: '#0f172a', color: '#fff', padding: '2px 8px', borderRadius: 4, letterSpacing: '0.3px' }}>0.1 BETA</span>
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 5, marginTop: 2 }}>
             <div style={{ width: 6, height: 6, background: '#22c55e', borderRadius: '50%' }} />
-            <span style={{ fontSize: 11, color: '#22c55e', fontWeight: 500 }}>Onlayn · Rasmiy manbalar bilan</span>
+            <span style={{ fontSize: 11, color: '#22c55e', fontWeight: 500 }}>tarmoqda · birinchi versiyamizni sinab ko'ring</span>
           </div>
         </div>
         {/* Yangi suhbat tugmasi */}
@@ -575,8 +701,8 @@ function ChatContent() {
         {aiMsgs.map((m, i) => (
           <div key={i} style={{ display: 'flex', gap: 10, justifyContent: m.role === 'user' ? 'flex-end' : 'flex-start', alignItems: 'flex-end' }}>
             {m.role === 'ai' && (
-              <div style={{ width: 30, height: 30, background: 'linear-gradient(135deg,#7c3aed,#4338ca)', borderRadius: 9, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, marginBottom: 2 }}>
-                <Bot size={15} color="#fff" />
+              <div style={{ width: 30, height: 30, background: '#0f172a', borderRadius: 9, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, marginBottom: 2 }}>
+                <Scale size={14} color="#fff" strokeWidth={2.5} />
               </div>
             )}
             <div style={{
@@ -595,8 +721,8 @@ function ChatContent() {
         {/* Loading dots */}
         {aiLoading && (
           <div style={{ display: 'flex', gap: 10, alignItems: 'flex-end' }}>
-            <div style={{ width: 30, height: 30, background: 'linear-gradient(135deg,#7c3aed,#4338ca)', borderRadius: 9, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-              <Bot size={15} color="#fff" />
+            <div style={{ width: 30, height: 30, background: '#0f172a', borderRadius: 9, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+              <Scale size={14} color="#fff" strokeWidth={2.5} />
             </div>
             <div style={{ padding: '12px 16px', background: '#fff', border: '0.5px solid #e2e8f0', borderRadius: '18px 18px 18px 4px', display: 'flex', gap: 5, alignItems: 'center', boxShadow: '0 2px 8px rgba(0,0,0,0.04)' }}>
               {[0, 1, 2].map(j => (
@@ -608,32 +734,25 @@ function ChatContent() {
         <div ref={aiEndRef} />
       </div>
 
-      {/* Kuchaytirilgan Disclaimer Banner */}
+      {/* Disclaimer Banner (ixcham) */}
       <div style={{
         background: '#fff7ed',
         border: '1px solid #fed7aa',
-        borderRadius: 12,
-        padding: '10px 14px',
-        margin: '10px 0 12px',
+        borderRadius: 10,
+        padding: '8px 12px',
+        margin: '8px 0 10px',
         display: 'flex',
-        alignItems: 'flex-start',
-        gap: 10,
+        alignItems: 'center',
+        gap: 8,
         flexShrink: 0,
       }}>
-        <div style={{ width: 26, height: 26, background: '#fed7aa', borderRadius: 7, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, marginTop: 1 }}>
-          <AlertTriangle size={14} color="#c2410c" />
-        </div>
-        <div style={{ flex: 1, minWidth: 0 }}>
-          <p style={{ fontSize: 12, fontWeight: 700, color: '#9a3412', marginBottom: 2 }}>
-            YuristimAI 0.1 beta — sinov rejimida
-          </p>
-          <p style={{ fontSize: 11, color: '#c2410c', lineHeight: 1.5 }}>
-            AI xato qilishi mumkin. Aniq huquqiy maslahat uchun yurist bilan bog'laning.{' '}
-            <Link href="/#fazalar" style={{ color: '#9a3412', fontWeight: 600, textDecoration: 'underline' }}>
-              Keyingi fazada batafsil →
-            </Link>
-          </p>
-        </div>
+        <AlertTriangle size={13} color="#c2410c" style={{ flexShrink: 0 }} />
+        <p style={{ fontSize: 11.5, color: '#c2410c', lineHeight: 1.45, margin: 0 }}>
+          <strong style={{ color: '#9a3412' }}>YuristimAI 0.1 beta</strong> xato qilishi mumkin.{' '}
+          <Link href="/#fazalar" style={{ color: '#9a3412', fontWeight: 600, textDecoration: 'underline' }}>
+            Yangi versiyalar haqida batafsil →
+          </Link>
+        </p>
       </div>
 
       {/* Input */}
@@ -668,13 +787,26 @@ function ChatContent() {
         <div style={{ width: 42, height: 42, background: 'linear-gradient(135deg,#334155,#475569)', color: '#fff', borderRadius: 12, display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, fontSize: 14, flexShrink: 0 }}>
           {ini(active.other_name)}
         </div>
-        <div style={{ flex: 1 }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
             <span style={{ fontWeight: 700, color: '#0f172a', fontSize: 15 }}>{active.other_name}</span>
-            {active.other_verified && <BadgeCheck size={14} color="#3b82f6" />}
+            {/* Maqom — sariq ikon ichida */}
+            <span style={{
+              display: 'inline-flex', alignItems: 'center', gap: 3,
+              fontSize: 9.5, fontWeight: 700, padding: '2px 7px', borderRadius: 5,
+              background: '#fefce8', color: '#a16207', border: '1px solid #fef08a',
+            }}>
+              {active.other_role === 'lawyer' ? 'Yurist' : 'Mijoz'}
+            </span>
+            {/* Yurist + tasdiqlangan */}
+            {active.other_role === 'lawyer' && active.other_verified && (
+              <span style={{ display: 'inline-flex', alignItems: 'center', gap: 3, fontSize: 9.5, fontWeight: 700, padding: '2px 7px', borderRadius: 5, background: '#f0fdf4', color: '#15803d', border: '1px solid #bbf7d0' }}>
+                <ShieldCheck size={10} /> Tasdiqlangan
+              </span>
+            )}
           </div>
           {otherTyping ? (
-            <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 4, marginTop: 2 }}>
               <span style={{ fontSize: 11, color: '#3b82f6', fontWeight: 600, fontStyle: 'italic' }}>
                 yozyapti
               </span>
@@ -683,8 +815,25 @@ function ChatContent() {
               <span style={{ ...typingDotStyle(0.4, '#3b82f6'), width: 5, height: 5 }} />
             </div>
           ) : (
-            <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-              <span style={{ fontSize: 11, color: '#94a3b8' }}>@{active.other_username}</span>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 2, flexWrap: 'wrap' }}>
+              {/* Online holati */}
+              {partner && (() => {
+                const st = onlineStatus(partner.partner_last_seen)
+                return st.text ? (
+                  <span style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 11, color: st.online ? '#16a34a' : '#94a3b8', fontWeight: st.online ? 600 : 400 }}>
+                    {st.online && <span style={{ width: 6, height: 6, background: '#22c55e', borderRadius: '50%' }} />}
+                    {st.text}
+                  </span>
+                ) : <span style={{ fontSize: 11, color: '#94a3b8' }}>@{active.other_username}</span>
+              })()}
+              {!partner && <span style={{ fontSize: 11, color: '#94a3b8' }}>@{active.other_username}</span>}
+              {/* Lokatsiya (yurist) */}
+              {partner?.partner_city && (
+                <span style={{ display: 'flex', alignItems: 'center', gap: 3, fontSize: 11, color: '#94a3b8' }}>
+                  <MapPin size={10} /> {partner.partner_city}
+                </span>
+              )}
+              {/* Reyting (yurist) */}
               {active.other_role === 'lawyer' && parseFloat(active.other_rating) > 0 && (
                 <span style={{ display: 'flex', alignItems: 'center', gap: 2, fontSize: 11, color: '#f59e0b', fontWeight: 600 }}>
                   <Star size={9} fill="#f59e0b" color="#f59e0b" /> {parseFloat(active.other_rating).toFixed(1)}
@@ -693,37 +842,57 @@ function ChatContent() {
             </div>
           )}
         </div>
+
+        {/* Xizmatni yakunlash tugmasi (mijoz, faol suhbatda) */}
+        {partner?.is_client && partner?.status !== 'completed' && (
+          <button onClick={() => setShowCompleteConfirm(true)}
+            style={{ display: 'flex', alignItems: 'center', gap: 5, padding: '8px 13px', background: '#f0fdf4', border: '1px solid #bbf7d0', borderRadius: 10, fontSize: 12, fontWeight: 600, color: '#15803d', cursor: 'pointer', flexShrink: 0, fontFamily: 'inherit' }}
+            title="Xizmatni yakunlash">
+            <CheckCircle2 size={14} /> Yakunlash
+          </button>
+        )}
+        {/* Yakunlangan belgisi */}
+        {partner?.status === 'completed' && (
+          <span style={{ display: 'flex', alignItems: 'center', gap: 5, padding: '6px 11px', background: '#f1f5f9', borderRadius: 10, fontSize: 11.5, fontWeight: 600, color: '#64748b', flexShrink: 0 }}>
+            <CheckCircle2 size={13} color="#16a34a" /> Yakunlangan
+          </span>
+        )}
       </div>
 
       <div style={{ flex: 1, overflowY: 'auto', padding: '16px 0', display: 'flex', flexDirection: 'column', gap: 10 }}>
         {msgs.length === 0 && (
           <div style={{ textAlign: 'center', padding: 40, color: '#94a3b8', fontSize: 13 }}>Suhbatni boshlang...</div>
         )}
-        {msgs.map(m => {
+        {msgs.map((m, idx) => {
           const mine = m.sender_id === user?.id
           const isTemp = typeof m.id === 'number'  // hali server javob bermagan
           const isRead = m.is_read === true
+          // Vaqtni ko'rsatish: keyingi xabar boshqa odamдan yoki boshqa daqiqada bo'lsa (audit C3)
+          const next = msgs[idx + 1]
+          const sameMinute = (a: string, b: string) => a && b && a.slice(0, 16) === b.slice(0, 16)
+          const showTime = !next
+            || next.sender_id !== m.sender_id
+            || !sameMinute(m.created_at, next.created_at)
           return (
-            <div key={m.id} style={{ display: 'flex', justifyContent: mine ? 'flex-end' : 'flex-start', alignItems: 'flex-end' }}>
+            <div key={m.id} style={{ display: 'flex', justifyContent: mine ? 'flex-end' : 'flex-start', alignItems: 'flex-end', marginBottom: showTime ? 2 : -6 }}>
               <div style={{ maxWidth: '72%' }}>
                 <div style={{ padding: '10px 14px', fontSize: 13.5, lineHeight: 1.65, borderRadius: mine ? '18px 18px 4px 18px' : '18px 18px 18px 4px', background: mine ? '#0f172a' : '#f1f5f9', color: mine ? '#fff' : '#1e293b' }}>
                   {m.content}
                 </div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 4, marginTop: 4, justifyContent: mine ? 'flex-end' : 'flex-start' }}>
-                  <span style={{ fontSize: 10, color: '#94a3b8' }}>{fmtTime(m.created_at)}</span>
-                  {mine && (
-                    isTemp ? (
-                      // Vaqtinchalik xabar - hali yuborilmagan
-                      <Loader2 size={10} color="#94a3b8" style={{ animation: 'spin 1s linear infinite' }} />
-                    ) : isRead ? (
-                      // O'qildi - ko'k ✓✓
-                      <CheckCheck size={12} color="#3b82f6" strokeWidth={2.5} />
-                    ) : (
-                      // Yuborildi - kulrang ✓✓
-                      <CheckCheck size={11} color="#94a3b8" />
-                    )
-                  )}
-                </div>
+                {showTime && (
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 4, marginTop: 4, justifyContent: mine ? 'flex-end' : 'flex-start' }}>
+                    <span style={{ fontSize: 10, color: '#94a3b8' }}>{fmtTime(m.created_at)}</span>
+                    {mine && (
+                      isTemp ? (
+                        <Loader2 size={10} color="#94a3b8" style={{ animation: 'spin 1s linear infinite' }} />
+                      ) : isRead ? (
+                        <CheckCheck size={12} color="#3b82f6" strokeWidth={2.5} />
+                      ) : (
+                        <CheckCheck size={11} color="#94a3b8" />
+                      )
+                    )}
+                  </div>
+                )}
               </div>
             </div>
           )
@@ -770,6 +939,78 @@ function ChatContent() {
         </button>
       </div>
 
+      {/* Xizmatni yakunlash — double-confirm */}
+      {showCompleteConfirm && (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(15,23,42,0.5)', zIndex: 200, display: 'flex', alignItems: 'center', justifyContent: 'center', backdropFilter: 'blur(6px)', padding: 20 }}
+          onClick={e => { if (e.target === e.currentTarget && !completing) setShowCompleteConfirm(false) }}>
+          <div style={{ background: '#fff', borderRadius: 18, padding: 24, width: '100%', maxWidth: 380, boxShadow: '0 20px 60px rgba(0,0,0,0.3)' }}>
+            <div style={{ width: 48, height: 48, background: '#f0fdf4', borderRadius: 13, display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 16 }}>
+              <CheckCircle2 size={22} color="#16a34a" />
+            </div>
+            <h3 style={{ fontSize: 17, fontWeight: 800, color: '#0f172a', marginBottom: 8 }}>Xizmatni yakunlaysizmi?</h3>
+            <p style={{ fontSize: 13, color: '#64748b', lineHeight: 1.5, marginBottom: 20 }}>
+              {partner?.partner_role === 'lawyer'
+                ? "Xizmat yakunlangach, yuristga sharh va baho qoldirishingiz mumkin."
+                : "Suhbat yakunlangan deb belgilanadi."}
+            </p>
+            <div style={{ display: 'flex', gap: 10 }}>
+              <button onClick={() => setShowCompleteConfirm(false)} disabled={completing}
+                style={{ flex: 1, padding: '12px', background: '#fff', color: '#475569', border: '1px solid #e2e8f0', borderRadius: 11, fontSize: 13.5, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>
+                Bekor qilish
+              </button>
+              <button onClick={handleCompleteService} disabled={completing}
+                style={{ flex: 1, padding: '12px', background: '#16a34a', color: '#fff', border: 'none', borderRadius: 11, fontSize: 13.5, fontWeight: 700, cursor: completing ? 'not-allowed' : 'pointer', opacity: completing ? 0.7 : 1, fontFamily: 'inherit', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 7 }}>
+                {completing ? <Loader2 size={15} style={{ animation: 'spin 1s linear infinite' }} /> : <CheckCircle2 size={15} />}
+                Yakunlash
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Reyting va sharh modali */}
+      {showReviewModal && (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(15,23,42,0.5)', zIndex: 200, display: 'flex', alignItems: 'center', justifyContent: 'center', backdropFilter: 'blur(6px)', padding: 20 }}
+          onClick={e => { if (e.target === e.currentTarget && !submittingReview) setShowReviewModal(false) }}>
+          <div style={{ background: '#fff', borderRadius: 18, padding: 24, width: '100%', maxWidth: 400, boxShadow: '0 20px 60px rgba(0,0,0,0.3)' }}>
+            <h3 style={{ fontSize: 17, fontWeight: 800, color: '#0f172a', marginBottom: 4 }}>Yuristni baholang</h3>
+            <p style={{ fontSize: 13, color: '#64748b', marginBottom: 20 }}>
+              <strong>{partner?.partner_name}</strong> bilan xizmatdan qoniqdingizmi?
+            </p>
+
+            {/* Yulduzlar */}
+            <div style={{ display: 'flex', justifyContent: 'center', gap: 8, marginBottom: 20 }}>
+              {[1, 2, 3, 4, 5].map(star => (
+                <button key={star} onClick={() => setReviewRating(star)}
+                  style={{ background: 'transparent', border: 'none', cursor: 'pointer', padding: 4 }}>
+                  <Star size={34}
+                    fill={star <= reviewRating ? '#fbbf24' : 'none'}
+                    color={star <= reviewRating ? '#fbbf24' : '#cbd5e1'} />
+                </button>
+              ))}
+            </div>
+
+            {/* Sharh matni */}
+            <textarea value={reviewComment} onChange={e => setReviewComment(e.target.value)}
+              placeholder="Sharhingizni yozing (ixtiyoriy)..."
+              maxLength={1000}
+              style={{ width: '100%', minHeight: 90, padding: '12px 14px', fontSize: 13.5, background: '#fff', border: '1px solid #e2e8f0', borderRadius: 12, outline: 'none', fontFamily: 'inherit', resize: 'vertical', boxSizing: 'border-box', marginBottom: 16 }} />
+
+            <div style={{ display: 'flex', gap: 10 }}>
+              <button onClick={() => setShowReviewModal(false)} disabled={submittingReview}
+                style={{ flex: 1, padding: '12px', background: '#fff', color: '#475569', border: '1px solid #e2e8f0', borderRadius: 11, fontSize: 13.5, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>
+                Keyinroq
+              </button>
+              <button onClick={handleSubmitReview} disabled={reviewRating === 0 || submittingReview}
+                style={{ flex: 1, padding: '12px', background: reviewRating === 0 ? '#cbd5e1' : '#0f172a', color: '#fff', border: 'none', borderRadius: 11, fontSize: 13.5, fontWeight: 700, cursor: reviewRating === 0 || submittingReview ? 'not-allowed' : 'pointer', fontFamily: 'inherit', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 7 }}>
+                {submittingReview ? <Loader2 size={15} style={{ animation: 'spin 1s linear infinite' }} /> : <Star size={15} />}
+                Yuborish
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Animations */}
       <style>{`
         @keyframes typingBounce {
@@ -802,10 +1043,10 @@ function ChatContent() {
         </div>
         <div style={{ flex: 1 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 3 }}>
-            <span style={{ fontWeight: 700, color: '#fff', fontSize: 15 }}>YuristimAI</span>
+            <span style={{ fontWeight: 700, color: '#fff', fontSize: 15 }}>Yuristim AI</span>
             <span style={{ fontSize: 9, fontWeight: 700, background: 'rgba(255,255,255,0.15)', color: '#fff', padding: '2px 8px', borderRadius: 4, letterSpacing: '0.3px' }}>0.1 BETA</span>
           </div>
-          <p style={{ fontSize: 12, color: 'rgba(255,255,255,0.65)' }}>Rasmiy manbalar va aniq qonun moddalari bilan</p>
+          <p style={{ fontSize: 12, color: 'rgba(255,255,255,0.65)', lineHeight: 1.4 }}>Boshlang'ich yuridik maslahatni sun'iy intellekt orqali bepul oling</p>
         </div>
         <div style={{ width: 7, height: 7, background: '#22c55e', borderRadius: '50%', boxShadow: '0 0 0 3px rgba(34,197,94,0.2)', flexShrink: 0 }} />
       </div>
@@ -954,9 +1195,18 @@ function ChatContent() {
                 {ini(c.other_name)}
               </div>
               <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 5, marginBottom: 3 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 3 }}>
                   <span style={{ fontSize: 14, fontWeight: unreadCount > 0 ? 800 : 700, color: '#0f172a' }}>{c.other_name}</span>
                   {c.other_verified && <BadgeCheck size={13} color="#3b82f6" />}
+                  {/* Maqom — sariq ikon ichida (audit B2) */}
+                  <span style={{
+                    display: 'inline-flex', alignItems: 'center', gap: 3,
+                    fontSize: 9.5, fontWeight: 700, padding: '2px 7px', borderRadius: 5,
+                    background: '#fefce8', color: '#a16207', border: '1px solid #fef08a',
+                    letterSpacing: '0.2px',
+                  }}>
+                    {c.other_role === 'lawyer' ? 'Yurist' : 'Mijoz'}
+                  </span>
                 </div>
                 <p style={{
                   fontSize: 12,
@@ -981,36 +1231,106 @@ function ChatContent() {
                 )}
               </div>
 
-              {/* Arxiv/qaytarish tugmasi */}
-              <button
-                onClick={(e) => {
-                  e.stopPropagation()
-                  toggleArchive(c, !c.is_archived)
-                }}
-                disabled={archivingId === c.id}
-                style={{
-                  width: 32, height: 32,
-                  background: c.is_archived ? '#dbeafe' : '#f1f5f9',
-                  border: 'none', borderRadius: 9,
-                  display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  cursor: archivingId === c.id ? 'not-allowed' : 'pointer',
-                  flexShrink: 0,
-                  marginLeft: 4,
-                  transition: 'all 150ms',
-                  opacity: archivingId === c.id ? 0.5 : 1,
-                }}
-                title={c.is_archived ? "Arxivdan qaytarish" : "Arxivlash"}>
-                {archivingId === c.id ? (
-                  <Loader2 size={13} color="#64748b" style={{ animation: 'spin 1s linear infinite' }} />
-                ) : c.is_archived ? (
-                  <ArchiveRestore size={13} color="#1d4ed8" />
-                ) : (
-                  <Archive size={13} color="#64748b" />
+              {/* 3 nuqta menyu (arxiv + o'chirish) */}
+              <div style={{ position: 'relative', flexShrink: 0, marginLeft: 4 }}>
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    setMenuOpenId(menuOpenId === c.id ? null : c.id)
+                  }}
+                  style={{
+                    width: 32, height: 32, background: 'transparent', border: 'none',
+                    borderRadius: 9, display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    cursor: 'pointer', transition: 'background 150ms',
+                  }}
+                  onMouseEnter={e => (e.currentTarget as HTMLElement).style.background = '#f1f5f9'}
+                  onMouseLeave={e => (e.currentTarget as HTMLElement).style.background = 'transparent'}
+                  title="Menyu">
+                  <MoreVertical size={16} color="#94a3b8" />
+                </button>
+
+                {menuOpenId === c.id && (
+                  <>
+                    {/* Tashqariga bosilsa yopish */}
+                    <div style={{ position: 'fixed', inset: 0, zIndex: 50 }}
+                      onClick={(e) => { e.stopPropagation(); setMenuOpenId(null) }} />
+                    <div style={{
+                      position: 'absolute', top: 36, right: 0, zIndex: 51,
+                      background: '#fff', borderRadius: 12, boxShadow: '0 8px 30px rgba(0,0,0,0.15)',
+                      border: '1px solid #e2e8f0', overflow: 'hidden', minWidth: 180,
+                    }}>
+                      {/* Arxivlash */}
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          setMenuOpenId(null)
+                          toggleArchive(c, !c.is_archived)
+                        }}
+                        style={{
+                          display: 'flex', alignItems: 'center', gap: 10, width: '100%',
+                          padding: '11px 14px', background: 'transparent', border: 'none',
+                          cursor: 'pointer', fontSize: 13, fontWeight: 500, color: '#0f172a',
+                          fontFamily: 'inherit', textAlign: 'left',
+                        }}
+                        onMouseEnter={e => (e.currentTarget as HTMLElement).style.background = '#f8fafc'}
+                        onMouseLeave={e => (e.currentTarget as HTMLElement).style.background = 'transparent'}>
+                        {c.is_archived ? <ArchiveRestore size={15} color="#1d4ed8" /> : <Archive size={15} color="#64748b" />}
+                        {c.is_archived ? 'Arxivdan qaytarish' : 'Arxivlash'}
+                      </button>
+                      {/* O'chirish */}
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          setMenuOpenId(null)
+                          setDeleteConvConfirm(c)
+                        }}
+                        style={{
+                          display: 'flex', alignItems: 'center', gap: 10, width: '100%',
+                          padding: '11px 14px', background: 'transparent', border: 'none',
+                          borderTop: '1px solid #f1f5f9',
+                          cursor: 'pointer', fontSize: 13, fontWeight: 500, color: '#dc2626',
+                          fontFamily: 'inherit', textAlign: 'left',
+                        }}
+                        onMouseEnter={e => (e.currentTarget as HTMLElement).style.background = '#fef2f2'}
+                        onMouseLeave={e => (e.currentTarget as HTMLElement).style.background = 'transparent'}>
+                        <Trash2 size={15} color="#dc2626" />
+                        O'chirish
+                      </button>
+                    </div>
+                  </>
                 )}
-              </button>
+              </div>
             </div>
             )
           })}
+        </div>
+      )}
+
+      {/* Suhbatni o'chirish — double-confirm modali */}
+      {deleteConvConfirm && (
+        <div
+          style={{ position: 'fixed', inset: 0, background: 'rgba(15,23,42,0.5)', zIndex: 200, display: 'flex', alignItems: 'center', justifyContent: 'center', backdropFilter: 'blur(6px)', padding: 20 }}
+          onClick={e => { if (e.target === e.currentTarget && !deletingConv) setDeleteConvConfirm(null) }}>
+          <div style={{ background: '#fff', borderRadius: 18, padding: 24, width: '100%', maxWidth: 380, boxShadow: '0 20px 60px rgba(0,0,0,0.3)' }}>
+            <div style={{ width: 48, height: 48, background: '#fef2f2', borderRadius: 13, display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 16 }}>
+              <Trash2 size={22} color="#dc2626" />
+            </div>
+            <h3 style={{ fontSize: 17, fontWeight: 800, color: '#0f172a', marginBottom: 8 }}>Suhbatni o'chirasizmi?</h3>
+            <p style={{ fontSize: 13, color: '#64748b', lineHeight: 1.5, marginBottom: 20 }}>
+              <strong>{deleteConvConfirm.other_name}</strong> bilan suhbat va barcha xabarlar butunlay o'chiriladi. Bu amalni qaytarib bo'lmaydi.
+            </p>
+            <div style={{ display: 'flex', gap: 10 }}>
+              <button onClick={() => setDeleteConvConfirm(null)} disabled={deletingConv}
+                style={{ flex: 1, padding: '12px', background: '#fff', color: '#475569', border: '1px solid #e2e8f0', borderRadius: 11, fontSize: 13.5, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>
+                Bekor qilish
+              </button>
+              <button onClick={handleDeleteConv} disabled={deletingConv}
+                style={{ flex: 1, padding: '12px', background: '#dc2626', color: '#fff', border: 'none', borderRadius: 11, fontSize: 13.5, fontWeight: 700, cursor: deletingConv ? 'not-allowed' : 'pointer', opacity: deletingConv ? 0.7 : 1, fontFamily: 'inherit', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 7 }}>
+                {deletingConv ? <Loader2 size={15} style={{ animation: 'spin 1s linear infinite' }} /> : <Trash2 size={15} />}
+                O'chirish
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </div>
@@ -1025,6 +1345,10 @@ export default function ChatPage() {
         <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
       </div>
     }>
+      {/* Chat ichi/AI ochilganda pastki navigatsiyani yashirish */}
+      <style>{`
+        body.chat-hide-bottom-nav .mobile-bottom-nav-wrapper { display: none !important; }
+      `}</style>
       <ChatContent />
     </Suspense>
   )
