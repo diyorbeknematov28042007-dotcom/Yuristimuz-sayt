@@ -1,6 +1,7 @@
 {
   "name": "Yuristim — Huquqiy yordam platformasi",
   "short_name": "Yuristim",
+  "id": "/dashboard",
   "description": "O'zbekistondagi yuristlar va mijozlarni bog'lovchi raqamli platforma. AI yordamida tez huquqiy maslahat oling.",
   "start_url": "/dashboard",
   "display": "standalone",
