@@ -120,7 +120,7 @@ const founder = {
   role: 'Asoschi va rahbar',
   // Rasm: /public ga rasm qo'ysangiz, shu yerga fayl nomini yozing (masalan '/founder.jpg').
   // Bo'sh qoldirilsa — ism harflari (DN) ko'rsatiladi.
-  photo: '',
+  photo: '/founder.png',
   desc: "Huquqshunos va raqamli xizmatlar tadbirkori. Maqsadim — O'zbekistonda sifatli huquqiy yordamni har bir inson uchun ochiq, tushunarli va arzon qilish.",
   telegram: 'https://t.me/yuristim_online',
   instagram: 'https://www.instagram.com/yuristim.online?igsh=MWh6d2hueTVpcXUxdg%3D%3D&utm_source=qr',
