@@ -3,9 +3,10 @@ import Link from 'next/link'
 import { getSession } from '@/lib/auth'
 import LogoutButton from '@/components/layout/LogoutButton'
 import { SidebarNav, BottomNav } from '@/components/layout/NavLinks'
-import { Scale, Bell } from 'lucide-react'
+import { Scale } from 'lucide-react'
 import { NotificationProvider } from '@/contexts/NotificationContext'
 import SurveyModal from '@/components/SurveyModal'
+import NotificationBell from '@/components/NotificationBell'
 
 export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
   const user = await getSession()
@@ -84,9 +85,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
         {/* Desktop topbar */}
         <header className="desktop-topbar" style={{ height: 64, background: '#fff', borderBottom: '0.5px solid #e2e8f0', display: 'flex', alignItems: 'center', justifyContent: 'flex-end', padding: '0 24px', position: 'sticky', top: 0, zIndex: 30 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-            <button style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: '#64748b', padding: 8, borderRadius: 9 }}>
-              <Bell size={17} />
-            </button>
+            <NotificationBell userId={user.id} size={17} />
             <Link href="/dashboard/profile" style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '6px 12px', borderRadius: 10, textDecoration: 'none' }}>
               <Avatar size={30} />
               <span style={{ fontSize: 13, fontWeight: 600, color: '#0f172a' }}>{user.full_name?.split(' ')[0]}</span>
@@ -103,9 +102,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
             <span style={{ fontWeight: 800, fontSize: 15, color: '#0f172a' }}>Yuristim</span>
           </Link>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-            <button style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#64748b', padding: 4 }}>
-              <Bell size={18} />
-            </button>
+            <NotificationBell userId={user.id} size={18} />
             <Link href="/dashboard/profile">
               <Avatar size={30} />
             </Link>
