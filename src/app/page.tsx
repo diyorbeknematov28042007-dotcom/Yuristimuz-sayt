@@ -188,7 +188,7 @@ export default function HomePage() {
           {/* Desktop nav */}
           {!isMobile && (
             <nav style={{ display: 'flex', gap: 24, alignItems: 'center' }}>
-              {[['Nega biz', '#nega-biz'], ['Imkoniyatlar', '#xizmatlar'], ['Rejalar', '#fazalar'], ['Biz haqimizda', '#jamoa']].map(([label, href]) => (
+              {[['Nega biz', '#nega-biz'], ['Imkoniyatlar', '#imkoniyatlar'], ['Rejalar', '#fazalar'], ['Biz haqimizda', '#jamoa']].map(([label, href]) => (
                 <a key={href} href={href} style={{ fontSize: 13.5, fontWeight: 500, color: '#475569', textDecoration: 'none', transition: 'color 150ms' }}
                   onMouseEnter={e => (e.currentTarget as HTMLElement).style.color = '#0f172a'}
                   onMouseLeave={e => (e.currentTarget as HTMLElement).style.color = '#475569'}>
@@ -219,7 +219,7 @@ export default function HomePage() {
         {/* Mobile dropdown */}
         {isMobile && mobileMenu && (
           <div style={{ borderTop: '0.5px solid #f1f5f9', background: '#fff', padding: '12px 16px 16px' }}>
-            {[['Nega biz', '#nega-biz'], ['Imkoniyatlar', '#xizmatlar'], ['Rejalar', '#fazalar'], ['Biz haqimizda', '#jamoa']].map(([label, href]) => (
+            {[['Nega biz', '#nega-biz'], ['Imkoniyatlar', '#imkoniyatlar'], ['Rejalar', '#fazalar'], ['Biz haqimizda', '#jamoa']].map(([label, href]) => (
               <a key={href} href={href} onClick={() => setMobileMenu(false)}
                 style={{ display: 'block', padding: '10px 0', fontSize: 15, fontWeight: 500, color: '#0f172a', textDecoration: 'none', borderBottom: '0.5px solid #f8fafc' }}>
                 {label}
@@ -350,7 +350,6 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* ── FEATURES ── */}
       {/* ── WHY US (Nega aynan Yuristim?) ── */}
       <section style={{ padding: sp, background: '#fff' }} id="nega-biz">
         <div style={{ maxWidth: 1100, margin: '0 auto' }}>
@@ -384,7 +383,12 @@ export default function HomePage() {
       </section>
 
       {/* ── FEATURES ── */}
-      <section style={{ padding: sp, background: '#fafafa', borderTop: '0.5px solid #f1f5f9' }}>
+      <section style={{ padding: sp, background: '#fafafa', borderTop: '0.5px solid #f1f5f9' }} id="imkoniyatlar">
+        <div style={{ maxWidth: 1200, margin: '0 auto' }}>
+          <Fade>
+            <div style={{ textAlign: 'center', marginBottom: isMobile ? 24 : 44 }}>
+              <p style={{ fontSize: 10, fontWeight: 700, color: '#4338ca', textTransform: 'uppercase', letterSpacing: '1.5px', marginBottom: 8 }}>Imkoniyatlar</p>
+              <h2 style={{ fontSize: isMobile ? 26 : 34, fontWeight: 800, color: '#0f172a', letterSpacing: '-0.5px' }}>Sizga nima beramiz?</h2>
             </div>
           </Fade>
           <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(3, 1fr)', gap: isMobile ? 8 : 14 }}>
