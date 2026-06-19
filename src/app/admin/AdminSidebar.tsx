@@ -10,7 +10,7 @@ import Link from 'next/link'
 import {
   Shield, LayoutDashboard, FileText, Users, MessageSquare,
   AlertTriangle, BarChart3, Settings, LogOut, Menu, X,
-  ScrollText, UserCheck, Loader2
+  ScrollText, UserCheck, Loader2, Newspaper
 } from 'lucide-react'
 
 interface AdminInfo {
@@ -25,6 +25,7 @@ const NAV_ITEMS = [
   { href: '/admin/users', label: 'Foydalanuvchilar', icon: Users },
   { href: '/admin/reports', label: 'Shikoyatlar', icon: AlertTriangle, badge: 'review' },
   { href: '/admin/analytics', label: 'Statistika', icon: BarChart3 },
+  { href: '/admin/news', label: 'Yangiliklar', icon: Newspaper },
   { href: '/admin/audit', label: 'Audit log', icon: ScrollText },
   { href: '/admin/settings', label: 'Sozlamalar', icon: Settings },
 ]
