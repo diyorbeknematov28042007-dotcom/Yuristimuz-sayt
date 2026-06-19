@@ -5,6 +5,7 @@ import LogoutButton from '@/components/layout/LogoutButton'
 import { SidebarNav, BottomNav } from '@/components/layout/NavLinks'
 import { Scale, Bell } from 'lucide-react'
 import { NotificationProvider } from '@/contexts/NotificationContext'
+import SurveyModal from '@/components/SurveyModal'
 
 export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
   const user = await getSession()
@@ -19,6 +20,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
 
   return (
     <NotificationProvider userId={user.id}>
+    <SurveyModal />
     <div style={{ minHeight: '100vh', background: '#fafafa' }}>
 
       <style>{`
