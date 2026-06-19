@@ -3,7 +3,7 @@
 import { useState, Suspense, useEffect } from 'react'
 import Link from 'next/link'
 import { useRouter, useSearchParams } from 'next/navigation'
-import { Scale, User, Briefcase, Eye, EyeOff, ArrowRight, CheckCircle2, X, Loader2 } from 'lucide-react'
+import { Scale, User, Briefcase, Eye, EyeOff, ArrowRight, CheckCircle2, X, Loader2, Send } from 'lucide-react'
 import { BotCheck } from '@/components/auth/BotCheck'
 
 function SignupForm() {
@@ -19,6 +19,19 @@ function SignupForm() {
   const [error, setError] = useState('')
   const [termsAccepted, setTermsAccepted] = useState(false)
   const [humanVerified, setHumanVerified] = useState(false)
+
+  // Typing animatsiya — "Keling, qadamingiz qutlug' bo'lsin!"
+  const fullGreeting = "Keling, qadamingiz qutlug' bo'lsin!"
+  const [typed, setTyped] = useState('')
+  useEffect(() => {
+    let i = 0
+    const timer = setInterval(() => {
+      i++
+      setTyped(fullGreeting.slice(0, i))
+      if (i >= fullGreeting.length) clearInterval(timer)
+    }, 55)
+    return () => clearInterval(timer)
+  }, [])
 
   // Username real-time check
   const [usernameCheck, setUsernameCheck] = useState<{
@@ -90,9 +103,15 @@ function SignupForm() {
         <div style={{ width: 52, height: 52, background: '#0f172a', borderRadius: 14, display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 14px', boxShadow: '0 4px 14px rgba(15,23,42,0.2)' }}>
           <Scale size={24} color="#fff" strokeWidth={2.5} />
         </div>
-        <h1 style={{ fontSize: 22, fontWeight: 800, color: '#0f172a', letterSpacing: '-0.4px', marginBottom: 5 }}>Yuristim</h1>
-        <p style={{ fontSize: 13, color: '#64748b' }}>Hisob yarating — bepul</p>
+        <h1 style={{ fontSize: 20, fontWeight: 800, color: '#0f172a', letterSpacing: '-0.4px', marginBottom: 7, minHeight: 28, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          {typed}
+          <span style={{ display: 'inline-block', width: 2, height: 20, background: '#4338ca', marginLeft: 2, animation: 'blink 1s step-end infinite', verticalAlign: 'middle' }} />
+        </h1>
+        <p style={{ fontSize: 13, color: '#64748b', lineHeight: 1.5, maxWidth: 340, margin: '0 auto' }}>
+          Biz sizni intizorlik bilan kutayotgan edik — platforma xizmatlari mutlaq bepul
+        </p>
       </div>
+      <style>{`@keyframes blink { 0%, 100% { opacity: 1 } 50% { opacity: 0 } }`}</style>
 
       <div style={{ background: '#fff', borderRadius: 18, border: '0.5px solid #e2e8f0', boxShadow: '0 4px 24px rgba(0,0,0,0.04)', padding: 24 }}>
 
@@ -216,9 +235,9 @@ function SignupForm() {
             <strong style={{ color: '#0f172a' }}>Yuristim</strong> loyihasi sizning takliflaringizni qadrlaydi va hamkorlik uchun doim tayyor.
             Hoziroq ro'yxatdan o'ting va platformamiz imkoniyatlaridan bahramand bo'ling.
           </p>
-          <a href="https://t.me/lawyer_nematov" target="_blank" rel="noopener noreferrer"
-            style={{ display: 'inline-flex', alignItems: 'center', gap: 5, fontSize: 12, color: '#4338ca', textDecoration: 'none', fontWeight: 600, marginTop: 8 }}>
-            ✈️ Bog'lanish uchun Telegram →
+          <a href="https://t.me/yuristim_online" target="_blank" rel="noopener noreferrer"
+            style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 12, color: '#4338ca', textDecoration: 'none', fontWeight: 600, marginTop: 8 }}>
+            <Send size={13} /> Bog'lanish uchun Telegram →
           </a>
         </div>
 
