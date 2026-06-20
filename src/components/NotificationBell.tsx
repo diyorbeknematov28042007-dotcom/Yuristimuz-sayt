@@ -77,10 +77,16 @@ export default function NotificationBell({ userId, size = 18 }: { userId: string
     setLoading(false)
   }, [userId])
 
-  // Boshlang'ich + real-time
+  // open va loadList ni ref orqali — kanal qayta yaratilmasligi uchun
+  const openRef = useRef(open)
+  const loadListRef = useRef(loadList)
+  useEffect(() => { openRef.current = open }, [open])
+  useEffect(() => { loadListRef.current = loadList }, [loadList])
+
+  // Boshlang'ich + real-time (kanal FAQAT userId ga bog'liq — bir marta yaratiladi)
   useEffect(() => {
-    loadCount()
     if (!userId) return
+    loadCount()
     const channel = supabase
       .channel(`notifs:${userId}`)
       .on('postgres_changes', {
@@ -88,11 +94,12 @@ export default function NotificationBell({ userId, size = 18 }: { userId: string
         filter: `user_id=eq.${userId}`,
       }, () => {
         loadCount()
-        if (open) loadList()
+        if (openRef.current) loadListRef.current()
       })
       .subscribe()
     return () => { supabase.removeChannel(channel) }
-  }, [userId, open, loadCount, loadList])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [userId])
 
   // Tashqariga bosilsa yopish
   useEffect(() => {
