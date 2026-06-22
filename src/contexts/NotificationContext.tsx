@@ -39,6 +39,10 @@ export function NotificationProvider({
   const [toasts, setToasts] = useState<ToastData[]>([])
   const [soundEnabled, setSoundEnabledState] = useState(true)
   const audioRef = useRef<HTMLAudioElement | null>(null)
+  const soundEnabledRef = useRef(true)  // kanal closure uchun
+
+  // soundEnabled o'zgarsa ref ham yangilanadi
+  useEffect(() => { soundEnabledRef.current = soundEnabled }, [soundEnabled])
 
   // localStorage dan sound setting yuklash
   useEffect(() => {
@@ -111,7 +115,7 @@ export function NotificationProvider({
     refresh()
 
     const channel = supabase
-      .channel(`notifications:${userId}`)
+      .channel(`notifications_ctx_${userId}_${Math.random().toString(36).slice(2, 8)}`)
       .on(
         'postgres_changes',
         {
@@ -154,7 +158,7 @@ export function NotificationProvider({
               })
 
               // Ovoz signali
-              if (soundEnabled && audioRef.current) {
+              if (soundEnabledRef.current && audioRef.current) {
                 audioRef.current.play().catch(() => {})
               }
             }
@@ -167,7 +171,8 @@ export function NotificationProvider({
       .subscribe()
 
     return () => { supabase.removeChannel(channel) }
-  }, [userId, refresh, showToast, soundEnabled])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [userId])
 
   // Tab title yangilash
   useEffect(() => {
