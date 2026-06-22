@@ -6,6 +6,7 @@ import { supabase } from '@/lib/supabase'
 import { Bot, Send, ArrowLeft, BadgeCheck, Star, Sparkles, CheckCheck, Loader2, Plus, AlertTriangle, ArrowRight, Search, X, Bell, Archive, ArchiveRestore, MessageCircle } from 'lucide-react'
 import Link from 'next/link'
 import { useNotifications } from '@/contexts/NotificationContext'
+import Avatar from '@/components/Avatar'
 
 // =============================================
 // MARKDOWN RENDERER — **bold**, *italic*, jadvallar, ro'yxatlar
@@ -679,9 +680,7 @@ function ChatContent() {
         <button onClick={() => setActive(null)} style={{ width: 34, height: 34, background: '#f8fafc', border: '0.5px solid #e2e8f0', borderRadius: 9, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
           <ArrowLeft size={15} color="#475569" />
         </button>
-        <div style={{ width: 42, height: 42, background: 'linear-gradient(135deg,#334155,#475569)', color: '#fff', borderRadius: 12, display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, fontSize: 14, flexShrink: 0 }}>
-          {ini(active.other_name)}
-        </div>
+        <Avatar src={active.other_avatar_url} name={active.other_name} size={42} rounded={12} />
         <div style={{ flex: 1 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
             <span style={{ fontWeight: 700, color: '#0f172a', fontSize: 15 }}>{active.other_name}</span>
@@ -964,9 +963,7 @@ function ChatContent() {
               }}
               onMouseEnter={e => { if (!isActive) { const el = e.currentTarget as HTMLElement; el.style.borderColor = '#0f172a'; el.style.background = '#fafafa' } }}
               onMouseLeave={e => { if (!isActive) { const el = e.currentTarget as HTMLElement; el.style.borderColor = '#e2e8f0'; el.style.background = '#fff' } }}>
-              <div style={{ width: 44, height: 44, background: 'linear-gradient(135deg,#334155,#475569)', color: '#fff', borderRadius: 12, display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: 14, flexShrink: 0 }}>
-                {ini(c.other_name)}
-              </div>
+              <Avatar src={c.other_avatar_url} name={c.other_name} size={44} rounded={12} />
               <div style={{ flex: 1, minWidth: 0 }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 5, marginBottom: 3 }}>
                   <span style={{ fontSize: 14, fontWeight: unreadCount > 0 ? 800 : 700, color: '#0f172a' }}>{c.other_name}</span>
