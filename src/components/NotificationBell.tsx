@@ -1,18 +1,16 @@
 // ════════════════════════════════════════════════
-// BILDIRISHNOMA QO'NG'IROQCHASI + PANEL
+// BILDIRISHNOMA QO'NG'IROQCHASI + PANEL (barqaror versiya)
 // /src/components/NotificationBell.tsx
-// Qo'ng'iroqcha bosilganda bildirishnomalar ro'yxati ochiladi
-// (e'lon tasdiqlandi, verifikatsiya o'tdingiz, va h.k.)
 // ════════════════════════════════════════════════
 
 'use client'
 
-import { useState, useEffect, useRef, useCallback } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
 import {
-  Bell, Check, CheckCheck, FileText, ShieldCheck, MessageCircle,
-  Star, Megaphone, X, Loader2
+  Bell, CheckCheck, FileText, ShieldCheck, MessageCircle,
+  Star, Megaphone, Loader2
 } from 'lucide-react'
 
 type Notif = {
@@ -26,7 +24,6 @@ type Notif = {
   metadata: any
 }
 
-// Bildirishnoma turiga qarab ikon va rang
 function notifVisual(type: string) {
   switch (type) {
     case 'ad_approved': return { icon: <FileText size={16} />, bg: '#dcfce7', c: '#16a34a' }
@@ -39,7 +36,6 @@ function notifVisual(type: string) {
   }
 }
 
-// "5 daqiqa oldin" formati
 function timeAgo(iso: string): string {
   const diff = Date.now() - new Date(iso).getTime()
   const m = Math.floor(diff / 60000)
@@ -61,43 +57,44 @@ export default function NotificationBell({ userId, size = 18 }: { userId: string
   const panelRef = useRef<HTMLDivElement>(null)
   const btnRef = useRef<HTMLButtonElement>(null)
 
-  // Unread sonini olish
-  const loadCount = useCallback(async () => {
-    if (!userId) return
-    const { data } = await supabase.rpc('get_user_notifications_count', { p_user_id: userId })
-    setUnread(Number(data) || 0)
-  }, [userId])
+  // Unread sonini olish (oddiy funksiya — ref/dependency muammosi yo'q)
+  async function loadCount(uid: string) {
+    try {
+      const { data } = await supabase.rpc('get_user_notifications_count', { p_user_id: uid })
+      setUnread(Number(data) || 0)
+    } catch {}
+  }
 
-  // Ro'yxatni olish
-  const loadList = useCallback(async () => {
-    if (!userId) return
+  async function loadList(uid: string) {
     setLoading(true)
-    const { data } = await supabase.rpc('get_user_notifications', { p_user_id: userId, p_limit: 30 })
-    setItems(data || [])
+    try {
+      const { data } = await supabase.rpc('get_user_notifications', { p_user_id: uid, p_limit: 30 })
+      setItems(data || [])
+    } catch {}
     setLoading(false)
-  }, [userId])
+  }
 
-  // open va loadList ni ref orqali — kanal qayta yaratilmasligi uchun
-  const openRef = useRef(open)
-  const loadListRef = useRef(loadList)
-  useEffect(() => { openRef.current = open }, [open])
-  useEffect(() => { loadListRef.current = loadList }, [loadList])
-
-  // Boshlang'ich + real-time (kanal FAQAT userId ga bog'liq — bir marta yaratiladi)
+  // ── Real-time: kanal FAQAT bir marta yaratiladi (userId o'zgarmasa) ──
+  // open holati bu yerda ISHLATILMAYDI — shuning uchun kanal qayta yaratilmaydi
   useEffect(() => {
     if (!userId) return
-    loadCount()
-    const channel = supabase
-      .channel(`notifs:${userId}`)
-      .on('postgres_changes', {
-        event: 'INSERT', schema: 'public', table: 'notifications',
-        filter: `user_id=eq.${userId}`,
-      }, () => {
-        loadCount()
-        if (openRef.current) loadListRef.current()
-      })
-      .subscribe()
-    return () => { supabase.removeChannel(channel) }
+
+    loadCount(userId)
+
+    const channelName = `notifs_bell_${userId}_${Math.random().toString(36).slice(2, 8)}`
+    const channel = supabase.channel(channelName)
+
+    channel.on(
+      'postgres_changes',
+      { event: 'INSERT', schema: 'public', table: 'notifications', filter: `user_id=eq.${userId}` },
+      () => { loadCount(userId) }
+    )
+
+    channel.subscribe()
+
+    return () => {
+      supabase.removeChannel(channel)
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [userId])
 
@@ -117,20 +114,22 @@ export default function NotificationBell({ userId, size = 18 }: { userId: string
   const togglePanel = () => {
     const next = !open
     setOpen(next)
-    if (next) loadList()
+    if (next) loadList(userId)
   }
 
-  // Hammasini o'qildi
   const markAll = async () => {
-    await supabase.rpc('mark_notifications_read', { p_user_id: userId, p_notification_ids: null })
+    try {
+      await supabase.rpc('mark_notifications_read', { p_user_id: userId, p_notification_ids: null })
+    } catch {}
     setItems(prev => prev.map(n => ({ ...n, is_read: true })))
     setUnread(0)
   }
 
-  // Bittasini bosish — o'qildi + linkka o'tish
   const clickNotif = async (n: Notif) => {
     if (!n.is_read) {
-      await supabase.rpc('mark_notifications_read', { p_user_id: userId, p_notification_ids: [n.id] })
+      try {
+        await supabase.rpc('mark_notifications_read', { p_user_id: userId, p_notification_ids: [n.id] })
+      } catch {}
       setItems(prev => prev.map(x => x.id === n.id ? { ...x, is_read: true } : x))
       setUnread(prev => Math.max(0, prev - 1))
     }
@@ -142,7 +141,6 @@ export default function NotificationBell({ userId, size = 18 }: { userId: string
 
   return (
     <div style={{ position: 'relative' }}>
-      {/* Qo'ng'iroqcha */}
       <button ref={btnRef} onClick={togglePanel}
         style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#64748b', padding: 4, position: 'relative', display: 'flex' }}>
         <Bell size={size} />
@@ -158,7 +156,6 @@ export default function NotificationBell({ userId, size = 18 }: { userId: string
         )}
       </button>
 
-      {/* Panel */}
       {open && (
         <div ref={panelRef} style={{
           position: 'absolute', top: 'calc(100% + 8px)', right: 0,
@@ -166,7 +163,6 @@ export default function NotificationBell({ userId, size = 18 }: { userId: string
           border: '0.5px solid #e2e8f0', borderRadius: 16, boxShadow: '0 12px 40px rgba(0,0,0,0.16)',
           zIndex: 200, overflow: 'hidden', display: 'flex', flexDirection: 'column',
         }}>
-          {/* Panel sarlavha */}
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '14px 16px', borderBottom: '0.5px solid #f1f5f9' }}>
             <span style={{ fontWeight: 800, fontSize: 14.5, color: '#0f172a' }}>Bildirishnomalar</span>
             {unread > 0 && (
@@ -177,7 +173,6 @@ export default function NotificationBell({ userId, size = 18 }: { userId: string
             )}
           </div>
 
-          {/* Ro'yxat */}
           <div style={{ overflowY: 'auto', flex: 1 }}>
             {loading ? (
               <div style={{ padding: '40px 0', textAlign: 'center' }}>
@@ -200,7 +195,7 @@ export default function NotificationBell({ userId, size = 18 }: { userId: string
                       display: 'flex', alignItems: 'flex-start', gap: 11, width: '100%',
                       padding: '13px 16px', textAlign: 'left', cursor: n.link ? 'pointer' : 'default',
                       background: n.is_read ? '#fff' : '#f8faff', border: 'none',
-                      borderBottom: '0.5px solid #f8fafc', fontFamily: 'inherit', transition: 'background 120ms',
+                      borderBottom: '0.5px solid #f8fafc', fontFamily: 'inherit',
                     }}>
                     <div style={{ width: 34, height: 34, background: v.bg, color: v.c, borderRadius: 10, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                       {v.icon}
