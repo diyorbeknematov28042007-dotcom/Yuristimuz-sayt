@@ -9,6 +9,7 @@ import {
   Shield, Globe, Phone, Linkedin, Send, MessageSquare, Sparkles
 } from 'lucide-react'
 import ShareButton from '@/components/lawyer/ShareButton'
+import Avatar from '@/components/Avatar'
 import PublicReviewsBox from '@/components/reviews/PublicReviewsBox'
 import LocationDisplay from '@/components/map/LocationDisplay'
 
@@ -139,15 +140,8 @@ export default async function PublicLawyerPage(
 
           {/* Avatar + Ism + Verified */}
           <div style={{ display: 'flex', alignItems: 'flex-start', gap: 18, position: 'relative', marginBottom: 18 }}>
-            <div style={{
-              width: 84, height: 84,
-              background: 'linear-gradient(135deg, #0f172a, #4338ca)',
-              color: '#fff', borderRadius: 22,
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              fontWeight: 800, fontSize: 28, flexShrink: 0,
-              boxShadow: '0 8px 24px rgba(15,23,42,0.18)',
-            }}>
-              {ini(lawyer.full_name)}
+            <div style={{ boxShadow: '0 8px 24px rgba(15,23,42,0.18)', borderRadius: 22, flexShrink: 0 }}>
+              <Avatar src={lawyer.avatar_url} name={lawyer.full_name} size={84} rounded={22} />
             </div>
 
             <div style={{ flex: 1, minWidth: 0 }}>
