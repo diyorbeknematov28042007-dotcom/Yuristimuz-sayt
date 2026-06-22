@@ -10,6 +10,8 @@ import {
 } from 'lucide-react'
 import AvatarUpload from '@/components/profile/AvatarUpload'
 import LocationPicker from '@/components/map/LocationPicker'
+import PrivacyToggle from '@/components/profile/PrivacyToggle'
+import VerificationManager from '@/components/profile/VerificationManager'
 import { useNotifications } from '@/contexts/NotificationContext'
 import { subscribeToPush, unsubscribeFromPush, getSubscriptionStatus } from '@/lib/push-subscription'
 
@@ -63,6 +65,26 @@ export default function SettingsPage() {
     office_address: '',
   })
   const [lawyerSaved, setLawyerSaved] = useState(false)
+
+  // ── Profil maydonlari ko'rinishi (public/private) ──
+  const [visibility, setVisibility] = useState<Record<string, boolean>>({
+    phone: false, experience_years: true, hourly_rate: true,
+    specialization: true, languages: true, education: true,
+    license: true, description: true, workplace: true,
+    location: false, social: true,
+  })
+  // Bitta maydonni o'zgartirib, darrov saqlash
+  const toggleVisibility = async (key: string, next: boolean) => {
+    const updated = { ...visibility, [key]: next }
+    setVisibility(updated)
+    try {
+      await fetch('/api/user/visibility', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ visibility: updated }),
+      })
+    } catch {}
+  }
   const [lawyerSaving, setLawyerSaving] = useState(false)
   useEffect(() => {
     fetchUser()
@@ -121,6 +143,12 @@ export default function SettingsPage() {
               office_address: lp[0].office_address || '',
             })
           }
+          // Visibility sozlamalarini yuklash
+          try {
+            const visRes = await fetch('/api/user/visibility')
+            const visData = await visRes.json()
+            if (visData.visibility) setVisibility(visData.visibility)
+          } catch {}
         }
       }
     } catch (err) {
@@ -429,12 +457,15 @@ export default function SettingsPage() {
 
             {/* Ixtisoslik */}
             <div>
-              <label style={labelStyle}>
-                <Award size={13} /> Ixtisoslik
-                <span style={{ marginLeft: 4, fontSize: 11, color: '#94a3b8', fontWeight: 500 }}>
-                  ({lawyerForm.specialization.length} tanlandi)
-                </span>
-              </label>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 }}>
+                <label style={{ ...labelStyle, marginBottom: 0 }}>
+                  <Award size={13} /> Ixtisoslik
+                  <span style={{ marginLeft: 4, fontSize: 11, color: '#94a3b8', fontWeight: 500 }}>
+                    ({lawyerForm.specialization.length} tanlandi)
+                  </span>
+                </label>
+                <PrivacyToggle isPublic={visibility.specialization} onChange={v => toggleVisibility('specialization', v)} size="sm" />
+              </div>
               <div style={{ display: 'flex', gap: 7, flexWrap: 'wrap' }}>
                 {CATEGORIES.map(cat => {
                   const active = lawyerForm.specialization.includes(cat)
@@ -461,9 +492,12 @@ export default function SettingsPage() {
             {/* Tajriba + Narx (yonma-yon) */}
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
               <div>
-                <label style={labelStyle}>
-                  <Clock size={13} /> Tajriba
-                </label>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 }}>
+                  <label style={{ ...labelStyle, marginBottom: 0 }}>
+                    <Clock size={13} /> Tajriba
+                  </label>
+                  <PrivacyToggle isPublic={visibility.experience_years} onChange={v => toggleVisibility('experience_years', v)} size="sm" />
+                </div>
                 <div style={{ position: 'relative' }}>
                   <input
                     type="number"
@@ -480,9 +514,12 @@ export default function SettingsPage() {
                 </div>
               </div>
               <div>
-                <label style={labelStyle}>
-                  <DollarSign size={13} /> Soatlik narx
-                </label>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 }}>
+                  <label style={{ ...labelStyle, marginBottom: 0 }}>
+                    <DollarSign size={13} /> Soatlik narx
+                  </label>
+                  <PrivacyToggle isPublic={visibility.hourly_rate} onChange={v => toggleVisibility('hourly_rate', v)} size="sm" />
+                </div>
                 <div style={{ position: 'relative' }}>
                   <input
                     type="number"
@@ -501,9 +538,12 @@ export default function SettingsPage() {
 
             {/* Tillar */}
             <div>
-              <label style={labelStyle}>
-                <Languages size={13} /> Bilish tillari
-              </label>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 }}>
+                <label style={{ ...labelStyle, marginBottom: 0 }}>
+                  <Languages size={13} /> Bilish tillari
+                </label>
+                <PrivacyToggle isPublic={visibility.languages} onChange={v => toggleVisibility('languages', v)} size="sm" />
+              </div>
               <div style={{ display: 'flex', gap: 7, flexWrap: 'wrap' }}>
                 {LANGUAGES.map(lang => {
                   const active = lawyerForm.languages.includes(lang)
@@ -552,12 +592,15 @@ export default function SettingsPage() {
 
             {/* Professional tavsif */}
             <div>
-              <label style={labelStyle}>
-                <FileText size={13} /> Professional tavsif
-                <span style={{ marginLeft: 4, fontSize: 11, color: '#94a3b8', fontWeight: 500 }}>
-                  ({lawyerForm.description.length}/500)
-                </span>
-              </label>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 }}>
+                <label style={{ ...labelStyle, marginBottom: 0 }}>
+                  <FileText size={13} /> Professional tavsif
+                  <span style={{ marginLeft: 4, fontSize: 11, color: '#94a3b8', fontWeight: 500 }}>
+                    ({lawyerForm.description.length}/500)
+                  </span>
+                </label>
+                <PrivacyToggle isPublic={visibility.description} onChange={v => toggleVisibility('description', v)} size="sm" />
+              </div>
               <textarea
                 value={lawyerForm.description}
                 onChange={e => setLawyerForm(f => ({ ...f, description: e.target.value.slice(0, 500) }))}
@@ -582,7 +625,10 @@ export default function SettingsPage() {
                     <p style={summarySubStyle}>Qayerda ishlaysiz</p>
                   </span>
                 </span>
-                <span style={summaryChevron}>▼</span>
+                <span style={{ display: 'flex', alignItems: 'center', gap: 10 }} onClick={e => e.preventDefault()}>
+                  <PrivacyToggle isPublic={visibility.workplace} onChange={v => toggleVisibility('workplace', v)} size="sm" />
+                  <span style={summaryChevron}>▼</span>
+                </span>
               </summary>
               <div style={detailsBodyStyle}>
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
@@ -616,7 +662,10 @@ export default function SettingsPage() {
                     <p style={summarySubStyle}>Diplom, universitet, qo'shimcha kurslar</p>
                   </span>
                 </span>
-                <span style={summaryChevron}>▼</span>
+                <span style={{ display: 'flex', alignItems: 'center', gap: 10 }} onClick={e => e.preventDefault()}>
+                  <PrivacyToggle isPublic={visibility.education} onChange={v => toggleVisibility('education', v)} size="sm" />
+                  <span style={summaryChevron}>▼</span>
+                </span>
               </summary>
               <div style={detailsBodyStyle}>
                 <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: 10, marginBottom: 12 }}>
@@ -696,7 +745,10 @@ export default function SettingsPage() {
                     <p style={summarySubStyle}>Ixtiyoriy — litsenziyasi bor advokatlar uchun</p>
                   </span>
                 </span>
-                <span style={summaryChevron}>▼</span>
+                <span style={{ display: 'flex', alignItems: 'center', gap: 10 }} onClick={e => e.preventDefault()}>
+                  <PrivacyToggle isPublic={visibility.license} onChange={v => toggleVisibility('license', v)} size="sm" />
+                  <span style={summaryChevron}>▼</span>
+                </span>
               </summary>
               <div style={detailsBodyStyle}>
                 <div style={{
@@ -745,18 +797,24 @@ export default function SettingsPage() {
                     <p style={summarySubStyle}>Telegram, LinkedIn, veb-sayt</p>
                   </span>
                 </span>
-                <span style={summaryChevron}>▼</span>
+                <span style={{ display: 'flex', alignItems: 'center', gap: 10 }} onClick={e => e.preventDefault()}>
+                  <PrivacyToggle isPublic={visibility.social} onChange={v => toggleVisibility('social', v)} size="sm" />
+                  <span style={summaryChevron}>▼</span>
+                </span>
               </summary>
               <div style={detailsBodyStyle}>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
                   <div>
-                    <label style={miniLabelStyle}>📱 Umumiy telefon (public)</label>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 5 }}>
+                      <label style={{ ...miniLabelStyle, marginBottom: 0 }}>Umumiy telefon</label>
+                      <PrivacyToggle isPublic={visibility.phone} onChange={v => toggleVisibility('phone', v)} size="sm" />
+                    </div>
                     <input type="tel" value={lawyerForm.public_phone}
                       onChange={e => setLawyerForm(f => ({ ...f, public_phone: e.target.value }))}
                       placeholder="+998 90 123 45 67"
                       style={inputStyle} />
                     <p style={{ fontSize: 10.5, color: '#94a3b8', marginTop: 3 }}>
-                      Bu raqam profilda ko'rinadi — mijozlar to'g'ridan qo'ng'iroq qila oladi
+                      "Ochiq" bo'lsa, mijozlar bu raqamni ko'radi va to'g'ridan qo'ng'iroq qila oladi
                     </p>
                   </div>
 
@@ -818,17 +876,20 @@ export default function SettingsPage() {
           background: '#fff', borderRadius: 18, padding: 28, marginTop: 20,
           border: '1px solid #e2e8f0', boxShadow: '0 1px 3px rgba(0,0,0,0.04)',
         }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 6 }}>
-            <div style={{
-              width: 38, height: 38, borderRadius: 11, background: '#fef2f2',
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-            }}>
-              <MapPin size={19} color="#dc2626" />
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+              <div style={{
+                width: 38, height: 38, borderRadius: 11, background: '#fef2f2',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+              }}>
+                <MapPin size={19} color="#dc2626" />
+              </div>
+              <p style={{ fontWeight: 700, color: '#0f172a', fontSize: 15 }}>Ofis joylashuvi</p>
             </div>
-            <p style={{ fontWeight: 700, color: '#0f172a', fontSize: 15 }}>Ofis joylashuvi</p>
+            <PrivacyToggle isPublic={visibility.location} onChange={v => toggleVisibility('location', v)} size="sm" />
           </div>
           <p style={{ fontSize: 13, color: '#64748b', marginBottom: 18, marginLeft: 48 }}>
-            Mijozlar sizni xaritadan topishi uchun ofisingiz joyini belgilang. Faqat tasdiqlangan yuristlar xaritada ko'rinadi.
+            Mijozlar sizni xaritadan topishi uchun ofisingiz joyini belgilang. "Ochiq" bo'lsa xaritada va profilda ko'rinadi.
           </p>
           <LocationPicker
             userId={user.id}
@@ -836,6 +897,18 @@ export default function SettingsPage() {
             initialLng={lawyerForm.longitude ? parseFloat(lawyerForm.longitude) : null}
             initialAddress={lawyerForm.office_address || null}
           />
+        </div>
+      )}
+
+      {/* ════════════════════════════════════════ */}
+      {/* HUJJATLAR VA VERIFIKATSIYA (yurist)      */}
+      {/* ════════════════════════════════════════ */}
+      {user?.role === 'lawyer' && (
+        <div style={{
+          background: '#fff', border: '1px solid #e2e8f0', borderRadius: 18,
+          padding: 24, marginBottom: 20,
+        }}>
+          <VerificationManager defaultName={form.full_name} />
         </div>
       )}
 
