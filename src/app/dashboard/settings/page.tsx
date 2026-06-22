@@ -63,6 +63,9 @@ export default function SettingsPage() {
     latitude: '',
     longitude: '',
     office_address: '',
+    office_name: '',
+    office_hours: '',
+    office_photos: [] as string[],
   })
   const [lawyerSaved, setLawyerSaved] = useState(false)
 
@@ -141,6 +144,9 @@ export default function SettingsPage() {
               latitude: lp[0].latitude?.toString() || '',
               longitude: lp[0].longitude?.toString() || '',
               office_address: lp[0].office_address || '',
+              office_name: lp[0].office_name || '',
+              office_hours: lp[0].office_hours || '',
+              office_photos: lp[0].office_photos || [],
             })
           }
           // Visibility sozlamalarini yuklash
@@ -896,6 +902,9 @@ export default function SettingsPage() {
             initialLat={lawyerForm.latitude ? parseFloat(lawyerForm.latitude) : null}
             initialLng={lawyerForm.longitude ? parseFloat(lawyerForm.longitude) : null}
             initialAddress={lawyerForm.office_address || null}
+            initialName={lawyerForm.office_name || null}
+            initialHours={lawyerForm.office_hours || null}
+            initialPhotos={lawyerForm.office_photos || null}
           />
         </div>
       )}
