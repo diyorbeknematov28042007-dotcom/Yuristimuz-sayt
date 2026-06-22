@@ -10,6 +10,7 @@ import {
   Loader2, AlertCircle, DollarSign, MessageSquare
 } from 'lucide-react'
 import ReviewsList from '@/components/reviews/ReviewsList'
+import Avatar from '@/components/Avatar'
 import LeaveReviewButton from '@/components/reviews/LeaveReviewButton'
 
 export default function LawyerDetailPage() {
@@ -121,15 +122,8 @@ export default function LawyerDetailPage() {
 
         <div style={{ display: 'flex', alignItems: 'flex-start', gap: 18, marginBottom: 18, position: 'relative' }}>
           {/* Avatar */}
-          <div style={{
-            width: 80, height: 80,
-            background: 'linear-gradient(135deg, #0f172a, #4338ca)',
-            color: '#fff', borderRadius: 20,
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            fontWeight: 800, fontSize: 26, flexShrink: 0,
-            boxShadow: '0 8px 24px rgba(15,23,42,0.18)',
-          }}>
-            {ini(lawyer.full_name)}
+          <div style={{ boxShadow: '0 8px 24px rgba(15,23,42,0.18)', borderRadius: 20, flexShrink: 0 }}>
+            <Avatar src={lawyer.avatar_url} name={lawyer.full_name} size={80} rounded={20} />
           </div>
 
           <div style={{ flex: 1, minWidth: 0 }}>
