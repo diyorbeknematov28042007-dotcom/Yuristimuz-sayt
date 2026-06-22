@@ -5,6 +5,7 @@ import { supabase } from '@/lib/supabase'
 import Link from 'next/link'
 import { Plus, Scale, User, MapPin, Star, BadgeCheck, MessageCircle, Briefcase, Calendar } from 'lucide-react'
 import ReportButton from '@/components/ReportButton'
+import Avatar from '@/components/Avatar'
 import AdFormModal from '@/components/AdFormModal'
 import AdTermsModal from '@/components/AdTermsModal'
 import { AD_CATEGORIES, formatPrice, formatAdDate } from '@/lib/ads-constants'
@@ -108,9 +109,7 @@ export default function AdsPage() {
 
               {/* Poster info */}
               <div style={{ display:'flex', alignItems:'center', gap:10, marginBottom:12, paddingBottom:12, borderBottom:'0.5px solid #f8fafc' }}>
-                <div style={{ width:36, height:36, background: ad.poster_role==='lawyer' ? 'linear-gradient(135deg,#0f172a,#4338ca)' : '#f1f5f9', color: ad.poster_role==='lawyer' ? '#fff' : '#64748b', borderRadius:10, display:'flex', alignItems:'center', justifyContent:'center', fontWeight:700, fontSize:12, flexShrink:0 }}>
-                  {ini(ad.poster_name)}
-                </div>
+                <Avatar src={ad.poster_avatar_url} name={ad.poster_name} size={36} rounded={10} />
                 <div style={{ flex:1 }}>
                   <div style={{ display:'flex', alignItems:'center', gap:5 }}>
                     <span style={{ fontSize:13.5, fontWeight:700, color:'#0f172a' }}>{ad.poster_name}</span>
