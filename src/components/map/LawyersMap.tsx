@@ -7,7 +7,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { useLeaflet } from '@/lib/useLeaflet'
 import { supabase } from '@/lib/supabase'
-import { Loader2, MapPin, Star, ShieldCheck, X, Crosshair } from 'lucide-react'
+import { Loader2, MapPin, Star, ShieldCheck, X, Crosshair, Clock, Navigation, List } from 'lucide-react'
 import Link from 'next/link'
 
 interface MapLawyer {
@@ -18,6 +18,9 @@ interface MapLawyer {
   latitude: number
   longitude: number
   office_address: string | null
+  office_name: string | null
+  office_hours: string | null
+  office_photos: string[] | null
   specialization: string[] | null
   rating: number
   total_reviews: number
@@ -36,6 +39,7 @@ export default function LawyersMap() {
   const [lawyers, setLawyers] = useState<MapLawyer[]>([])
   const [loading, setLoading] = useState(true)
   const [selected, setSelected] = useState<MapLawyer | null>(null)
+  const [view, setView] = useState<'map' | 'list'>('map')  // xarita yoki ro'yxat
 
   // Yuristlarni yuklash
   useEffect(() => {
@@ -127,6 +131,102 @@ export default function LawyersMap() {
 
   return (
     <div style={{ position: 'relative' }}>
+      {/* Xarita / Ro'yxat almashtirish */}
+      <div style={{ display: 'flex', gap: 6, marginBottom: 12, background: '#f1f5f9', padding: 4, borderRadius: 11, width: 'fit-content' }}>
+        <button onClick={() => setView('map')} style={{
+          display: 'flex', alignItems: 'center', gap: 6, padding: '8px 16px',
+          background: view === 'map' ? '#fff' : 'transparent',
+          color: view === 'map' ? '#0f172a' : '#64748b',
+          border: 'none', borderRadius: 8, fontSize: 13, fontWeight: 600, cursor: 'pointer',
+          fontFamily: 'inherit', boxShadow: view === 'map' ? '0 1px 3px rgba(0,0,0,0.1)' : 'none',
+        }}>
+          <MapPin size={14} /> Xarita
+        </button>
+        <button onClick={() => setView('list')} style={{
+          display: 'flex', alignItems: 'center', gap: 6, padding: '8px 16px',
+          background: view === 'list' ? '#fff' : 'transparent',
+          color: view === 'list' ? '#0f172a' : '#64748b',
+          border: 'none', borderRadius: 8, fontSize: 13, fontWeight: 600, cursor: 'pointer',
+          fontFamily: 'inherit', boxShadow: view === 'list' ? '0 1px 3px rgba(0,0,0,0.1)' : 'none',
+        }}>
+          <List size={14} /> Ro'yxat {!loading && `(${lawyers.length})`}
+        </button>
+      </div>
+
+      {/* ── RO'YXAT KO'RINISHI ── */}
+      {view === 'list' && (
+        <div>
+          {loading ? (
+            <div style={{ padding: '50px 0', textAlign: 'center' }}>
+              <Loader2 size={24} color="#94a3b8" style={{ animation: 'spin 1s linear infinite' }} />
+            </div>
+          ) : lawyers.length === 0 ? (
+            <div style={{ padding: 30, textAlign: 'center', background: '#f8fafc', borderRadius: 12, fontSize: 13, color: '#64748b' }}>
+              Hozircha xaritada yuristlar yo'q.
+            </div>
+          ) : (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+              {lawyers.map((lawyer) => (
+                <div key={lawyer.id} style={{
+                  background: '#fff', border: '1px solid #e2e8f0', borderRadius: 14, padding: 14,
+                  display: 'flex', gap: 12,
+                }}>
+                  {lawyer.avatar_url ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img src={lawyer.avatar_url} alt={lawyer.full_name} style={{ width: 50, height: 50, borderRadius: 12, objectFit: 'cover', flexShrink: 0 }} />
+                  ) : (
+                    <div style={{
+                      width: 50, height: 50, borderRadius: 12, background: 'linear-gradient(135deg, #4338ca, #6366f1)',
+                      display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontSize: 19, fontWeight: 700, flexShrink: 0,
+                    }}>
+                      {(lawyer.full_name || '?').charAt(0).toUpperCase()}
+                    </div>
+                  )}
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 5, marginBottom: 2 }}>
+                      <span style={{ fontSize: 14.5, fontWeight: 700, color: '#0f172a' }}>{lawyer.full_name}</span>
+                      {lawyer.is_verified && <ShieldCheck size={13} color="#16a34a" />}
+                    </div>
+                    {lawyer.rating > 0 && (
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 11.5, color: '#64748b', marginBottom: 3 }}>
+                        <Star size={11} fill="#fbbf24" color="#fbbf24" />
+                        <span style={{ fontWeight: 600, color: '#0f172a' }}>{Number(lawyer.rating).toFixed(1)}</span>
+                        <span>({lawyer.total_reviews})</span>
+                      </div>
+                    )}
+                    {lawyer.office_address && (
+                      <div style={{ fontSize: 11.5, color: '#64748b', display: 'flex', alignItems: 'flex-start', gap: 4, marginBottom: 8 }}>
+                        <MapPin size={11} style={{ flexShrink: 0, marginTop: 2 }} /> {lawyer.office_address}
+                      </div>
+                    )}
+                    <div style={{ display: 'flex', gap: 8 }}>
+                      <a
+                        href={`https://www.google.com/maps/dir/?api=1&destination=${lawyer.latitude},${lawyer.longitude}`}
+                        target="_blank" rel="noopener noreferrer"
+                        style={{
+                          display: 'flex', alignItems: 'center', gap: 5, padding: '7px 12px',
+                          background: '#fff', color: '#0f172a', borderRadius: 8, fontSize: 12, fontWeight: 600,
+                          textDecoration: 'none', border: '1px solid #e2e8f0',
+                        }}>
+                        <Navigation size={12} /> Yo'l olish
+                      </a>
+                      <Link href={`/yurist/${lawyer.username}`} style={{
+                        display: 'flex', alignItems: 'center', gap: 5, padding: '7px 12px',
+                        background: '#0f172a', color: '#fff', borderRadius: 8, fontSize: 12, fontWeight: 600, textDecoration: 'none',
+                      }}>
+                        Profil
+                      </Link>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* ── XARITA KO'RINISHI (DOM da qoladi, faqat yashirinadi) ── */}
+      <div style={{ display: view === 'map' ? 'block' : 'none', position: 'relative' }}>
       {/* Yuristlar soni */}
       <div style={{
         position: 'absolute', top: 14, left: 14, zIndex: 1000,
@@ -206,9 +306,19 @@ export default function LawyersMap() {
                   <span>({selected.total_reviews})</span>
                 </div>
               )}
+              {selected.office_name && (
+                <div style={{ fontSize: 12, color: '#0f172a', fontWeight: 600, marginBottom: 2 }}>
+                  {selected.office_name}
+                </div>
+              )}
               {selected.office_address && (
                 <div style={{ fontSize: 11.5, color: '#64748b', display: 'flex', alignItems: 'flex-start', gap: 4 }}>
                   <MapPin size={11} style={{ flexShrink: 0, marginTop: 2 }} /> {selected.office_address}
+                </div>
+              )}
+              {selected.office_hours && (
+                <div style={{ fontSize: 11.5, color: '#64748b', display: 'flex', alignItems: 'center', gap: 4, marginTop: 2 }}>
+                  <Clock size={11} style={{ flexShrink: 0 }} /> {selected.office_hours}
                 </div>
               )}
             </div>
@@ -225,15 +335,42 @@ export default function LawyersMap() {
             </div>
           )}
 
-          <Link href={`/yurist/${selected.username}`} style={{
-            display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
-            padding: '11px', background: '#0f172a', color: '#fff', borderRadius: 10,
-            fontSize: 13, fontWeight: 600, textDecoration: 'none',
-          }}>
-            Profilni ko'rish
-          </Link>
+          {/* Ofis rasmlari */}
+          {selected.office_photos && selected.office_photos.length > 0 && (
+            <div style={{ display: 'flex', gap: 6, marginBottom: 12, overflowX: 'auto' }}>
+              {selected.office_photos.map((url, i) => (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img key={i} src={url} alt={`Ofis ${i + 1}`}
+                  style={{ width: 72, height: 72, borderRadius: 9, objectFit: 'cover', flexShrink: 0, border: '1px solid #e2e8f0' }} />
+              ))}
+            </div>
+          )}
+
+          {/* Tugmalar: Yo'l olish + Profil */}
+          <div style={{ display: 'flex', gap: 8 }}>
+            <a
+              href={`https://www.google.com/maps/dir/?api=1&destination=${selected.latitude},${selected.longitude}`}
+              target="_blank" rel="noopener noreferrer"
+              style={{
+                display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
+                padding: '11px 14px', background: '#fff', color: '#0f172a', borderRadius: 10,
+                fontSize: 13, fontWeight: 600, textDecoration: 'none', border: '1px solid #e2e8f0',
+                flexShrink: 0,
+              }}>
+              <Navigation size={14} /> Yo'l olish
+            </a>
+            <Link href={`/yurist/${selected.username}`} style={{
+              flex: 1,
+              display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
+              padding: '11px', background: '#0f172a', color: '#fff', borderRadius: 10,
+              fontSize: 13, fontWeight: 600, textDecoration: 'none',
+            }}>
+              Profilni ko'rish
+            </Link>
+          </div>
         </div>
       )}
+      </div>
 
       <style>{`
         @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
