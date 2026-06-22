@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { supabase } from '@/lib/supabase'
 import { Search, MapPin, Star, BadgeCheck, ChevronRight, Clock, Users, Sparkles, Rocket, Megaphone, ArrowRight, Briefcase } from 'lucide-react'
 import DashboardMapPreview from '@/components/map/DashboardMapPreview'
+import Avatar from '@/components/Avatar'
 
 // Yangiliklar — swipe qiluvchi e'lonlar
 const NEWS_ITEMS = [
@@ -135,9 +136,7 @@ export default function DashboardPage() {
                 style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '11px 16px', textDecoration: 'none', borderBottom: i < searchResults.length - 1 ? '0.5px solid #f8fafc' : 'none', transition: 'background 150ms' }}
                 onMouseEnter={e => (e.currentTarget as HTMLElement).style.background = '#f8fafc'}
                 onMouseLeave={e => (e.currentTarget as HTMLElement).style.background = 'transparent'}>
-                <div style={{ width: 36, height: 36, background: 'linear-gradient(135deg,#0f172a,#4338ca)', color: '#fff', borderRadius: 10, display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: 12, flexShrink: 0 }}>
-                  {initials(l.full_name)}
-                </div>
+                <Avatar src={l.avatar_url} name={l.full_name} size={36} />
                 <div style={{ flex: 1 }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
                     <span style={{ fontSize: 13.5, fontWeight: 600, color: '#0f172a' }}>{l.full_name}</span>
@@ -274,9 +273,7 @@ export default function DashboardPage() {
                 style={{ display: 'flex', alignItems: 'center', gap: 14, padding: '14px 16px', background: '#fff', border: '0.5px solid #e2e8f0', borderRadius: 14, textDecoration: 'none', transition: 'all 200ms' }}
                 onMouseEnter={e => { const el = e.currentTarget as HTMLElement; el.style.borderColor = '#0f172a'; el.style.transform = 'translateX(2px)' }}
                 onMouseLeave={e => { const el = e.currentTarget as HTMLElement; el.style.borderColor = '#e2e8f0'; el.style.transform = 'translateX(0)' }}>
-                <div style={{ width: 44, height: 44, background: 'linear-gradient(135deg,#0f172a,#4338ca)', color: '#fff', borderRadius: 12, display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, fontSize: 14, flexShrink: 0 }}>
-                  {initials(l.full_name)}
-                </div>
+                <Avatar src={l.avatar_url} name={l.full_name} size={44} />
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 5, marginBottom: 3 }}>
                     <span style={{ fontSize: 14, fontWeight: 700, color: '#0f172a' }}>{l.full_name}</span>
