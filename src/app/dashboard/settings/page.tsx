@@ -6,7 +6,7 @@ import {
   User, Mail, Phone, MapPin, FileText,
   CheckCircle2, X, Sparkles, Save, AlertCircle,
   Briefcase, Award, Clock, Languages, DollarSign,
-  Bell, Volume2, VolumeX, MessageCircle, Smartphone, Loader2
+  Bell, Volume2, VolumeX, MessageCircle, Smartphone, Loader2, Plus
 } from 'lucide-react'
 import AvatarUpload from '@/components/profile/AvatarUpload'
 import LocationPicker from '@/components/map/LocationPicker'
@@ -219,13 +219,19 @@ export default function SettingsPage() {
     }))
   }
 
-  const toggleLang = (lang: string) => {
-    setLawyerForm(f => ({
-      ...f,
-      languages: f.languages.includes(lang)
-        ? f.languages.filter(l => l !== lang)
-        : [...f.languages, lang]
-    }))
+  // Til erkin kiritish (istalgan tilni yozish mumkin)
+  const [langInput, setLangInput] = useState('')
+  const addLanguage = (raw: string) => {
+    const lang = raw.trim()
+    if (!lang) return
+    setLawyerForm(f => {
+      if (f.languages.some(l => l.toLowerCase() === lang.toLowerCase())) return f
+      return { ...f, languages: [...f.languages, lang] }
+    })
+    setLangInput('')
+  }
+  const removeLanguage = (lang: string) => {
+    setLawyerForm(f => ({ ...f, languages: f.languages.filter(l => l !== lang) }))
   }
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -550,23 +556,69 @@ export default function SettingsPage() {
                 </label>
                 <PrivacyToggle isPublic={visibility.languages} onChange={v => toggleVisibility('languages', v)} size="sm" />
               </div>
-              <div style={{ display: 'flex', gap: 7, flexWrap: 'wrap' }}>
-                {LANGUAGES.map(lang => {
-                  const active = lawyerForm.languages.includes(lang)
-                  return (
-                    <button type="button" key={lang} onClick={() => toggleLang(lang)}
+
+              {/* Tanlangan tillar (chiplar) */}
+              {lawyerForm.languages.length > 0 && (
+                <div style={{ display: 'flex', gap: 7, flexWrap: 'wrap', marginBottom: 8 }}>
+                  {lawyerForm.languages.map(lang => (
+                    <span key={lang} style={{
+                      display: 'inline-flex', alignItems: 'center', gap: 6,
+                      padding: '7px 10px 7px 14px', borderRadius: 100,
+                      background: '#f1f5f9', border: '1px solid #e2e8f0',
+                      color: '#0f172a', fontSize: 12.5, fontWeight: 600,
+                    }}>
+                      {lang}
+                      <button type="button" onClick={() => removeLanguage(lang)}
+                        style={{ display: 'flex', background: 'none', border: 'none', cursor: 'pointer', padding: 2, borderRadius: 4 }}>
+                        <X size={13} color="#94a3b8" />
+                      </button>
+                    </span>
+                  ))}
+                </div>
+              )}
+
+              {/* Erkin kiritish maydoni */}
+              <div style={{ display: 'flex', gap: 8 }}>
+                <input
+                  value={langInput}
+                  onChange={e => setLangInput(e.target.value)}
+                  onKeyDown={e => {
+                    if (e.key === 'Enter') { e.preventDefault(); addLanguage(langInput) }
+                  }}
+                  placeholder="Tilni yozing (masalan: Arabcha) va qo'shing"
+                  maxLength={40}
+                  style={{
+                    flex: 1, padding: '10px 14px', fontSize: 13,
+                    border: '1px solid #e2e8f0', borderRadius: 10, outline: 'none',
+                    fontFamily: 'inherit', boxSizing: 'border-box',
+                  }}
+                />
+                <button type="button" onClick={() => addLanguage(langInput)}
+                  disabled={!langInput.trim()}
+                  style={{
+                    display: 'flex', alignItems: 'center', gap: 5, padding: '0 16px',
+                    background: langInput.trim() ? '#0f172a' : '#cbd5e1', color: '#fff',
+                    border: 'none', borderRadius: 10, fontSize: 13, fontWeight: 600,
+                    cursor: langInput.trim() ? 'pointer' : 'not-allowed', fontFamily: 'inherit',
+                  }}>
+                  <Plus size={15} /> Qo'shish
+                </button>
+              </div>
+
+              {/* Mashhur tillar — tez qo'shish (ixtiyoriy taklif) */}
+              <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginTop: 8 }}>
+                {["O'zbekcha", "Ruscha", "Inglizcha", "Qoraqalpoqcha", "Tojikcha", "Qozoqcha", "Turkcha", "Arabcha"]
+                  .filter(l => !lawyerForm.languages.some(x => x.toLowerCase() === l.toLowerCase()))
+                  .map(lang => (
+                    <button type="button" key={lang} onClick={() => addLanguage(lang)}
                       style={{
-                        padding: '7px 14px', borderRadius: 100,
-                        border: active ? '1.5px solid #0f172a' : '1px solid #e2e8f0',
-                        background: active ? '#f1f5f9' : '#fff',
-                        color: active ? '#0f172a' : '#475569',
-                        fontSize: 12.5, fontWeight: 600, cursor: 'pointer',
-                        transition: 'all 150ms', fontFamily: 'inherit',
+                        padding: '5px 11px', borderRadius: 100, border: '1px dashed #cbd5e1',
+                        background: '#fff', color: '#64748b', fontSize: 11.5, fontWeight: 600,
+                        cursor: 'pointer', fontFamily: 'inherit',
                       }}>
-                      {active ? '✓ ' : ''}{lang}
+                      + {lang}
                     </button>
-                  )
-                })}
+                  ))}
               </div>
             </div>
 
