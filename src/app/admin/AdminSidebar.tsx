@@ -10,7 +10,7 @@ import Link from 'next/link'
 import {
   Shield, LayoutDashboard, FileText, Users, MessageSquare,
   AlertTriangle, BarChart3, Settings, LogOut, Menu, X,
-  ScrollText, UserCheck, Loader2, PieChart
+  ScrollText, UserCheck, Loader2, PieChart, ShieldCheck
 } from 'lucide-react'
 
 interface AdminInfo {
@@ -21,6 +21,7 @@ interface AdminInfo {
 const NAV_ITEMS = [
   { href: '/admin', label: 'Dashboard', icon: LayoutDashboard },
   { href: '/admin/lawyers', label: 'Yuristlar', icon: UserCheck, badge: 'review' },
+  { href: '/admin/verification', label: 'Verifikatsiya', icon: ShieldCheck, badge: 'review' },
   { href: '/admin/ads', label: 'E\'lonlar', icon: FileText, badge: 'review' },
   { href: '/admin/users', label: 'Foydalanuvchilar', icon: Users },
   { href: '/admin/reports', label: 'Shikoyatlar', icon: AlertTriangle, badge: 'review' },
