@@ -12,6 +12,7 @@ import {
   FileText, MessageSquare, Star, Eye, Shield, ShieldCheck, ShieldAlert,
   Briefcase, User as UserIcon, ExternalLink, Loader2, Edit3
 } from 'lucide-react'
+import VerificationManager from '@/components/profile/VerificationManager'
 
 interface Profile {
   id: string
@@ -164,47 +165,13 @@ export default function ProfilePage() {
         )}
       </div>
 
-      {/* ── Yurist uchun: verifikatsiya holati ── */}
+      {/* ── Yurist uchun: hujjatlar va verifikatsiya ── */}
       {isLawyer && (
         <div style={{
           background: '#fff', border: '1px solid #e2e8f0', borderRadius: 16,
           padding: 18, marginBottom: 16,
         }}>
-          {profile.lawyer_verified ? (
-            <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-              <div style={{ width: 42, height: 42, borderRadius: 12, background: '#f0fdf4', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                <ShieldCheck size={20} color="#16a34a" />
-              </div>
-              <div style={{ flex: 1 }}>
-                <p style={{ fontSize: 14, fontWeight: 700, color: '#0f172a', marginBottom: 2 }}>Tasdiqlangan yurist</p>
-                <p style={{ fontSize: 12, color: '#64748b' }}>Profilingiz tekshirildi va tasdiqlandi</p>
-              </div>
-              <Link href={`/yurist/${profile.username}`} style={{
-                display: 'flex', alignItems: 'center', gap: 5, padding: '8px 13px',
-                background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: 9,
-                fontSize: 12, fontWeight: 600, color: '#0f172a', textDecoration: 'none', flexShrink: 0,
-              }}>
-                <ExternalLink size={13} /> Profilim
-              </Link>
-            </div>
-          ) : (
-            <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-              <div style={{ width: 42, height: 42, borderRadius: 12, background: '#fffbeb', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                <ShieldAlert size={20} color="#d97706" />
-              </div>
-              <div style={{ flex: 1 }}>
-                <p style={{ fontSize: 14, fontWeight: 700, color: '#0f172a', marginBottom: 2 }}>Tasdiqlanmagan</p>
-                <p style={{ fontSize: 12, color: '#64748b' }}>Profilingizni to'ldiring va tekshiruvga yuboring</p>
-              </div>
-              <Link href="/dashboard/settings" style={{
-                display: 'flex', alignItems: 'center', gap: 5, padding: '8px 13px',
-                background: '#0f172a', color: '#fff', borderRadius: 9,
-                fontSize: 12, fontWeight: 600, textDecoration: 'none', flexShrink: 0,
-              }}>
-                To'ldirish
-              </Link>
-            </div>
-          )}
+          <VerificationManager defaultName={profile.full_name || ''} />
         </div>
       )}
 
