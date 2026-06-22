@@ -13,13 +13,16 @@ interface Props {
   initialLat?: number | null
   initialLng?: number | null
   initialAddress?: string | null
+  initialName?: string | null
+  initialHours?: string | null
+  initialPhotos?: string[] | null
   onSaved?: (lat: number, lng: number, address: string) => void
 }
 
 // O'zbekiston markaziy nuqtasi (Toshkent)
 const DEFAULT_CENTER: [number, number] = [41.3111, 69.2797]
 
-export default function LocationPicker({ userId, initialLat, initialLng, initialAddress, onSaved }: Props) {
+export default function LocationPicker({ userId, initialLat, initialLng, initialAddress, initialName, initialHours, initialPhotos, onSaved }: Props) {
   const { L, loaded, error } = useLeaflet()
   const mapRef = useRef<HTMLDivElement>(null)
   const mapInstance = useRef<any>(null)
@@ -29,6 +32,11 @@ export default function LocationPicker({ userId, initialLat, initialLng, initial
     initialLat && initialLng ? [initialLat, initialLng] : null
   )
   const [address, setAddress] = useState(initialAddress || '')
+  const [officeName, setOfficeName] = useState(initialName || '')
+  const [officeHours, setOfficeHours] = useState(initialHours || '')
+  const [photos, setPhotos] = useState<string[]>(initialPhotos || [])
+  const [uploadingPhoto, setUploadingPhoto] = useState(false)
+  const photoInputRef = useRef<HTMLInputElement>(null)
   const [saving, setSaving] = useState(false)
   const [saved, setSaved] = useState(false)
   const [err, setErr] = useState('')
@@ -123,6 +131,41 @@ export default function LocationPicker({ userId, initialLat, initialLng, initial
     )
   }
 
+  // Rasm qo'shish (max 3)
+  const handlePhotoUpload = async (file: File) => {
+    if (photos.length >= 3) { setErr('Maksimal 3 ta rasm'); return }
+    setUploadingPhoto(true)
+    setErr('')
+    try {
+      // Siqish (compressImage bor bo'lsa ishlatamiz)
+      let toUpload: Blob = file
+      try {
+        const mod = await import('@/lib/compressImage')
+        toUpload = await mod.compressImage(file, 1400, 0.8)
+      } catch {}
+
+      const fd = new FormData()
+      fd.append('file', toUpload, file.name)
+      const res = await fetch('/api/lawyer/office-photo', { method: 'POST', body: fd })
+      const d = await res.json()
+      if (d.success && d.url) {
+        setPhotos(prev => [...prev, d.url])
+        setSaved(false)
+      } else {
+        setErr(d.error || 'Rasm yuklanmadi')
+      }
+    } catch {
+      setErr('Rasm yuklashda xatolik')
+    } finally {
+      setUploadingPhoto(false)
+    }
+  }
+
+  const removePhoto = (url: string) => {
+    setPhotos(prev => prev.filter(p => p !== url))
+    setSaved(false)
+  }
+
   // Saqlash
   const handleSave = async () => {
     if (!coords) { setErr('Avval xaritada ofis joyini belgilang'); return }
@@ -136,6 +179,9 @@ export default function LocationPicker({ userId, initialLat, initialLng, initial
           latitude: coords[0],
           longitude: coords[1],
           officeAddress: address.trim() || null,
+          officeName: officeName.trim() || null,
+          officeHours: officeHours.trim() || null,
+          officePhotos: photos,
         }),
       })
       const d = await res.json()
@@ -244,6 +290,85 @@ export default function LocationPicker({ userId, initialLat, initialLng, initial
             fontFamily: 'inherit', boxSizing: 'border-box',
           }}
         />
+      </div>
+
+      {/* Ofis nomi */}
+      <div style={{ marginTop: 12 }}>
+        <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: '#475569', marginBottom: 6 }}>
+          Ofis nomi (ixtiyoriy)
+        </label>
+        <input
+          value={officeName}
+          onChange={(e) => { setOfficeName(e.target.value); setSaved(false) }}
+          placeholder="Masalan: Bosh ofis yoki idora nomi"
+          maxLength={100}
+          style={{
+            width: '100%', padding: '10px 12px', fontSize: 13,
+            border: '1px solid #e2e8f0', borderRadius: 10, outline: 'none',
+            fontFamily: 'inherit', boxSizing: 'border-box',
+          }}
+        />
+      </div>
+
+      {/* Ish vaqti */}
+      <div style={{ marginTop: 12 }}>
+        <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: '#475569', marginBottom: 6 }}>
+          Ish vaqti (ixtiyoriy)
+        </label>
+        <input
+          value={officeHours}
+          onChange={(e) => { setOfficeHours(e.target.value); setSaved(false) }}
+          placeholder="Masalan: Dushanba-Juma, 9:00-18:00"
+          maxLength={100}
+          style={{
+            width: '100%', padding: '10px 12px', fontSize: 13,
+            border: '1px solid #e2e8f0', borderRadius: 10, outline: 'none',
+            fontFamily: 'inherit', boxSizing: 'border-box',
+          }}
+        />
+      </div>
+
+      {/* Ofis rasmlari (max 3) */}
+      <div style={{ marginTop: 12 }}>
+        <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: '#475569', marginBottom: 6 }}>
+          Ofis rasmlari (ixtiyoriy, max 3)
+        </label>
+        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+          {photos.map((url, i) => (
+            <div key={i} style={{ position: 'relative', width: 80, height: 80, borderRadius: 10, overflow: 'hidden', border: '1px solid #e2e8f0' }}>
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src={url} alt={`Ofis ${i + 1}`} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+              <button onClick={() => removePhoto(url)}
+                style={{ position: 'absolute', top: 3, right: 3, background: 'rgba(0,0,0,0.6)', border: 'none', borderRadius: 6, padding: 3, cursor: 'pointer', display: 'flex' }}>
+                <X size={12} color="#fff" />
+              </button>
+            </div>
+          ))}
+          {photos.length < 3 && (
+            <>
+              <input ref={photoInputRef} type="file" accept="image/*" style={{ display: 'none' }}
+                onChange={(e) => e.target.files?.[0] && handlePhotoUpload(e.target.files[0])} />
+              <button onClick={() => photoInputRef.current?.click()} disabled={uploadingPhoto}
+                style={{
+                  width: 80, height: 80, borderRadius: 10, border: '1.5px dashed #cbd5e1',
+                  background: '#f8fafc', cursor: 'pointer', display: 'flex', flexDirection: 'column',
+                  alignItems: 'center', justifyContent: 'center', gap: 4, fontFamily: 'inherit',
+                }}>
+                {uploadingPhoto ? (
+                  <Loader2 size={18} color="#94a3b8" style={{ animation: 'spin 1s linear infinite' }} />
+                ) : (
+                  <>
+                    <MapPin size={16} color="#94a3b8" />
+                    <span style={{ fontSize: 10, color: '#94a3b8', fontWeight: 600 }}>Rasm</span>
+                  </>
+                )}
+              </button>
+            </>
+          )}
+        </div>
+        <p style={{ fontSize: 10.5, color: '#94a3b8', marginTop: 5 }}>
+          Mijozlar ofisingizni xaritada ko'rganda bu rasmlar ko'rinadi
+        </p>
       </div>
 
       {err && (
