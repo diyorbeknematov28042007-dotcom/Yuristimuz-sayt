@@ -534,6 +534,8 @@ function ChatContent() {
       })
       const d = await res.json()
       setAiMsgs(prev => [...prev, { role: 'ai', content: d.reply || 'Javob topilmadi.' }])
+      // AI yuristdan foydalandi — PWA o'rnatishni taklif qilamiz
+      import('@/lib/triggerInstall').then(m => m.maybeOfferInstall()).catch(() => {})
     } catch {
       setAiMsgs(prev => [...prev, { role: 'ai', content: 'Tarmoq xatosi. Qayta urinib ko\'ring.' }])
     }
