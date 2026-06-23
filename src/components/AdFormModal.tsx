@@ -99,6 +99,8 @@ export default function AdFormModal({ userRole, onClose, onSuccess, onNeedsTerms
         return
       }
       onSuccess(d)
+      // E'lon muvaffaqiyatli yaratildi — PWA o'rnatishni taklif qilamiz
+      import('@/lib/triggerInstall').then(m => m.maybeOfferInstall()).catch(() => {})
     } catch {
       setErr('Tarmoq xatosi')
       setCreating(false)
