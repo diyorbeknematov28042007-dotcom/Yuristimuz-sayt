@@ -14,6 +14,7 @@ import PrivacyToggle from '@/components/profile/PrivacyToggle'
 import VerificationManager from '@/components/profile/VerificationManager'
 import { useNotifications } from '@/contexts/NotificationContext'
 import { subscribeToPush, unsubscribeFromPush, getSubscriptionStatus } from '@/lib/push-subscription'
+import InstallAppButton from '@/components/InstallAppButton'
 
 const CATEGORIES = ['Oilaviy', 'Biznes', 'Mulk', 'Mehnat', 'Soliq', 'Jinoyat', 'Shartnoma', 'Migratsiya']
 const LANGUAGES = ["O'zbekcha", "Ruscha", "Inglizcha", "Qoraqalpoqcha", "Tojikcha"]
@@ -201,6 +202,8 @@ export default function SettingsPage() {
       } else {
         setLawyerSaved(true)
         setTimeout(() => setLawyerSaved(false), 3000)
+        // Yurist profilni tahrirladi — PWA o'rnatishni taklif qilamiz
+        import('@/lib/triggerInstall').then(m => m.maybeOfferInstall()).catch(() => {})
       }
     } catch {
       setError("Tarmoq xatosi")
@@ -1155,6 +1158,9 @@ function NotificationSettings({ userId }: { userId?: string }) {
             </div>
           )}
         </div>
+
+        {/* ─── Ilovani o'rnatish (PWA) ─── */}
+        <InstallAppButton />
 
         {/* ─── Ovoz signali ─── */}
         <div style={{ padding: '14px 22px' }}>
