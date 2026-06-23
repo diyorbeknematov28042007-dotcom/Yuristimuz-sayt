@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from 'next'
 import './globals.css'
 import PWAProvider from '@/components/PWAProvider'
+import SplashGate from '@/components/SplashGate'
 
 export const metadata: Metadata = {
   title: 'Yuristim — Huquqiy xizmatlar platformasi',
@@ -54,6 +55,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <link rel="icon" type="image/png" sizes="192x192" href="/icon-192.png" />
       </head>
       <body>
+        <SplashGate />
         {children}
         <PWAProvider />
       </body>
