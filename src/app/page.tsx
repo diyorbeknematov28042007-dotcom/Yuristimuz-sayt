@@ -616,7 +616,7 @@ export default function HomePage() {
             <div style={{ width: 52, height: 52, background: 'linear-gradient(135deg,#4338ca,#6366f1)', borderRadius: 16, display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 22px', boxShadow: '0 8px 24px rgba(67,56,202,.35)' }}>
               <Scale size={24} color="#fff" />
             </div>
-            <h2 style={{ fontSize: isMobile ? 30 : 38, fontWeight: 800, color: '#fff', marginBottom: 12, letterSpacing: '-0.5px' }}>Huquqiy yordamга bugun ega bo'ling</h2>
+            <h2 style={{ fontSize: isMobile ? 30 : 38, fontWeight: 800, color: '#fff', marginBottom: 12, letterSpacing: '-0.5px' }}>Huquqiy yordamga bugun ega bo'ling</h2>
             <p style={{ color: '#94a3b8', marginBottom: 6, fontSize: isMobile ? 14 : 16 }}>Minglab fuqarolar va yuristlar uchun ochiq platforma</p>
             <p style={{ color: '#475569', marginBottom: 28, fontSize: isMobile ? 12 : 13.5 }}>Ro'yxatdan o'tish 1 daqiqa · Kredit karta talab etilmaydi</p>
             <Link href="/auth/signup" style={{ display: 'inline-flex', alignItems: 'center', gap: 8, background: '#fff', color: '#0f172a', fontWeight: 700, fontSize: isMobile ? 14 : 15, padding: isMobile ? '13px 28px' : '15px 34px', borderRadius: 12, textDecoration: 'none' }}>
