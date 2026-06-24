@@ -74,7 +74,7 @@ const faqs = [
       },
       {
         q: "Tasdiqlangan nishonni qanday olaman?",
-        a: "Tasdiqlangan nishon — bu mijozlar oldidagi obro'ingiz kafolati. Uni olish uchun profilingizни to'ldirib, malakangizni tasdiqlovchi hujjatlar bilan ma'muriyatga murojaat qiling. Tekshiruvdan so'ng profilingizда maxsus belgi paydo bo'ladi va siz qidiruvda yuqori o'rinlarda ko'rinasiz."
+        a: "Tasdiqlangan nishon — bu mijozlar oldidagi obro'ingiz kafolati. Uni olish uchun profilingizni to'ldirib, malakangizni tasdiqlovchi hujjatlar bilan ma'muriyatga murojaat qiling. Tekshiruvdan so'ng profilingizda maxsus belgi paydo bo'ladi va siz qidiruvda yuqori o'rinlarda ko'rinasiz."
       },
       {
         q: "Mijozlar bilan qanday ishlayman?",
