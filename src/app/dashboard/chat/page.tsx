@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef, Suspense } from 'react'
 import { useSearchParams } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
-import { Send, ArrowLeft, BadgeCheck, Star, Sparkles, CheckCheck, Loader2, Plus, AlertTriangle, ArrowRight, Search, X, Bell, Archive, ArchiveRestore, MessageCircle } from 'lucide-react'
+import { Bot, Send, ArrowLeft, BadgeCheck, Star, Sparkles, CheckCheck, Loader2, Plus, AlertTriangle, ArrowRight, Search, X, Bell, Archive, ArchiveRestore, MessageCircle } from 'lucide-react'
 import Link from 'next/link'
 import { useNotifications } from '@/contexts/NotificationContext'
 import Avatar from '@/components/Avatar'
@@ -580,8 +580,8 @@ function ChatContent() {
         <button onClick={() => setShowAI(false)} style={{ width: 34, height: 34, background: '#f8fafc', border: '0.5px solid #e2e8f0', borderRadius: 9, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
           <ArrowLeft size={15} color="#475569" />
         </button>
-        <div style={{ width: 42, height: 42, borderRadius: 12, overflow: 'hidden', flexShrink: 0, boxShadow: '0 2px 8px rgba(67,56,202,0.2)' }}>
-          <img src="/icon-512.png" alt="YuristimAI" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+        <div style={{ width: 42, height: 42, background: 'linear-gradient(135deg,#7c3aed,#4338ca)', borderRadius: 12, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+          <Bot size={21} color="#fff" />
         </div>
         <div style={{ flex: 1 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
@@ -608,8 +608,8 @@ function ChatContent() {
         {aiMsgs.map((m, i) => (
           <div key={i} style={{ display: 'flex', gap: 10, justifyContent: m.role === 'user' ? 'flex-end' : 'flex-start', alignItems: 'flex-end' }}>
             {m.role === 'ai' && (
-              <div style={{ width: 30, height: 30, borderRadius: 9, overflow: 'hidden', flexShrink: 0, marginBottom: 2 }}>
-                <img src="/icon-512.png" alt="AI" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+              <div style={{ width: 30, height: 30, background: 'linear-gradient(135deg,#7c3aed,#4338ca)', borderRadius: 9, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, marginBottom: 2 }}>
+                <Bot size={15} color="#fff" />
               </div>
             )}
             <div style={{
@@ -628,8 +628,8 @@ function ChatContent() {
         {/* Loading dots */}
         {aiLoading && (
           <div style={{ display: 'flex', gap: 10, alignItems: 'flex-end' }}>
-            <div style={{ width: 30, height: 30, borderRadius: 9, overflow: 'hidden', flexShrink: 0 }}>
-              <img src="/icon-512.png" alt="AI" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+            <div style={{ width: 30, height: 30, background: 'linear-gradient(135deg,#7c3aed,#4338ca)', borderRadius: 9, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+              <Bot size={15} color="#fff" />
             </div>
             <div style={{ padding: '12px 16px', background: '#fff', border: '0.5px solid #e2e8f0', borderRadius: '18px 18px 18px 4px', display: 'flex', gap: 5, alignItems: 'center', boxShadow: '0 2px 8px rgba(0,0,0,0.04)' }}>
               {[0, 1, 2].map(j => (
@@ -682,7 +682,7 @@ function ChatContent() {
           placeholder="Huquqiy savolingizni yozing..."
           disabled={aiLoading}
         />
-        <button onClick={sendAI} disabled={aiLoading || !aiInput.trim()}
+        <button onClick={() => sendAI()} disabled={aiLoading || !aiInput.trim()}
           style={{ width: 46, height: 46, background: (!aiInput.trim() || aiLoading) ? '#f1f5f9' : 'linear-gradient(135deg,#7c3aed,#4338ca)', border: 'none', borderRadius: 14, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all 200ms', flexShrink: 0 }}>
           <Send size={17} color={(!aiInput.trim() || aiLoading) ? '#94a3b8' : '#fff'} />
         </button>
