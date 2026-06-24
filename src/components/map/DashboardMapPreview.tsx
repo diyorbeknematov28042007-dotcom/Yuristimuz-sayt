@@ -1,5 +1,5 @@
 // ════════════════════════════════════════════════
-// DashboardMapPreview — asosiy dashboardда shaffof mini-xarita
+// DashboardMapPreview — asosiy dashboardda shaffof mini-xarita
 // /src/components/map/DashboardMapPreview.tsx
 // Bosilsa to'liq xaritaga (/dashboard/lawyers/map) o'tadi
 // ════════════════════════════════════════════════
