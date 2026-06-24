@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect, useRef, Suspense } from 'react'
-import { useSearchParams } from 'next/navigation'
+import { useSearchParams, useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
 import { Bot, Send, ArrowLeft, BadgeCheck, Star, Sparkles, CheckCheck, Loader2, Plus, AlertTriangle, ArrowRight, Search, X, Bell, Archive, ArchiveRestore, MessageCircle } from 'lucide-react'
 import Link from 'next/link'
@@ -198,6 +198,7 @@ function MarkdownMessage({ content, isAI }: { content: string; isAI: boolean }) 
 // =============================================
 function ChatContent() {
   const params = useSearchParams()
+  const router = useRouter()
   const { markAsRead, unreadByConversation } = useNotifications()
   const autoOpenedRef = useRef(false)  // URL ?conv= ni bir marta avtomatik ochish uchun
   const [user, setUser] = useState<any>(null)
@@ -698,31 +699,35 @@ function ChatContent() {
         <button onClick={() => setActive(null)} style={{ width: 34, height: 34, background: '#f8fafc', border: '0.5px solid #e2e8f0', borderRadius: 9, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
           <ArrowLeft size={15} color="#475569" />
         </button>
-        <Avatar src={active.other_avatar_url} name={active.other_name} size={42} rounded={12} />
-        <div style={{ flex: 1 }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
-            <span style={{ fontWeight: 700, color: '#0f172a', fontSize: 15 }}>{active.other_name}</span>
-            {active.other_verified && <BadgeCheck size={14} color="#3b82f6" />}
-          </div>
-          {otherTyping ? (
-            <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-              <span style={{ fontSize: 11, color: '#3b82f6', fontWeight: 600, fontStyle: 'italic' }}>
-                yozyapti
-              </span>
-              <span style={{ ...typingDotStyle(0, '#3b82f6'), width: 5, height: 5 }} />
-              <span style={{ ...typingDotStyle(0.2, '#3b82f6'), width: 5, height: 5 }} />
-              <span style={{ ...typingDotStyle(0.4, '#3b82f6'), width: 5, height: 5 }} />
+        <div
+          onClick={() => active.other_username && router.push(`/yurist/${active.other_username}`)}
+          style={{ display: 'flex', alignItems: 'center', gap: 12, flex: 1, cursor: active.other_username ? 'pointer' : 'default', minWidth: 0 }}>
+          <Avatar src={active.other_avatar_url} name={active.other_name} size={42} rounded={12} />
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
+              <span style={{ fontWeight: 700, color: '#0f172a', fontSize: 15 }}>{active.other_name}</span>
+              {active.other_verified && <BadgeCheck size={14} color="#3b82f6" />}
             </div>
-          ) : (
-            <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-              <span style={{ fontSize: 11, color: '#94a3b8' }}>@{active.other_username}</span>
-              {active.other_role === 'lawyer' && parseFloat(active.other_rating) > 0 && (
-                <span style={{ display: 'flex', alignItems: 'center', gap: 2, fontSize: 11, color: '#f59e0b', fontWeight: 600 }}>
-                  <Star size={9} fill="#f59e0b" color="#f59e0b" /> {parseFloat(active.other_rating).toFixed(1)}
+            {otherTyping ? (
+              <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+                <span style={{ fontSize: 11, color: '#3b82f6', fontWeight: 600, fontStyle: 'italic' }}>
+                  yozyapti
                 </span>
-              )}
-            </div>
-          )}
+                <span style={{ ...typingDotStyle(0, '#3b82f6'), width: 5, height: 5 }} />
+                <span style={{ ...typingDotStyle(0.2, '#3b82f6'), width: 5, height: 5 }} />
+                <span style={{ ...typingDotStyle(0.4, '#3b82f6'), width: 5, height: 5 }} />
+              </div>
+            ) : (
+              <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                <span style={{ fontSize: 11, color: '#94a3b8' }}>@{active.other_username}</span>
+                {active.other_role === 'lawyer' && parseFloat(active.other_rating) > 0 && (
+                  <span style={{ display: 'flex', alignItems: 'center', gap: 2, fontSize: 11, color: '#f59e0b', fontWeight: 600 }}>
+                    <Star size={9} fill="#f59e0b" color="#f59e0b" /> {parseFloat(active.other_rating).toFixed(1)}
+                  </span>
+                )}
+              </div>
+            )}
+          </div>
         </div>
       </div>
 
