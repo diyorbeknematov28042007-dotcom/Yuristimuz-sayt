@@ -1,7 +1,8 @@
 import type { Metadata, Viewport } from 'next'
+import { Suspense } from 'react'
 import './globals.css'
 import PWAProvider from '@/components/PWAProvider'
-import SplashGate from '@/components/SplashGate'
+import RouteProgress from '@/components/RouteProgress'
 
 export const metadata: Metadata = {
   title: 'Yuristim — Huquqiy xizmatlar platformasi',
@@ -55,7 +56,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <link rel="icon" type="image/png" sizes="192x192" href="/icon-192.png" />
       </head>
       <body>
-        <SplashGate />
+        <Suspense fallback={null}>
+          <RouteProgress />
+        </Suspense>
         {children}
         <PWAProvider />
       </body>
