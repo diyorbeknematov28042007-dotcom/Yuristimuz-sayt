@@ -11,12 +11,12 @@ import { useState } from 'react'
 import Link from 'next/link'
 import { MapPin, Navigation, Star, BadgeCheck, X, Crosshair } from 'lucide-react'
 
-// Namuna yuristlar (faqat ko'rgazma uchun)
+// Namuna yuristlar (faqat ko'rgazma uchun) — markazdan uzoqda joylashgan
 const SAMPLE_LAWYERS = [
-  { id: 1, name: 'Diyorbek N.', initial: 'D', spec: 'Fuqarolik huquqi', city: 'Toshkent', rating: 4.9, top: '24%', left: '30%' },
-  { id: 2, name: 'Aziz K.', initial: 'A', spec: 'Jinoyat huquqi', city: 'Toshkent', rating: 4.8, top: '52%', left: '64%' },
-  { id: 3, name: 'Malika R.', initial: 'M', spec: 'Oilaviy nizolar', city: 'Toshkent', rating: 5.0, top: '38%', left: '52%' },
-  { id: 4, name: 'Sardor T.', initial: 'S', spec: 'Biznes huquqi', city: 'Toshkent', rating: 4.7, top: '66%', left: '34%' },
+  { id: 1, name: 'Diyorbek N.', initial: 'D', spec: 'Fuqarolik huquqi', city: 'Toshkent', rating: 4.9, top: '16%', left: '15%' },
+  { id: 2, name: 'Aziz K.', initial: 'A', spec: 'Jinoyat huquqi', city: 'Toshkent', rating: 4.8, top: '24%', left: '82%' },
+  { id: 3, name: 'Malika R.', initial: 'M', spec: 'Oilaviy nizolar', city: 'Toshkent', rating: 5.0, top: '78%', left: '76%' },
+  { id: 4, name: 'Sardor T.', initial: 'S', spec: 'Biznes huquqi', city: 'Toshkent', rating: 4.7, top: '82%', left: '20%' },
 ]
 
 export default function LandingMap() {
@@ -34,18 +34,79 @@ export default function LandingMap() {
       <div style={{
         position: 'relative', height: 420, borderRadius: 18, overflow: 'hidden',
         border: '1px solid #e2e8f0',
-        background: 'linear-gradient(135deg, #dbeafe 0%, #e0e7ff 60%, #ede9fe 100%)',
+        background: '#e8eef0',
         boxShadow: '0 4px 24px rgba(0,0,0,0.06)',
       }}>
-        {/* Xarita to'ri (grid) — xarita hissi uchun */}
-        <div style={{
-          position: 'absolute', inset: 0,
-          backgroundImage: 'linear-gradient(rgba(99,102,241,0.07) 1px, transparent 1px), linear-gradient(90deg, rgba(99,102,241,0.07) 1px, transparent 1px)',
-          backgroundSize: '44px 44px',
-        }} />
-        {/* Nozik "yo'llar" */}
-        <div style={{ position: 'absolute', top: '45%', left: 0, right: 0, height: 3, background: 'rgba(255,255,255,0.5)' }} />
-        <div style={{ position: 'absolute', top: 0, bottom: 0, left: '48%', width: 3, background: 'rgba(255,255,255,0.5)' }} />
+        {/* Haqiqiy xarita ko'rinishi — SVG (egri ko'chalar, uylar, parklar, suv) */}
+        <svg viewBox="0 0 900 420" preserveAspectRatio="xMidYMid slice" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%' }}>
+          {/* Asosiy fon — yer rangi */}
+          <rect width="900" height="420" fill="#eaeef0" />
+
+          {/* Yam-yashil hududlar (parklar) — tabiiy shakl */}
+          <path d="M 50 30 Q 130 20 200 50 Q 220 110 160 140 Q 80 150 45 100 Z" fill="#d2e7d0" />
+          <ellipse cx="780" cy="70" rx="70" ry="55" fill="#d2e7d0" />
+          <path d="M 700 280 Q 800 270 860 310 Q 870 370 800 390 Q 710 380 690 330 Z" fill="#d2e7d0" />
+
+          {/* Suv (daryo — egri oqim) */}
+          <path d="M -20 330 Q 150 295 320 335 Q 500 375 680 330 Q 820 295 920 320 L 920 440 L -20 440 Z" fill="#bcdce9" opacity="0.9" />
+          <path d="M -20 330 Q 150 295 320 335 Q 500 375 680 330 Q 820 295 920 320" fill="none" stroke="#a5cee0" strokeWidth="2.5" />
+
+          {/* EGRI asosiy ko'chalar (yo'l ostki qatlam — kengroq, och) */}
+          <g stroke="#dfe5e7" strokeWidth="17" fill="none" strokeLinecap="round">
+            <path d="M -20 150 Q 250 130 450 160 Q 680 195 920 165" />
+            <path d="M 430 -20 Q 410 150 450 280 Q 470 380 440 440" />
+          </g>
+          {/* EGRI asosiy ko'chalar (oq ust qatlam) */}
+          <g stroke="#ffffff" strokeWidth="13" fill="none" strokeLinecap="round">
+            <path d="M -20 150 Q 250 130 450 160 Q 680 195 920 165" />
+            <path d="M 430 -20 Q 410 150 450 280 Q 470 380 440 440" />
+            <path d="M -20 240 Q 200 250 400 235 Q 650 215 920 245" />
+            <path d="M 650 -20 Q 670 150 640 300 Q 625 380 660 440" />
+          </g>
+          {/* Ikkilamchi ko'chalar (ingichka) */}
+          <g stroke="#ffffff" strokeWidth="6.5" fill="none" strokeLinecap="round">
+            <path d="M -20 70 Q 200 60 400 75 Q 600 88 920 68" />
+            <path d="M 200 -20 Q 220 120 195 260 Q 185 360 210 440" />
+            <path d="M -20 300 Q 150 305 330 298" />
+            <path d="M 760 60 Q 780 180 750 290" />
+            <path d="M 100 150 Q 110 250 90 350" />
+          </g>
+
+          {/* Kichik uylar (bloklar bo'ylab tarqalgan kichik to'rtburchaklar) */}
+          <g fill="#dbe2e5">
+            {/* Yuqori-chap mahalla */}
+            <rect x="240" y="90" width="26" height="22" rx="3" />
+            <rect x="272" y="92" width="22" height="20" rx="3" />
+            <rect x="300" y="88" width="28" height="24" rx="3" />
+            <rect x="245" y="118" width="24" height="20" rx="3" />
+            <rect x="275" y="120" width="26" height="18" rx="3" />
+            {/* Markaz-yuqori */}
+            <rect x="480" y="95" width="30" height="24" rx="3" />
+            <rect x="516" y="98" width="24" height="21" rx="3" />
+            <rect x="485" y="125" width="26" height="20" rx="3" />
+            {/* O'ng mahalla */}
+            <rect x="560" y="100" width="28" height="22" rx="3" />
+            <rect x="592" y="102" width="22" height="20" rx="3" />
+            <rect x="565" y="128" width="25" height="19" rx="3" />
+            {/* Pastki-chap */}
+            <rect x="150" y="195" width="28" height="22" rx="3" />
+            <rect x="182" y="198" width="24" height="20" rx="3" />
+            <rect x="155" y="222" width="26" height="19" rx="3" />
+            {/* Pastki-markaz */}
+            <rect x="490" y="270" width="28" height="22" rx="3" />
+            <rect x="522" y="272" width="24" height="20" rx="3" />
+            {/* O'ng-past */}
+            <rect x="560" y="255" width="26" height="21" rx="3" />
+            <rect x="590" y="258" width="23" height="19" rx="3" />
+          </g>
+          {/* Yirik binolar (bir nechta kattaroq blok) */}
+          <g fill="#d4dce0">
+            <rect x="340" y="180" width="55" height="42" rx="4" />
+            <rect x="700" y="150" width="48" height="40" rx="4" />
+            <rect x="120" y="270" width="50" height="40" rx="4" />
+          </g>
+        </svg>
+
 
         {/* O'RTADA — "SIZ" nuqtasi */}
         <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', zIndex: 5 }}>
@@ -183,12 +244,12 @@ export default function LandingMap() {
             <p style={{ fontSize: 13.5, color: '#64748b', lineHeight: 1.5, marginBottom: 22 }}>
               Yuristlar bilan bog'lanish, yo'nalish olish va boshqa imkoniyatlar uchun hisobingizga kiring. Bu atigi 1 daqiqa.
             </p>
-            <Link href="/register" style={{ textDecoration: 'none', display: 'block', marginBottom: 9 }}>
+            <Link href="/auth/signup" style={{ textDecoration: 'none', display: 'block', marginBottom: 9 }}>
               <div style={{ width: '100%', padding: 14, background: '#0f172a', color: '#fff', borderRadius: 12, fontSize: 14, fontWeight: 700 }}>
                 Ro'yxatdan o'tish
               </div>
             </Link>
-            <Link href="/login" style={{ textDecoration: 'none', display: 'block' }}>
+            <Link href="/auth/login" style={{ textDecoration: 'none', display: 'block' }}>
               <div style={{ width: '100%', padding: 14, background: '#f1f5f9', color: '#475569', borderRadius: 12, fontSize: 14, fontWeight: 700 }}>
                 Hisobim bor — kirish
               </div>
