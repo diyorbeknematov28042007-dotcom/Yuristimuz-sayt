@@ -11,68 +11,147 @@ export default function OffertaPage() {
       num: '1',
       title: 'Umumiy qoidalar',
       content: [
-        'Ushbu Ommaviy offerta (bundan buyon — Shartnoma) Yuristim platformasi (yuristimuz-sayt.vercel.app) va uning foydalanuvchilari o\'rtasidagi munosabatlarni tartibga soladi.',
-        'Ro\'yxatdan o\'tish tugmasini bosish orqali siz ushbu shartlarni to\'liq o\'qib chiqqaningizni va ularga rozilik bildirishingizni tasdiqlaysiz.',
-        'Platforma hozirda sinov (beta) rejimida ishlaydi. Xizmatlar va qoidalar takomillashtirilib borilishi mumkin.',
+        "Ushbu Ommaviy offerta (bundan buyon — Shartnoma) Yuristim raqamli platformasi (yuristimuz-sayt.vercel.app, bundan buyon — Platforma) hamda undan foydalanuvchi jismoniy va yuridik shaxslar (bundan buyon — Foydalanuvchi) o'rtasidagi munosabatlarni tartibga soluvchi rasmiy taklif hisoblanadi.",
+        "Platforma — bu huquqiy yordamga muhtoj shaxslar bilan malakali yuristlarni bog'lovchi, shuningdek sun'iy intellekt asosidagi dastlabki huquqiy maslahat beruvchi vositachi xizmatdir.",
+        "Ro'yxatdan o'tish tugmasini bosish yoki Platformadan foydalanishni boshlash orqali Foydalanuvchi ushbu Shartnoma shartlarini to'liq o'qib chiqqanini, tushunganini va ularga so'zsiz rozilik bildirganini tasdiqlaydi.",
+        "Agar Foydalanuvchi ushbu shartlarning biron qismiga rozi bo'lmasa, Platformadan foydalanishdan voz kechishi lozim.",
       ]
     },
     {
       num: '2',
-      title: 'Sinov rejimi va cheklovlar',
+      title: 'Asosiy tushunchalar',
       content: [
-        'Platforma hozirda beta (sinov) bosqichida bo\'lib, barcha xizmatlar bepul taqdim etiladi.',
-        'Sinov davri mobaynida texnik nosozliklar, ma\'lumot yo\'qolishi yoki xizmat to\'xtatilishi mumkin.',
-        'Platforma ma\'muriyati foydalanuvchilarga oldindan xabar bermagan holda xizmatlarni o\'zgartirish, to\'xtatish yoki yangilash huquqini saqlab qoladi.',
-        'Foydalanuvchilar platformada saqlangan ma\'lumotlarning zaxira nusxasini o\'zlari saqlashlari tavsiya etiladi.',
+        "Mijoz — huquqiy yordam yoki maslahat olish maqsadida Platformadan foydalanuvchi shaxs.",
+        "Yurist — o'z kasbiy xizmatlarini taklif qilish uchun Platformada ro'yxatdan o'tgan huquqshunos.",
+        "AI Yurist — Platformaning sun'iy intellekt asosida ishlovchi, dastlabki umumiy huquqiy ma'lumot beruvchi avtomatlashtirilgan yordamchisi.",
+        "Kontent — Foydalanuvchi tomonidan Platformaga joylashtirilgan har qanday ma'lumot: e'lonlar, xabarlar, profil ma'lumotlari, rasmlar va hujjatlar.",
+        "Ma'muriyat — Platformani boshqaruvchi va texnik jihatdan ta'minlovchi shaxs yoki guruh.",
       ]
     },
     {
       num: '3',
-      title: 'Foydalanuvchi majburiyatlari',
+      title: 'Sinov (beta) rejimi va cheklovlar',
       content: [
-        'Ro\'yxatdan o\'tayotganda haqiqiy va to\'g\'ri ma\'lumotlar kiritish majburiy.',
-        'Boshqa foydalanuvchilar nomidan ro\'yxatdan o\'tish, aldamchi ma\'lumot berish taqiqlanadi.',
-        'Platformada noqonuniy, haqoratli yoki zararli kontent joylashtirish taqiqlanadi.',
-        'Foydalanuvchi login va parolining maxfiyligini ta\'minlash uchun o\'zi javobgar.',
+        "Platforma hozirda sinov (beta) bosqichida bo'lib, barcha asosiy xizmatlar Foydalanuvchilar uchun bepul taqdim etiladi.",
+        "Sinov davri mobaynida texnik nosozliklar, ma'lumotlar vaqtincha mavjud bo'lmasligi yoki xizmatning to'xtab qolishi ehtimoli mavjud.",
+        "Ma'muriyat oldindan xabar bermagan holda xizmatlarni o'zgartirish, vaqtincha to'xtatish, yangilash yoki butunlay bekor qilish huquqini saqlab qoladi.",
+        "Foydalanuvchiga Platformada saqlanadigan muhim ma'lumotlarning zaxira nusxasini mustaqil ravishda saqlab borish tavsiya etiladi.",
+        "Sinov rejimida taqdim etilgan funksiyalar yakuniy ko'rinishidan farq qilishi mumkin.",
       ]
     },
     {
       num: '4',
-      title: 'Yuristlar uchun maxsus shartlar',
+      title: "Ro'yxatdan o'tish va hisob xavfsizligi",
       content: [
-        'Platformada yurist sifatida ro\'yxatdan o\'tgan shaxslar o\'zlarining malakasi va ma\'lumotlari to\'g\'riligini kafolatlaydi.',
-        'Platforma ma\'muriyati yuristlarning kasbiy faoliyati uchun javobgar emas.',
-        'Berilgan huquqiy maslahatlar uchun to\'liq javobgarlik maslahat beruvchi yurist zimmасида.',
-        'Platforma faqat aloqa vositasi bo\'lib, yurist-mijoz munosabatlariga tomon bo\'lmaydi.',
+        "Ro'yxatdan o'tishda Foydalanuvchi haqiqiy, to'g'ri va to'liq ma'lumotlarni kiritishi shart.",
+        "Bir shaxs tomonidan boshqa shaxs nomidan ro'yxatdan o'tish yoki soxta ma'lumot kiritish qat'iyan taqiqlanadi.",
+        "Foydalanuvchi o'z login va parolining maxfiyligini ta'minlash uchun shaxsan javobgardir.",
+        "Hisobdan ruxsatsiz foydalanish aniqlansa, Foydalanuvchi zudlik bilan Ma'muriyatni xabardor qilishi lozim.",
+        "Ma'muriyat shubhali yoki qoidalarga zid faoliyat aniqlangan hisoblarni vaqtincha to'xtatish yoki o'chirish huquqiga ega.",
       ]
     },
     {
       num: '5',
-      title: "Ma'lumotlar va maxfiylik",
+      title: 'Foydalanuvchi majburiyatlari',
       content: [
-        'Foydalanuvchi ma\'lumotlari faqat platforma xizmatlari doirasida ishlatiladi.',
-        'Uchinchi shaxslarga ma\'lumot foydalanuvchi rozilisisiz berilmaydi.',
-        'Platforma ma\'lumotlarni texnik maqsadlarda qayta ishlash huquqini saqlab qoladi.',
-        'Akkountni o\'chirish so\'rovi bo\'lsa, ma\'lumotlar 30 kun ichida o\'chiriladi.',
+        "Platformada noqonuniy, haqoratli, kamsituvchi, yolg'on yoki zararli kontent joylashtirish taqiqlanadi.",
+        "Boshqa Foydalanuvchilarning huquqlari, sha'ni va qadr-qimmatini hurmat qilish majburiy.",
+        "Platformadan firibgarlik, spam tarqatish yoki noqonuniy reklama maqsadlarida foydalanish taqiqlanadi.",
+        "Foydalanuvchi Platformaning texnik ishlashiga zarar yetkazuvchi har qanday harakatlardan (avtomatlashtirilgan so'rovlar, buzg'unchilik va h.k.) saqlanishi shart.",
+        "Foydalanuvchi o'zi joylashtirgan barcha kontent uchun to'liq javobgardir.",
       ]
     },
     {
       num: '6',
-      title: 'Risklar haqida ogohlantirish',
+      title: 'AI Yurist xizmatidan foydalanish',
       content: [
-        'Platforma sinov rejimida ishlayapti — to\'liq ishonchlilik kafolatlanmaydi.',
-        'Yuristim platformasi orqali olingan maslahatlar rasmiy yuridik yordam o\'rnini bosa olmaydi.',
-        'Muhim huquqiy masalalarda litsenziyalangan advokat bilan shaxsan uchrashish tavsiya etiladi.',
-        'Platforma foydalanuvchilarga yetkazilgan bilvosita zararlar uchun javobgar emas.',
+        "AI Yurist faqat umumiy va dastlabki huquqiy ma'lumot beradi — uning javoblari rasmiy yuridik maslahat hisoblanmaydi.",
+        "AI tomonidan berilgan javoblar to'liq, aniq yoki dolzarb bo'lmasligi mumkin, shuning uchun ularga muhim qarorlar uchun yagona asos sifatida tayanish tavsiya etilmaydi.",
+        "Har qanday jiddiy huquqiy masala bo'yicha malakali yurist yoki advokat bilan shaxsan maslahatlashish zarur.",
+        "AI Yurist bilan bo'lishilgan ma'lumotlar xizmat sifatini yaxshilash maqsadida qayta ishlanishi mumkin — maxfiy yoki shaxsiy ma'lumotlarni kiritishda ehtiyot bo'ling.",
       ]
     },
     {
       num: '7',
+      title: 'Yuristlar uchun maxsus shartlar',
+      content: [
+        "Yurist sifatida ro'yxatdan o'tgan shaxs o'z malakasi, ma'lumotlari va taqdim etgan hujjatlari to'g'riligini kafolatlaydi.",
+        "Yurist o'zining kasbiy faoliyati, mijozga bergan maslahatlari va xizmatlari uchun to'liq va yakka tartibda javobgardir.",
+        "Ma'muriyat yuristning kasbiy faoliyati natijalari uchun javobgar emas va yurist-mijoz munosabatlariga tomon bo'lmaydi.",
+        "Profilda 'Tasdiqlangan' belgisini olish uchun yurist o'z malakasini tasdiqlovchi hujjatlarni taqdim etishi lozim. Belgi malaka tekshiruvidan o'tganlikni bildiradi, biroq xizmat sifatiga kafolat bermaydi.",
+        "Yurist o'zi haqida yolg'on yoki chalg'ituvchi ma'lumot bergani aniqlansa, profili o'chirilishi mumkin.",
+      ]
+    },
+    {
+      num: '8',
+      title: "E'lonlar va kontent",
+      content: [
+        "Foydalanuvchi joylashtirgan e'lonlar aniq, haqiqiy va qonuniy bo'lishi shart.",
+        "Ma'muriyat qoidalarga zid, chalg'ituvchi yoki nomaqbul e'lonlarni oldindan xabar bermay o'chirish huquqiga ega.",
+        "E'lonlar avtomatik va/yoki qo'lda moderatsiyadan o'tkazilishi mumkin.",
+        "Foydalanuvchi o'z kontentini Platformada ko'rsatish uchun Ma'muriyatga zaruriy huquqlarni beradi, biroq kontentga bo'lgan mualliflik huquqi Foydalanuvchida qoladi.",
+      ]
+    },
+    {
+      num: '9',
+      title: 'Joylashuv va xarita ma\'lumotlari',
+      content: [
+        "Yurist o'z ofisi yoki ish joyining manzilini xaritada ko'rsatish-ko'rsatmaslikni o'zi tanlaydi.",
+        "Joylashuv ma'lumotlari faqat yurist roziligi asosida va u tomonidan kiritilgan holda ommaga ko'rsatiladi.",
+        "Mijozning joriy joylashuvi yaqin-atrofdagi yuristlarni topish uchun ishlatilishi mumkin va uchinchi shaxslarga oshkor qilinmaydi.",
+        "Xaritadagi ma'lumotlar taxminiy bo'lishi mumkin — aniq manzilni yurist bilan to'g'ridan-to'g'ri tasdiqlash tavsiya etiladi.",
+      ]
+    },
+    {
+      num: '10',
+      title: "Shaxsiy ma'lumotlar va maxfiylik",
+      content: [
+        "Foydalanuvchi ma'lumotlari faqat Platforma xizmatlarini taqdim etish doirasida yig'iladi va ishlatiladi.",
+        "Foydalanuvchi har bir profil maydonini ommaga ochiq yoki yashirin qilishni mustaqil boshqarishi mumkin.",
+        "Ma'lumotlar Foydalanuvchining aniq roziligisiz uchinchi shaxslarga sotilmaydi yoki berilmaydi.",
+        "Ma'muriyat ma'lumotlarni texnik ishlov berish, xavfsizlik va xizmat sifatini oshirish maqsadlarida qayta ishlash huquqini saqlab qoladi.",
+        "Foydalanuvchi hisobini o'chirishni so'rasa, uning shaxsiy ma'lumotlari oqilona muddat ichida (taxminan 30 kun) tizimdan o'chiriladi.",
+      ]
+    },
+    {
+      num: '11',
+      title: 'Ilova (PWA) va bildirishnomalar',
+      content: [
+        "Platforma qurilmaga ilova sifatida o'rnatilishi mumkin (PWA texnologiyasi) — bu ixtiyoriy va bepul.",
+        "Mobil ilova ishlab chiqilmoqda; u tayyor bo'lguncha veb-ilova qurilmaning bosh ekranidan oddiy ilovadek ishlatilishi mumkin.",
+        "Foydalanuvchi yangi xabarlar va muhim yangiliklar haqida bildirishnomalar olishga rozilik berishi yoki uni o'chirishi mumkin.",
+        "Bildirishnomalarni qurilma sozlamalari yoki Platforma sozlamalari orqali istalgan vaqtda boshqarish mumkin.",
+      ]
+    },
+    {
+      num: '12',
+      title: 'Mas\'uliyat cheklovi va risklar',
+      content: [
+        "Platforma sinov rejimida ishlamoqda — uzluksiz va xatosiz ishlash to'liq kafolatlanmaydi.",
+        "Yuristim — bu vositachi platforma; u Foydalanuvchilar o'rtasidagi kelishuvlar, xizmatlar yoki nizolar uchun javobgar emas.",
+        "Platforma orqali olingan har qanday maslahat (jumladan AI javoblari) rasmiy yuridik yordam o'rnini bosa olmaydi.",
+        "Muhim huquqiy masalalarda litsenziyalangan advokat bilan shaxsan uchrashish qat'iy tavsiya etiladi.",
+        "Ma'muriyat Foydalanuvchilarga yetkazilishi mumkin bo'lgan bilvosita, tasodifiy yoki oqibatli zararlar uchun javobgar emas.",
+      ]
+    },
+    {
+      num: '13',
+      title: 'Shartlarning o\'zgarishi',
+      content: [
+        "Ma'muriyat ushbu Shartnoma shartlarini istalgan vaqtda bir tomonlama o'zgartirish huquqiga ega.",
+        "Muhim o'zgarishlar haqida Foydalanuvchilar Platforma orqali xabardor qilinishga harakat qilinadi.",
+        "O'zgarishlardan keyin Platformadan foydalanishni davom ettirish yangilangan shartlarga rozilik sifatida qabul qilinadi.",
+        "Foydalanuvchiga ushbu hujjatni vaqti-vaqti bilan qayta o'qib turish tavsiya etiladi.",
+      ]
+    },
+    {
+      num: '14',
       title: 'Aloqa va murojaatlar',
       content: [
-        'Shikoyat va takliflar uchun: @lawyer_nematov (Telegram)',
-        'Elektron pochta: diyorbeknematov07@gmail.com',
-        'Murojaatlarga 3 ish kuni ichida javob beriladi.',
+        "Shikoyat, taklif va savollar uchun Telegram: @lawyer_nematov",
+        "Elektron pochta: diyorbeknematov07@gmail.com",
+        "Murojaatlarga oqilona muddatda (odatda 3 ish kuni ichida) javob berishga harakat qilinadi.",
+        "Ushbu Shartnoma bo'yicha kelib chiqadigan nizolar dastlab muzokaralar yo'li bilan, kelishuvga erishilmasa O'zbekiston Respublikasi qonunchiligiga muvofiq hal etiladi.",
       ]
     },
   ]
@@ -107,8 +186,8 @@ export default function OffertaPage() {
             Yuristim platformasidan foydalanish shartlari. Ro'yxatdan o'tishdan oldin diqqat bilan o'qing.
           </p>
           <div style={{ marginTop: 16, display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-            <span style={{ fontSize: 11, background: '#fff7ed', color: '#c2410c', padding: '4px 10px', borderRadius: 6, fontWeight: 600 }}>⚠️ Sinov (beta) rejimi</span>
-            <span style={{ fontSize: 11, background: '#f0fdf4', color: '#166534', padding: '4px 10px', borderRadius: 6, fontWeight: 600 }}>✓ Bepul xizmat</span>
+            <span style={{ fontSize: 11, background: '#fff7ed', color: '#c2410c', padding: '4px 10px', borderRadius: 6, fontWeight: 600 }}>Sinov (beta) rejimi</span>
+            <span style={{ fontSize: 11, background: '#f0fdf4', color: '#166534', padding: '4px 10px', borderRadius: 6, fontWeight: 600 }}>Bepul xizmat</span>
             <span style={{ fontSize: 11, background: '#eef2ff', color: '#4338ca', padding: '4px 10px', borderRadius: 6, fontWeight: 600 }}>Yangilangan: 2026</span>
           </div>
         </div>
@@ -135,8 +214,15 @@ export default function OffertaPage() {
           ))}
         </div>
 
+        {/* Eslatma */}
+        <div style={{ marginTop: 20, background: '#fff7ed', border: '1px solid #fed7aa', borderRadius: 14, padding: '16px 20px' }}>
+          <p style={{ fontSize: 12.5, color: '#9a3412', lineHeight: 1.6 }}>
+            Ushbu hujjat sinov bosqichidagi platforma uchun tuzilgan bo'lib, takomillashtirilib boriladi. Foydalanuvchilarga uni vaqti-vaqti bilan qayta ko'rib chiqish tavsiya etiladi.
+          </p>
+        </div>
+
         {/* Footer CTA */}
-        <div style={{ marginTop: 24, background: '#f0fdf4', border: '1px solid #bbf7d0', borderRadius: 16, padding: '20px 24px', textAlign: 'center' }}>
+        <div style={{ marginTop: 20, background: '#f0fdf4', border: '1px solid #bbf7d0', borderRadius: 16, padding: '20px 24px', textAlign: 'center' }}>
           <p style={{ fontSize: 14, fontWeight: 600, color: '#166534', marginBottom: 12 }}>Shartlarni qabul qilib ro'yxatdan o'ting</p>
           <Link href="/auth/signup" style={{ display: 'inline-flex', alignItems: 'center', gap: 8, background: '#0f172a', color: '#fff', fontWeight: 700, fontSize: 14, padding: '12px 28px', borderRadius: 11, textDecoration: 'none' }}>
             Ro'yxatdan o'tish →
