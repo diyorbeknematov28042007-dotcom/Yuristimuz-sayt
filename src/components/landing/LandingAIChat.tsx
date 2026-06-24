@@ -107,7 +107,7 @@ export default function LandingAIChat() {
 
         {/* CTA — ro'yxatdan o'tish */}
         {showCTA && (
-          <Link href="/register" style={{ textDecoration: 'none' }}>
+          <Link href="/auth/signup" style={{ textDecoration: 'none' }}>
             <div style={{
               padding: 14, background: 'linear-gradient(135deg,#7c3aed,#4338ca)', borderRadius: 13,
               display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
