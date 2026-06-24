@@ -125,7 +125,11 @@ export function BottomNav() {
       backdropFilter: 'blur(12px)',
       WebkitBackdropFilter: 'blur(12px)',
       borderTop: '0.5px solid #e2e8f0',
-      zIndex: 50, padding: '8px 0 14px',
+      zIndex: 50,
+      paddingTop: 8,
+      paddingLeft: 0,
+      paddingRight: 0,
+      paddingBottom: 'calc(14px + env(safe-area-inset-bottom))',
       display: 'flex', alignItems: 'center', justifyContent: 'space-around',
     }}>
       {mainLinks.map(link => {
