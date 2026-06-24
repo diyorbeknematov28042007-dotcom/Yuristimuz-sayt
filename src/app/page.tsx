@@ -5,9 +5,11 @@ import Link from 'next/link'
 import {
   Scale, Search, MessageCircle, FileText, MapPin,
   CheckCircle2, ArrowRight, Shield, Users, Mail, Send, Instagram,
-  Sparkles, Building2, TrendingUp, Lock, Globe, Briefcase,
+  Sparkles, Globe, Briefcase,
   Clock, BookOpen, Menu, X, Star
 } from 'lucide-react'
+import LandingAIChat from '@/components/landing/LandingAIChat'
+import LandingMap from '@/components/landing/LandingMap'
 
 // ── Hooks ──────────────────────────────────────────────
 function useIsMobile() {
@@ -53,16 +55,6 @@ function useCountUp(target: number, duration = 1800, start = false) {
 }
 
 // ── Data ───────────────────────────────────────────────
-const specs = [
-  { icon: <Users size={20} />, label: 'Oilaviy', bg: '#fef2f2', color: '#991b1b' },
-  { icon: <Building2 size={20} />, label: 'Biznes', bg: '#eff6ff', color: '#1d4ed8' },
-  { icon: <MapPin size={20} />, label: 'Mulk', bg: '#f0fdf4', color: '#166534' },
-  { icon: <Briefcase size={20} />, label: 'Mehnat', bg: '#fff7ed', color: '#c2410c' },
-  { icon: <TrendingUp size={20} />, label: 'Soliq', bg: '#fefce8', color: '#854d0e' },
-  { icon: <Lock size={20} />, label: 'Jinoyat', bg: '#fef2f2', color: '#991b1b' },
-  { icon: <FileText size={20} />, label: 'Shartnoma', bg: '#faf5ff', color: '#7e22ce' },
-]
-
 const steps = [
   { num: '01', icon: <FileText size={20} />, title: "Murojaat yuboring", desc: "Huquqiy vaziyatni qisqacha yozing", color: '#eff6ff', icolor: '#1d4ed8' },
   { num: '02', icon: <Search size={20} />, title: 'Yurist tanlang', desc: "Soha, shahar va reytingga qarab", color: '#f0fdf4', icolor: '#166534' },
@@ -296,30 +288,35 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* ── SPECIALIZATIONS ── */}
-      <section style={{ padding: sp2, background: '#fafafa', borderTop: '0.5px solid #f1f5f9' }} id="xizmatlar">
+      {/* ── AI CHAT PREVIEW ── */}
+      <section style={{ padding: sp2, background: '#fff' }} id="ai-yurist">
         <div style={{ maxWidth: 1200, margin: '0 auto' }}>
           <Fade>
-            <div style={{ textAlign: 'center', marginBottom: isMobile ? 24 : 40 }}>
-              <p style={{ fontSize: 10, fontWeight: 700, color: '#4338ca', textTransform: 'uppercase', letterSpacing: '1.5px', marginBottom: 8 }}>Sohalar</p>
-              <h2 style={{ fontSize: isMobile ? 26 : 34, fontWeight: 800, color: '#0f172a', letterSpacing: '-0.5px', marginBottom: 8 }}>Qaysi sohada yordam kerak?</h2>
-              {!isMobile && <p style={{ color: '#64748b', fontSize: 15 }}>Oilaviy nizolardan biznes huquqigacha — har bir masalaga mutaxassis topasiz</p>}
+            <div style={{ textAlign: 'center', marginBottom: isMobile ? 24 : 36 }}>
+              <p style={{ fontSize: 10, fontWeight: 700, color: '#4338ca', textTransform: 'uppercase', letterSpacing: '1.5px', marginBottom: 8 }}>AI Yurist · 24/7</p>
+              <h2 style={{ fontSize: isMobile ? 26 : 34, fontWeight: 800, color: '#0f172a', letterSpacing: '-0.5px', marginBottom: 8 }}>Huquqiy savolingizni bering</h2>
+              {!isMobile && <p style={{ color: '#64748b', fontSize: 15 }}>Sun'iy intellekt savolingizni tushunadi va to'g'ri yo'naltiradi. Sinab ko'ring — savolingiz saqlanib qoladi.</p>}
             </div>
           </Fade>
-          <div style={{ display: 'grid', gridTemplateColumns: isMobile ? 'repeat(4, 1fr)' : 'repeat(4, 1fr)', gap: isMobile ? 8 : 12 }}>
-            {specs.map((s, i) => (
-              <Fade key={s.label} delay={i * 40}>
-                <div style={{ background: '#fff', border: '0.5px solid #e2e8f0', borderRadius: isMobile ? 12 : 14, padding: isMobile ? '12px 6px' : '20px 16px', textAlign: 'center', cursor: 'pointer', transition: 'all 200ms' }}
-                  onMouseEnter={e => { const el = e.currentTarget as HTMLElement; el.style.borderColor = '#0f172a'; el.style.transform = 'translateY(-2px)' }}
-                  onMouseLeave={e => { const el = e.currentTarget as HTMLElement; el.style.borderColor = '#e2e8f0'; el.style.transform = 'translateY(0)' }}>
-                  <div style={{ width: isMobile ? 36 : 44, height: isMobile ? 36 : 44, background: s.bg, color: s.color, borderRadius: isMobile ? 10 : 12, display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto', marginBottom: isMobile ? 6 : 12 }}>
-                    {isMobile ? <span style={{ fontSize: 16 }}>{[<Users />, <Building2 />, <MapPin />, <Briefcase />, <TrendingUp />, <Lock />, <FileText />][i]}</span> : s.icon}
-                  </div>
-                  <p style={{ fontSize: isMobile ? 10 : 13, fontWeight: 600, color: '#1e293b', lineHeight: 1.3 }}>{s.label.replace(' huquqi', isMobile ? '' : ' huquqi')}</p>
-                </div>
-              </Fade>
-            ))}
-          </div>
+          <Fade delay={80}>
+            <LandingAIChat />
+          </Fade>
+        </div>
+      </section>
+
+      {/* ── XARITA PREVIEW ── */}
+      <section style={{ padding: sp2, background: '#fafafa', borderTop: '0.5px solid #f1f5f9' }} id="xarita">
+        <div style={{ maxWidth: 1200, margin: '0 auto' }}>
+          <Fade>
+            <div style={{ textAlign: 'center', marginBottom: isMobile ? 24 : 36 }}>
+              <p style={{ fontSize: 10, fontWeight: 700, color: '#4338ca', textTransform: 'uppercase', letterSpacing: '1.5px', marginBottom: 8 }}>Yuristlar xaritasi</p>
+              <h2 style={{ fontSize: isMobile ? 26 : 34, fontWeight: 800, color: '#0f172a', letterSpacing: '-0.5px', marginBottom: 8 }}>Yoningizdagi yuristni toping</h2>
+              {!isMobile && <p style={{ color: '#64748b', fontSize: 15 }}>Tasdiqlangan yuristlar xaritada. Birortasini tanlang yoki yo'nalish oling.</p>}
+            </div>
+          </Fade>
+          <Fade delay={80}>
+            <LandingMap />
+          </Fade>
         </div>
       </section>
 
