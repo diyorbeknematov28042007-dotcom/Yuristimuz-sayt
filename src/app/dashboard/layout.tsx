@@ -94,7 +94,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
         </header>
 
         {/* Mobile topbar */}
-        <header className="mobile-topbar" style={{ height: 56, background: '#fff', borderBottom: '0.5px solid #e2e8f0', alignItems: 'center', justifyContent: 'space-between', padding: '0 16px', position: 'sticky', top: 0, zIndex: 30 }}>
+        <header className="mobile-topbar" style={{ minHeight: 56, background: '#fff', borderBottom: '0.5px solid #e2e8f0', alignItems: 'center', justifyContent: 'space-between', padding: '0 16px', paddingTop: 'env(safe-area-inset-top)', position: 'sticky', top: 0, zIndex: 30 }}>
           <Link href="/dashboard" style={{ display: 'flex', alignItems: 'center', gap: 8, textDecoration: 'none' }}>
             <div style={{ width: 28, height: 28, background: '#0f172a', borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
               <Scale size={13} color="#fff" />
@@ -110,7 +110,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
         </header>
 
         {/* Page content */}
-        <main style={{ flex: 1, padding: '24px 16px 100px' }}>
+        <main style={{ flex: 1, padding: '24px 16px', paddingBottom: 'calc(100px + env(safe-area-inset-bottom))' }}>
           {children}
         </main>
       </div>
