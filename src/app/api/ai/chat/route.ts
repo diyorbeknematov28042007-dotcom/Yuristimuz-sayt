@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { getSession } from '@/lib/auth'
 
 function getKeys(): string[] {
   const raw = process.env.GEMINI_API_KEYS || process.env.GEMINI_API_KEY || ''
@@ -180,6 +181,16 @@ async function callGemini(messages: Msg[], key: string): Promise<string | null> 
 // ─────────────────────────────────────────────────────────
 export async function POST(request: NextRequest) {
   try {
+    // ── HIMOYA: faqat ro'yxatdan o'tgan foydalanuvchi AI ishlatadi ──
+    // (Gemini API suiiste'molini oldini oladi)
+    const user = await getSession()
+    if (!user) {
+      return NextResponse.json(
+        { error: "AI yuristdan foydalanish uchun ro'yxatdan o'ting" },
+        { status: 401 }
+      )
+    }
+
     const body = await request.json()
 
     // Eski format: { message: "..." }
