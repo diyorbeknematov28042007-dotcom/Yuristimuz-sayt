@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import webpush from 'web-push'
 import { createClient } from '@supabase/supabase-js'
+import { getSession } from '@/lib/auth'
 
 // VAPID sozlash (server start'da bir marta)
 const VAPID_PUBLIC_KEY = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY
@@ -24,6 +25,16 @@ if (VAPID_PUBLIC_KEY && VAPID_PRIVATE_KEY) {
  */
 export async function POST(request: NextRequest) {
   try {
+    // ── HIMOYA: faqat ro'yxatdan o'tgan foydalanuvchi push yubora oladi ──
+    // (tashqaridan spam push yuborishni oldini oladi)
+    const sender = await getSession()
+    if (!sender) {
+      return NextResponse.json(
+        { error: "Ruxsat yo'q" },
+        { status: 401 }
+      )
+    }
+
     if (!VAPID_PUBLIC_KEY || !VAPID_PRIVATE_KEY) {
       return NextResponse.json(
         { error: 'VAPID kalitlari sozlanmagan. Environment variables tekshiring.' },
