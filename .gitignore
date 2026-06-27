@@ -1,0 +1,59 @@
+# ════════════════════════════════════════════════
+# Yuristim — .gitignore (Next.js + Vercel)
+# Maxfiy fayllar va keraksiz papkalar GitHub'ga ketmasligi uchun
+# ════════════════════════════════════════════════
+
+# Dependencies
+/node_modules
+/.pnp
+.pnp.js
+.yarn/install-state.gz
+
+# Testing
+/coverage
+
+# Next.js
+/.next/
+/out/
+next-env.d.ts
+
+# Production build
+/build
+/dist
+
+# Misc
+.DS_Store
+*.pem
+Thumbs.db
+
+# Debug loglar
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+
+# ── MUHIM: Maxfiy environment fayllar ──
+# Bular hech qachon GitHub'ga ketmasligi kerak (API kalitlar, parollar)
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+.env*.local
+
+# Vercel
+.vercel
+
+# TypeScript
+*.tsbuildinfo
+
+# IDE
+.vscode/*
+!.vscode/extensions.json
+.idea
+*.swp
+*.swo
+
+# OS
+.DS_Store
+*~
